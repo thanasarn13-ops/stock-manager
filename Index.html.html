@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stock Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;color:#1c1c1e;font-size:15px;min-height:100vh}
+#app{max-width:480px;margin:0 auto;padding:16px 12px 32px}
+h1{font-size:22px;font-weight:700;margin-bottom:16px;color:#111;letter-spacing:-0.3px}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+.card-title{font-size:14px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+label{font-size:13px;color:#555;display:block;margin-bottom:4px;font-weight:500}
+input[type=text],input[type=number]{
+  width:100%;padding:11px 13px;border:1.5px solid #e5e5ea;border-radius:11px;
+  font-size:15px;margin-bottom:12px;background:#fafafa;color:#1c1c1e;
+  -webkit-appearance:none;outline:none;transition:border-color .15s}
+input:focus{border-color:#007aff;background:#fff}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+.row input{width:100%}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  padding:13px;border-radius:12px;font-size:15px;font-weight:600;
+  cursor:pointer;border:none;margin-bottom:8px;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:0.7}
+.btn-blue{background:#007aff;color:#fff}
+.btn-green{background:#34c759;color:#fff}
+.btn-red{background:#ff3b30;color:#fff}
+.btn-orange{background:#ff9500;color:#fff}
+.btn-gray{background:#e5e5ea;color:#1c1c1e}
+.btn-outline{background:#fff;color:#007aff;border:1.5px solid #007aff}
+.btn-sm{font-size:13px;padding:10px;border-radius:10px}
+#video-wrap{display:none;position:relative;margin-bottom:12px}
+#video-wrap video{width:100%;border-radius:12px;background:#000;display:block}
+#scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#scan-line-box{width:70%;height:70%;border:2px solid rgba(255,255,255,0.8);border-radius:12px;position:relative}
+#scan-line-box::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(0,200,100,0.8);border-radius:2px}
+#close-cam{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;
+  border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:10}
+.status-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;
+  border-radius:20px;font-size:13px;font-weight:500;margin-top:4px}
+.pill-idle{background:#f2f2f7;color:#8e8e93}
+.pill-ok{background:#e8fdf0;color:#1a7a3c}
+.pill-err{background:#fff0f0;color:#c0392b}
+.pill-warn{background:#fff8e6;color:#a06000}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-idle{background:#c7c7cc}
+.dot-ok{background:#34c759}
+.dot-err{background:#ff3b30}
+.dot-warn{background:#ff9500}
+.badge-af{display:none;font-size:11px;background:#e8fdf0;color:#1a7a3c;
+  border-radius:6px;padding:2px 8px;margin-left:6px;font-weight:600}
+.label-row{display:flex;align-items:center;margin-bottom:4px}
+.stock-list{max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.stock-item{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid #f2f2f7}
+.stock-item:last-child{border-bottom:none}
+.item-name{font-weight:600;font-size:14px;color:#1c1c1e}
+.item-bc{font-family:monospace;font-size:11px;color:#aaa;margin-top:2px}
+.qty-pill{background:#e8fdf0;color:#1a7a3c;border-radius:8px;
+  padding:4px 12px;font-weight:700;font-size:13px;white-space:nowrap}
+.del-btn{background:none;border:none;color:#ff3b30;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1}
+.empty{text-align:center;color:#c7c7cc;padding:28px 0;font-size:14px}
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions .btn{flex:1;margin:0}
+.msg{font-size:13px;min-height:20px;margin-top:8px;font-weight:500;color:#34c759}
+.msg.err{color:#ff3b30}
+.msg.warn{color:#ff9500}
+.total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.total-count{font-size:13px;color:#8e8e93}
+.divider{height:1px;background:#f2f2f7;margin:10px 0}
+.upload-area{border:2px dashed #c7c7cc;border-radius:12px;padding:20px;text-align:center;
+  cursor:pointer;transition:all .2s;margin-bottom:10px;background:#fafafa}
+.upload-area:hover,.upload-area.drag{border-color:#007aff;background:#f0f7ff}
+.upload-area input{display:none}
+.upload-icon{font-size:28px;margin-bottom:6px}
+.upload-label{font-size:14px;color:#007aff;font-weight:600}
+.upload-sub{font-size:12px;color:#8e8e93;margin-top:3px}
+.prod-preview{background:#f2f2f7;border-radius:10px;padding:10px 12px;font-size:13px;color:#555;margin-top:8px;display:none}
+.section-tab{display:flex;gap:6px;margin-bottom:14px}
+.tab{flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+  border:1.5px solid #e5e5ea;background:#fff;color:#8e8e93;text-align:center;transition:all .15s}
+.tab.active{background:#007aff;color:#fff;border-color:#007aff}
+@media(prefers-color-scheme:dark){
+  body{background:#000;color:#f2f2f7}
+  .card{background:#1c1c1e;box-shadow:none;border:1px solid #2c2c2e}
+  .card-title{color:#636366}
+  input[type=text],input[type=number]{background:#2c2c2e;border-color:#3a3a3c;color:#f2f2f7}
+  input:focus{border-color:#0a84ff;background:#1c1c1e}
+  .btn-gray{background:#2c2c2e;color:#f2f2f7}
+  .btn-outline{background:transparent;color:#0a84ff;border-color:#0a84ff}
+  .btn-blue{background:#0a84ff}
+  .btn-green{background:#30d158}
+  .stock-item{border-color:#2c2c2e}
+  .upload-area{background:#2c2c2e;border-color:#3a3a3c}
+  .upload-area:hover,.upload-area.drag{border-color:#0a84ff;background:#1c3a5f}
+  .pill-idle{background:#2c2c2e;color:#8e8e93}
+  .prod-preview{background:#2c2c2e;color:#aaa}
+  .tab{background:#1c1c1e;border-color:#2c2c2e;color:#636366}
+  .tab.active{background:#0a84ff;border-color:#0a84ff;color:#fff}
+  h1{color:#f2f2f7}
+  .item-name{color:#f2f2f7}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>&#128230; Stock Manager</h1>
+
+  <!-- STEP TABS -->
+  <div class="section-tab">
+    <div class="tab active" id="tab-db" onclick="showTab('db')">1. สินค้า</div>
+    <div class="tab" id="tab-scan" onclick="showTab('scan')">2. สแกน</div>
+    <div class="tab" id="tab-list" onclick="showTab('list')">3. รายการ</div>
+  </div>
+
+  <!-- TAB 1: Product DB -->
+  <div id="pane-db">
+    <div class="card">
+      <div class="card-title">&#128196; อัปโหลดข้อมูลสินค้า</div>
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-in').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleDrop(event)">
+        <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
+        <div class="upload-icon">&#128193;</div>
+        <div class="upload-label">แตะเพื่อเลือกไฟล์</div>
+        <div class="upload-sub">รองรับ .csv และ .xlsx / .xls</div>
+      </div>
+      <div class="prod-preview" id="prod-preview"></div>
+      <div class="divider"></div>
+      <div style="font-size:12px;color:#8e8e93;line-height:1.6">
+        &#9432; ไฟล์ต้องมีคอลัมน์: <b>Barcode, ชื่อสินค้า, หน่วย</b> (แถวแรกเป็นหัวข้อ)<br>
+        ข้อมูลจะถูกบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำ
+      </div>
+    </div>
+    <div id="db-status-wrap">
+      <div class="status-pill pill-idle" id="db-pill">
+        <div class="dot dot-idle" id="db-dot"></div>
+        <span id="db-status">ยังไม่ได้โหลดข้อมูล</span>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-blue" onclick="showTab('scan')">ถัดไป: สแกน Barcode &#8594;</button>
+    </div>
+  </div>
+
+  <!-- TAB 2: Scanner -->
+  <div id="pane-scan" style="display:none">
+    <div class="card">
+      <div class="card-title">&#128247; สแกน Barcode</div>
+      <div id="video-wrap">
+        <video id="video" autoplay playsinline muted></video>
+        <div id="scan-overlay"><div id="scan-line-box"></div></div>
+        <button id="close-cam">&#x2715;</button>
+      </div>
+      <button class="btn btn-blue" id="scan-btn">&#128247; เปิดกล้องสแกน</button>
+
+      <label style="margin-top:4px">Barcode</label>
+      <input type="text" id="bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+
+      <div class="label-row">
+        <label style="margin:0">ชื่อสินค้า</label>
+        <span class="badge-af" id="af-badge">auto-filled</span>
+      </div>
+      <input type="text" id="name-in" placeholder="ดึงชื่อจากไฟล์อัตโนมัติ" style="margin-top:4px">
+
+      <div class="row">
+        <div><label>จำนวน</label><input type="number" id="qty-in" value="1" min="0"></div>
+        <div><label>หน่วย</label><input type="text" id="unit-in" placeholder="pcs / kg / กล่อง"></div>
+      </div>
+      <button class="btn btn-green" id="add-btn">+ เพิ่ม / อัปเดต Stock</button>
+      <div class="msg" id="scan-msg"></div>
+    </div>
+    <button class="btn btn-gray btn-sm" onclick="showTab('list')">ดูรายการ stock &#8594;</button>
+  </div>
+
+  <!-- TAB 3: Stock List -->
+  <div id="pane-list" style="display:none">
+    <div class="card">
+      <div class="total-row">
+        <span style="font-size:16px;font-weight:700">&#128203; รายการ Stock</span>
+        <span class="total-count" id="total"></span>
+      </div>
+      <div class="stock-list" id="stock-list"><div class="empty">ยังไม่มีรายการ<br>ไปที่แท็บ "สแกน" เพื่อเพิ่ม</div></div>
+      <div class="actions">
+        <button class="btn btn-green btn-sm" id="save-btn">&#128190; บันทึก .txt</button>
+        <button class="btn btn-red btn-sm" id="clear-btn">&#128465; ล้าง</button>
+      </div>
+      <div class="msg" id="save-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+<script>
+const PROD_KEY = 'stockapp_products_v3';
+let products = {};
+let stock = {};
+let codeReader = null;
+let scanning = false;
+
+function showTab(t) {
+  ['db','scan','list'].forEach(id => {
+    document.getElementById('pane-'+id).style.display = id===t ? 'block' : 'none';
+    document.getElementById('tab-'+id).className = 'tab' + (id===t?' active':'');
+  });
+}
+
+function setDbStatus(state, txt) {
+  const dot = document.getElementById('db-dot');
+  const pill = document.getElementById('db-pill');
+  const st = document.getElementById('db-status');
+  dot.className = 'dot dot-'+state;
+  pill.className = 'status-pill pill-'+(state==='ok'?'ok':state==='err'?'err':'warn');
+  st.textContent = txt;
+}
+
+function tryLoadSaved() {
+  try {
+    const saved = localStorage.getItem(PROD_KEY);
+    if (saved) {
+      products = JSON.parse(saved);
+      const count = Object.keys(products).length;
+      setDbStatus('ok', count + ' สินค้า (บันทึกแล้ว)');
+      showPreview(count);
+    }
+  } catch(e) {}
+}
+
+function showPreview(count) {
+  const el = document.getElementById('prod-preview');
+  el.style.display = 'block';
+  const samples = Object.values(products).slice(0,3).map(p=>p.name).join(', ');
+  el.innerHTML = '&#10003; โหลด <b>'+count+'</b> สินค้าแล้ว &nbsp;|&nbsp; ตัวอย่าง: '+samples+(count>3?' ...':'');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    const reader = new FileReader();
+    reader.onload = e => parseCSV(e.target.result);
+    reader.readAsText(file, 'UTF-8');
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => parseXLSX(e.target.result);
+    reader.readAsArrayBuffer(file);
+  } else {
+    setDbStatus('err', 'รองรับเฉพาะ .csv, .xlsx, .xls เท่านั้น');
+  }
+}
+
+function parseCSV(text) {
+  const rows = text.trim().split('\n').slice(1);
+  products = {};
+  rows.forEach(row => {
+    const cols = row.split(',').map(c => c.replace(/^"|"$/g,'').trim());
+    const bc = cols[0], name = cols[1]||'', unit = cols[2]||'';
+    if (bc) products[bc] = {name, unit};
+  });
+  saveAndShow();
+}
+
+function parseXLSX(buffer) {
+  try {
+    const wb = XLSX.read(buffer, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, {header:1});
+    products = {};
+    data.slice(1).forEach(row => {
+      const bc = String(row[0]||'').trim();
+      const name = String(row[1]||'').trim();
+      const unit = String(row[2]||'').trim();
+      if (bc) products[bc] = {name, unit};
+    });
+    saveAndShow();
+  } catch(e) {
+    setDbStatus('err', 'อ่านไฟล์ไม่ได้ ลองบันทึกเป็น .csv แล้วอัปโหลดใหม่');
+  }
+}
+
+function saveAndShow() {
+  const count = Object.keys(products).length;
+  localStorage.setItem(PROD_KEY, JSON.stringify(products));
+  setDbStatus('ok', count + ' สินค้า บันทึกแล้ว ✓');
+  showPreview(count);
+  showMsg('scan-msg', '&#10003; โหลด '+count+' สินค้าเรียบร้อย', false);
+}
+
+document.getElementById('bc-in').addEventListener('input', function() {
+  const bc = this.value.trim();
+  const badge = document.getElementById('af-badge');
+  if (products[bc]) {
+    document.getElementById('name-in').value = products[bc].name;
+    document.getElementById('unit-in').value = products[bc].unit || '';
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+});
+
+document.getElementById('add-btn').addEventListener('click', () => {
+  const bc   = document.getElementById('bc-in').value.trim();
+  const name = document.getElementById('name-in').value.trim();
+  const qty  = parseFloat(document.getElementById('qty-in').value) || 0;
+  const unit = document.getElementById('unit-in').value.trim();
+  if (!bc) { showMsg('scan-msg','กรุณาสแกนหรือใส่ barcode',true); return; }
+  if (stock[bc]) {
+    stock[bc].qty += qty;
+    if (name) stock[bc].name = name;
+    if (unit) stock[bc].unit = unit;
+  } else {
+    stock[bc] = { name: name||(products[bc]?.name||'—'), qty, unit: unit||(products[bc]?.unit||'') };
+  }
+  document.getElementById('bc-in').value = '';
+  document.getElementById('name-in').value = '';
+  document.getElementById('qty-in').value = '1';
+  document.getElementById('unit-in').value = '';
+  document.getElementById('af-badge').style.display = 'none';
+  showMsg('scan-msg','&#10003; อัปเดต stock แล้ว',false);
+  renderList();
+});
+
+function renderList() {
+  const list = document.getElementById('stock-list');
+  const keys = Object.keys(stock);
+  document.getElementById('total').textContent = keys.length ? keys.length+' รายการ' : '';
+  if (!keys.length) { list.innerHTML='<div class="empty">ยังไม่มีรายการ<br>ไปที่แท็บ "สแกน" เพื่อเพิ่ม</div>'; return; }
+  list.innerHTML = keys.map(k => {
+    const it = stock[k];
+    return `<div class="stock-item">
+      <div>
+        <div class="item-name">${it.name||'—'}</div>
+        <div class="item-bc">${k}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="qty-pill">${it.qty} ${it.unit||''}</span>
+        <button class="del-btn" onclick="removeItem('${k}')">&#x2715;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeItem(k) { delete stock[k]; renderList(); }
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const keys = Object.keys(stock);
+  if (!keys.length) { showMsg('save-msg','ไม่มีรายการที่จะบันทึก',true); return; }
+  const now = new Date();
+  const ds = now.toLocaleDateString('th-TH')+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  let txt = '===========================\n  รายงาน STOCK\n  '+ds+'\n===========================\n\n';
+  txt += 'ลำดับ | Barcode          | ชื่อสินค้า              | จำนวน  | หน่วย\n';
+  txt += '------|------------------|-------------------------|--------|--------\n';
+  keys.forEach((k,i) => {
+    const it = stock[k];
+    txt += `${String(i+1).padEnd(5)} | ${k.padEnd(16)} | ${(it.name||'—').padEnd(23)} | ${String(it.qty).padEnd(6)} | ${it.unit||''}\n`;
+  });
+  txt += '\n---------------------------\nรวม: '+keys.length+' รายการ\n===========================\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download = 'stock_'+now.toISOString().slice(0,10)+'.txt';
+  a.click();
+  showMsg('save-msg','&#10003; บันทึกไฟล์แล้ว ดูใน Downloads',false);
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (!Object.keys(stock).length) return;
+  if (confirm('ล้างรายการ stock ทั้งหมด?')) { stock={}; renderList(); }
+});
+
+document.getElementById('scan-btn').addEventListener('click', startScan);
+document.getElementById('close-cam').addEventListener('click', stopScan);
+
+function startScan() {
+  if (scanning) return;
+  if (typeof ZXing === 'undefined') { showMsg('scan-msg','Scanner ไม่พร้อม ลอง refresh',true); return; }
+  document.getElementById('video-wrap').style.display = 'block';
+  document.getElementById('scan-btn').style.display = 'none';
+  codeReader = new ZXing.BrowserMultiFormatReader();
+  scanning = true;
+  codeReader.decodeFromVideoDevice(null, 'video', result => {
+    if (result) {
+      const bc = result.getText();
+      document.getElementById('bc-in').value = bc;
+      const badge = document.getElementById('af-badge');
+      if (products[bc]) {
+        document.getElementById('name-in').value = products[bc].name;
+        document.getElementById('unit-in').value = products[bc].unit||'';
+        badge.style.display = 'inline';
+        showMsg('scan-msg','&#10003; พบ: '+products[bc].name,false);
+      } else {
+        badge.style.display = 'none';
+        showMsg('scan-msg','Barcode: '+bc+' — ไม่พบในรายการ','warn');
+      }
+      stopScan();
+    }
+  });
+}
+
+function stopScan() {
+  scanning = false;
+  if (codeReader) { codeReader.reset(); codeReader=null; }
+  document.getElementById('video-wrap').style.display = 'none';
+  document.getElementById('scan-btn').style.display = 'flex';
+}
+
+function showMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.innerHTML = msg;
+  el.className = 'msg'+(type===true?' err':type==='warn'?' warn':'');
+  setTimeout(() => { el.innerHTML=''; el.className='msg'; }, 4000);
+}
+
+tryLoadSaved();
+renderList();
+</script>
+</body>
+</html>
