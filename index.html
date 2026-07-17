@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Stock Manager</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007aff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stock">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;color:#1c1c1e;font-size:15px;min-height:100vh}
@@ -106,6 +112,9 @@ input:focus{border-color:#007aff;background:#fff}
 </style>
 </head>
 <body>
+<button id="install-btn" onclick="installPWA()" style="display:none;position:fixed;bottom:20px;right:16px;z-index:999;background:#007aff;color:#fff;border:none;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,122,255,0.4);align-items:center;gap:8px;cursor:pointer">
+  &#43; ติดตั้งเป็นแอป
+</button>
 <div id="app">
   <h1>&#128230; Stock Manager</h1>
 
@@ -261,15 +270,31 @@ function handleFile(file) {
   }
 }
 
+function detectColumns(headers) {
+  const h = headers.map(x => String(x||'').toUpperCase());
+  // ไฟล์ POS แบบใหม่มี CF_BARCODE, ไฟล์เก่ามี CF_ITEMID
+  const hasCFBarcode = h.indexOf('CF_BARCODE') !== -1;
+  const hasCFItemId  = h.indexOf('CF_ITEMID')  !== -1;
+  const isPOS = hasCFBarcode || hasCFItemId;
+  const bcIdx       = hasCFBarcode ? h.indexOf('CF_BARCODE') : hasCFItemId ? h.indexOf('CF_ITEMID') : 0;
+  const nameIdx     = h.indexOf('CF_ITEMNAME') !== -1 ? h.indexOf('CF_ITEMNAME') : 1;
+  const unitIdx     = h.indexOf('CF_UNITNAME') !== -1 ? h.indexOf('CF_UNITNAME') : 2;
+  const multipleIdx = h.indexOf('MULTIPLE')    !== -1 ? h.indexOf('MULTIPLE')    : -1;
+  return { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS };
+}
+
 function parseCSV(text) {
-  const rows = text.trim().split('\n').slice(1);
+  const rows = text.trim().split('\n');
+  const headers = rows[0].split(',').map(c => c.replace(/^"|"$/g,'').trim());
+  const { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS } = detectColumns(headers);
   products = {};
-  rows.forEach(row => {
+  rows.slice(1).forEach(row => {
     const cols = row.split(',').map(c => c.replace(/^"|"$/g,'').trim());
-    const bc = cols[0], name = cols[1]||'', unit = cols[2]||'';
-    if (bc) products[bc] = {name, unit};
+    const bc = cols[bcIdx]||'', name = cols[nameIdx]||'', unit = cols[unitIdx]||'';
+    const multiple = multipleIdx >= 0 ? parseInt(cols[multipleIdx])||1 : 1;
+    if (bc) products[bc] = {name, unit, multiple};
   });
-  saveAndShow();
+  saveAndShow(isPOS ? 'ตรวจพบรูปแบบ POS อัตโนมัติ' : '');
 }
 
 function parseXLSX(buffer) {
@@ -277,38 +302,50 @@ function parseXLSX(buffer) {
     const wb = XLSX.read(buffer, {type:'array'});
     const ws = wb.Sheets[wb.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(ws, {header:1});
+    const headers = data[0] || [];
+    const { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS } = detectColumns(headers);
     products = {};
     data.slice(1).forEach(row => {
-      const bc = String(row[0]||'').trim();
-      const name = String(row[1]||'').trim();
-      const unit = String(row[2]||'').trim();
-      if (bc) products[bc] = {name, unit};
+      const bc       = String(row[bcIdx]||'').trim();
+      const name     = String(row[nameIdx]||'').trim();
+      const unit     = String(row[unitIdx]||'').trim();
+      const multiple = multipleIdx >= 0 ? parseInt(row[multipleIdx])||1 : 1;
+      if (bc) products[bc] = {name, unit, multiple};
     });
-    saveAndShow();
+    saveAndShow(isPOS ? 'ตรวจพบรูปแบบ POS อัตโนมัติ' : '');
   } catch(e) {
     setDbStatus('err', 'อ่านไฟล์ไม่ได้ ลองบันทึกเป็น .csv แล้วอัปโหลดใหม่');
   }
 }
 
-function saveAndShow() {
+function saveAndShow(note) {
   const count = Object.keys(products).length;
   localStorage.setItem(PROD_KEY, JSON.stringify(products));
-  setDbStatus('ok', count + ' สินค้า บันทึกแล้ว ✓');
+  const extra = note ? ' — '+note : '';
+  setDbStatus('ok', count + ' สินค้า บันทึกแล้ว ✓' + extra);
   showPreview(count);
-  showMsg('scan-msg', '&#10003; โหลด '+count+' สินค้าเรียบร้อย', false);
+  showMsg('scan-msg', '&#10003; โหลด '+count+' สินค้าเรียบร้อย' + (note ? ' ('+note+')' : ''), false);
 }
 
 document.getElementById('bc-in').addEventListener('input', function() {
-  const bc = this.value.trim();
+  autofillProduct(this.value.trim());
+});
+
+function autofillProduct(bc) {
   const badge = document.getElementById('af-badge');
-  if (products[bc]) {
-    document.getElementById('name-in').value = products[bc].name;
-    document.getElementById('unit-in').value = products[bc].unit || '';
+  const p = products[bc];
+  if (p) {
+    document.getElementById('name-in').value = p.name;
+    document.getElementById('unit-in').value = p.unit || '';
+    const m = p.multiple || 1;
+    document.getElementById('qty-in').value = m;
     badge.style.display = 'inline';
+    badge.textContent = m > 1 ? `auto-filled · 1 ${p.unit} = ${m} ชิ้นย่อย` : 'auto-filled';
   } else {
     badge.style.display = 'none';
+    document.getElementById('qty-in').value = '1';
   }
-});
+}
 
 document.getElementById('add-btn').addEventListener('click', () => {
   const bc   = document.getElementById('bc-in').value.trim();
@@ -393,14 +430,13 @@ function startScan() {
     if (result) {
       const bc = result.getText();
       document.getElementById('bc-in').value = bc;
-      const badge = document.getElementById('af-badge');
-      if (products[bc]) {
-        document.getElementById('name-in').value = products[bc].name;
-        document.getElementById('unit-in').value = products[bc].unit||'';
-        badge.style.display = 'inline';
-        showMsg('scan-msg','&#10003; พบ: '+products[bc].name,false);
+      autofillProduct(bc);
+      const p = products[bc];
+      if (p) {
+        const m = p.multiple || 1;
+        const note = m > 1 ? ` (1 ${p.unit} = ${m} ชิ้น)` : '';
+        showMsg('scan-msg','&#10003; พบ: '+p.name+note,false);
       } else {
-        badge.style.display = 'none';
         showMsg('scan-msg','Barcode: '+bc+' — ไม่พบในรายการ','warn');
       }
       stopScan();
@@ -424,6 +460,36 @@ function showMsg(id, msg, type) {
 
 tryLoadSaved();
 renderList();
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(c => {
+      deferredPrompt = null;
+      document.getElementById('install-btn').style.display = 'none';
+    });
+  }
+}
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+
+// PWA Install prompt (Android)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+});
 </script>
 </body>
 </html>
