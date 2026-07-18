@@ -1,4 +1,4 @@
-const CACHE = 'stock-v2';
+const CACHE = 'stock-v3';
 const FILES = [
   '/stock-manager/',
   '/stock-manager/index.html',
