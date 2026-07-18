@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="screen-orientation" content="portrait">
 <title>Stock Manager</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#007aff">
@@ -12,484 +13,662 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;color:#1c1c1e;font-size:15px;min-height:100vh}
-#app{max-width:480px;margin:0 auto;padding:16px 12px 32px}
-h1{font-size:22px;font-weight:700;margin-bottom:16px;color:#111;letter-spacing:-0.3px}
-.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
-.card-title{font-size:14px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;min-height:100vh;font-size:15px}
+#app{max-width:480px;margin:0 auto;padding:0}
+
+/* Header */
+.header{background:#fff;border-bottom:0.5px solid #e5e5ea;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.header-back{font-size:24px;color:#007aff;cursor:pointer;padding:0 4px;background:none;border:none;line-height:1}
+.header-title{font-size:17px;font-weight:600;color:#111;flex:1}
+.header-sub{font-size:12px;color:#8e8e93}
+
+/* Home screen */
+.home{padding:20px 16px}
+.home-greeting{font-size:22px;font-weight:700;color:#111;margin-bottom:4px}
+.home-sub{font-size:14px;color:#8e8e93;margin-bottom:20px}
+.mode-btn{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;border:0.5px solid;margin-bottom:10px;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.mode-btn:active{opacity:0.75;transform:scale(0.98)}
+.mode-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.mode-title{font-size:16px;font-weight:600;margin-bottom:2px}
+.mode-desc{font-size:13px;opacity:0.75}
+.mode-stock{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.mode-stock .mode-icon{background:#dbeafe}
+.mode-price{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}
+.mode-price .mode-icon{background:#dcfce7}
+.mode-list{background:#fff;border-color:#e5e5ea;color:#1c1c1e}
+.mode-list .mode-icon{background:#f2f2f7}
+.mode-upload{background:#fff;border-color:#e5e5ea;color:#1c1c1e}
+.mode-upload .mode-icon{background:#f2f2f7}
+
+/* DB status bar */
+.db-bar{background:#fff;border:0.5px solid #e5e5ea;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.db-dot{width:8px;height:8px;border-radius:50%;background:#c7c7cc;flex-shrink:0;margin-right:8px}
+.db-dot.ok{background:#34c759}
+.db-dot.err{background:#ff3b30}
+.db-status-text{font-size:13px;color:#8e8e93;flex:1}
+.db-update{font-size:12px;color:#007aff;cursor:pointer}
+
+/* Screens */
+.screen{display:none;padding:0}
+.screen.active{display:block}
+
+/* Cards */
+.card{background:#fff;border-radius:14px;border:0.5px solid #e5e5ea;padding:14px 16px;margin:12px 16px}
+.card-title{font-size:12px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+
+/* Inputs */
 label{font-size:13px;color:#555;display:block;margin-bottom:4px;font-weight:500}
-input[type=text],input[type=number]{
-  width:100%;padding:11px 13px;border:1.5px solid #e5e5ea;border-radius:11px;
-  font-size:15px;margin-bottom:12px;background:#fafafa;color:#1c1c1e;
-  -webkit-appearance:none;outline:none;transition:border-color .15s}
+input[type=text],input[type=number]{width:100%;padding:11px 13px;border:1.5px solid #e5e5ea;border-radius:11px;font-size:16px;margin-bottom:10px;background:#fafafa;color:#1c1c1e;-webkit-appearance:none;outline:none}
 input:focus{border-color:#007aff;background:#fff}
-.row{display:flex;gap:10px}
-.row>div{flex:1}
-.row input{width:100%}
-.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
-  padding:13px;border-radius:12px;font-size:15px;font-weight:600;
-  cursor:pointer;border:none;margin-bottom:8px;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
-.btn:active{opacity:0.7}
+.row{display:flex;gap:8px}.row>div{flex:1}.row input{width:100%}
+
+/* Buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-bottom:8px;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:0.7;transform:scale(0.98)}
 .btn-blue{background:#007aff;color:#fff}
 .btn-green{background:#34c759;color:#fff}
 .btn-red{background:#ff3b30;color:#fff}
-.btn-orange{background:#ff9500;color:#fff}
 .btn-gray{background:#e5e5ea;color:#1c1c1e}
-.btn-outline{background:#fff;color:#007aff;border:1.5px solid #007aff}
-.btn-sm{font-size:13px;padding:10px;border-radius:10px}
-#video-wrap{display:none;position:relative;margin-bottom:12px}
-#video-wrap video{width:100%;border-radius:12px;background:#000;display:block}
-#scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-#scan-line-box{width:70%;height:70%;border:2px solid rgba(255,255,255,0.8);border-radius:12px;position:relative}
-#scan-line-box::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(0,200,100,0.8);border-radius:2px}
-#close-cam{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;
-  border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;z-index:10}
-.status-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;
-  border-radius:20px;font-size:13px;font-weight:500;margin-top:4px}
-.pill-idle{background:#f2f2f7;color:#8e8e93}
-.pill-ok{background:#e8fdf0;color:#1a7a3c}
-.pill-err{background:#fff0f0;color:#c0392b}
-.pill-warn{background:#fff8e6;color:#a06000}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-idle{background:#c7c7cc}
-.dot-ok{background:#34c759}
-.dot-err{background:#ff3b30}
-.dot-warn{background:#ff9500}
-.badge-af{display:none;font-size:11px;background:#e8fdf0;color:#1a7a3c;
-  border-radius:6px;padding:2px 8px;margin-left:6px;font-weight:600}
+
+/* Camera */
+#video-wrap{display:none;position:relative;margin:0 16px 0}
+#video-wrap video{width:100%;border-radius:14px;background:#000;display:block}
+#scan-line{position:absolute;left:15%;right:15%;top:50%;height:2px;background:rgba(0,200,100,0.8);border-radius:2px}
+#close-cam{position:absolute;top:10px;right:26px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* Auto-save bar */
+.autosave-bar{margin:0 16px 4px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#8e8e93}
+.pulse{width:7px;height:7px;border-radius:50%;background:#34c759;animation:pulse 2s infinite;flex-shrink:0;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* Badge */
+.badge-af{display:none;font-size:11px;background:#dcfce7;color:#15803d;border-radius:5px;padding:1px 7px;margin-left:6px;font-weight:600}
 .label-row{display:flex;align-items:center;margin-bottom:4px}
-.stock-list{max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.stock-item{display:flex;justify-content:space-between;align-items:center;
-  padding:10px 0;border-bottom:1px solid #f2f2f7}
+
+/* Stock list */
+.stock-list{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.stock-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0}
 .stock-item:last-child{border-bottom:none}
 .item-name{font-weight:600;font-size:14px;color:#1c1c1e}
 .item-bc{font-family:monospace;font-size:11px;color:#aaa;margin-top:2px}
-.qty-pill{background:#e8fdf0;color:#1a7a3c;border-radius:8px;
-  padding:4px 12px;font-weight:700;font-size:13px;white-space:nowrap}
-.del-btn{background:none;border:none;color:#ff3b30;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1}
+.qty-pill{background:#dcfce7;color:#15803d;border-radius:8px;padding:3px 12px;font-weight:700;font-size:13px;white-space:nowrap}
+.qty-sub{font-size:10px;color:#aaa;margin-top:2px;text-align:right}
+.del-btn{background:none;border:none;color:#ff3b30;font-size:20px;cursor:pointer;padding:2px 6px;flex-shrink:0}
 .empty{text-align:center;color:#c7c7cc;padding:28px 0;font-size:14px}
-.actions{display:flex;gap:8px;margin-top:10px}
-.actions .btn{flex:1;margin:0}
-.msg{font-size:13px;min-height:20px;margin-top:8px;font-weight:500;color:#34c759}
-.msg.err{color:#ff3b30}
-.msg.warn{color:#ff9500}
-.total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.total-count{font-size:13px;color:#8e8e93}
-.divider{height:1px;background:#f2f2f7;margin:10px 0}
-.upload-area{border:2px dashed #c7c7cc;border-radius:12px;padding:20px;text-align:center;
-  cursor:pointer;transition:all .2s;margin-bottom:10px;background:#fafafa}
-.upload-area:hover,.upload-area.drag{border-color:#007aff;background:#f0f7ff}
+.scan-counter{font-size:32px;font-weight:700;color:#007aff;text-align:center;padding:4px 0}
+.scan-counter-label{font-size:12px;color:#8e8e93;text-align:center;margin-bottom:10px}
+
+/* Price result */
+.price-result{margin:0 16px}
+.price-name{font-size:18px;font-weight:700;color:#111;margin-bottom:2px;padding:0 2px}
+.price-unit{font-size:13px;color:#8e8e93;margin-bottom:14px;padding:0 2px}
+.price-card{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:12px;margin-bottom:8px}
+.pc-sell{background:#eff6ff;color:#1e40af}
+.pc-fml{background:#f0fdf4;color:#15803d}
+.pc-bot{background:#fff7ed;color:#9a3412}
+.pc-top{background:#faf5ff;color:#6b21a8}
+.pc-label{font-size:13px;font-weight:600}
+.pc-sub{font-size:10px;opacity:0.65;margin-top:1px}
+.pc-val{font-size:24px;font-weight:700}
+.price-bc{font-family:monospace;font-size:12px;color:#aaa;text-align:center;padding:8px 0}
+.price-not-found{text-align:center;padding:32px 16px}
+
+/* Upload area */
+.upload-area{border:2px dashed #c7c7cc;border-radius:14px;padding:24px;text-align:center;cursor:pointer;background:#fafafa;margin:0 16px 12px}
+.upload-area:active{border-color:#007aff;background:#f0f7ff}
 .upload-area input{display:none}
-.upload-icon{font-size:28px;margin-bottom:6px}
-.upload-label{font-size:14px;color:#007aff;font-weight:600}
-.upload-sub{font-size:12px;color:#8e8e93;margin-top:3px}
-.prod-preview{background:#f2f2f7;border-radius:10px;padding:10px 12px;font-size:13px;color:#555;margin-top:8px;display:none}
-.section-tab{display:flex;gap:6px;margin-bottom:14px}
-.tab{flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
-  border:1.5px solid #e5e5ea;background:#fff;color:#8e8e93;text-align:center;transition:all .15s}
-.tab.active{background:#007aff;color:#fff;border-color:#007aff}
+
+/* Actions row */
+.actions{display:flex;gap:8px;padding:0 16px;margin-bottom:8px}
+.actions .btn{flex:1;margin:0}
+
+/* Msg */
+.msg{font-size:13px;min-height:18px;padding:0 16px;color:#34c759;font-weight:500}
+.msg.err{color:#ff3b30}
+
+/* Prod preview */
+.prod-preview{display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#15803d;margin:0 16px 10px;border:0.5px solid #bbf7d0}
+
 @media(prefers-color-scheme:dark){
   body{background:#000;color:#f2f2f7}
-  .card{background:#1c1c1e;box-shadow:none;border:1px solid #2c2c2e}
-  .card-title{color:#636366}
+  .header{background:#1c1c1e;border-color:#2c2c2e}
+  .header-title{color:#f2f2f7}
+  .card{background:#1c1c1e;border-color:#2c2c2e}
   input[type=text],input[type=number]{background:#2c2c2e;border-color:#3a3a3c;color:#f2f2f7}
   input:focus{border-color:#0a84ff;background:#1c1c1e}
   .btn-gray{background:#2c2c2e;color:#f2f2f7}
-  .btn-outline{background:transparent;color:#0a84ff;border-color:#0a84ff}
-  .btn-blue{background:#0a84ff}
-  .btn-green{background:#30d158}
+  .mode-list,.mode-upload{background:#1c1c1e;border-color:#2c2c2e}
+  .mode-stock{background:#1e3a5f;border-color:#1d4ed8;color:#93c5fd}
+  .mode-stock .mode-icon{background:#1d4ed8}
+  .mode-price{background:#14532d;border-color:#15803d;color:#86efac}
+  .mode-price .mode-icon{background:#166534}
+  .db-bar{background:#1c1c1e;border-color:#2c2c2e}
   .stock-item{border-color:#2c2c2e}
-  .upload-area{background:#2c2c2e;border-color:#3a3a3c}
-  .upload-area:hover,.upload-area.drag{border-color:#0a84ff;background:#1c3a5f}
-  .pill-idle{background:#2c2c2e;color:#8e8e93}
-  .prod-preview{background:#2c2c2e;color:#aaa}
-  .tab{background:#1c1c1e;border-color:#2c2c2e;color:#636366}
-  .tab.active{background:#0a84ff;border-color:#0a84ff;color:#fff}
-  h1{color:#f2f2f7}
   .item-name{color:#f2f2f7}
+  .upload-area{background:#2c2c2e;border-color:#3a3a3c}
+  .home-greeting{color:#f2f2f7}
+  .pc-sell{background:#1e3a5f;color:#93c5fd}
+  .pc-fml{background:#14532d;color:#86efac}
+  .pc-bot{background:#431407;color:#fdba74}
+  .pc-top{background:#3b0764;color:#d8b4fe}
+  .mode-list .mode-icon,.mode-upload .mode-icon{background:#2c2c2e}
+  .prod-preview{background:#14532d;border-color:#166534;color:#86efac}
+  .qty-pill{background:#14532d;color:#86efac}
 }
 </style>
 </head>
 <body>
-<button id="install-btn" onclick="installPWA()" style="display:none;position:fixed;bottom:20px;right:16px;z-index:999;background:#007aff;color:#fff;border:none;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,122,255,0.4);align-items:center;gap:8px;cursor:pointer">
-  &#43; ติดตั้งเป็นแอป
-</button>
 <div id="app">
-  <h1>&#128230; Stock Manager</h1>
 
-  <!-- STEP TABS -->
-  <div class="section-tab">
-    <div class="tab active" id="tab-db" onclick="showTab('db')">1. สินค้า</div>
-    <div class="tab" id="tab-scan" onclick="showTab('scan')">2. สแกน</div>
-    <div class="tab" id="tab-list" onclick="showTab('list')">3. รายการ</div>
+<!-- Video (shared) -->
+<div id="video-wrap">
+  <video id="video" autoplay playsinline muted></video>
+  <div id="scan-line"></div>
+  <button id="close-cam">&#x2715;</button>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="home">
+    <div class="home-greeting">&#128230; Stock Manager</div>
+    <div class="home-sub">เลือกโหมดการทำงาน</div>
+
+    <div id="db-bar" class="db-bar">
+      <div class="db-dot" id="db-dot"></div>
+      <span class="db-status-text" id="db-status">ยังไม่ได้โหลดข้อมูลสินค้า</span>
+      <span class="db-update" onclick="goScreen('upload')">อัปโหลด</span>
+    </div>
+
+    <div class="mode-btn mode-stock" onclick="goScreen('stock')">
+      <div class="mode-icon">&#128230;</div>
+      <div>
+        <div class="mode-title">นับ Stock</div>
+        <div class="mode-desc">สแกน barcode → บันทึกจำนวน → ส่งออก</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-price" onclick="goScreen('price')">
+      <div class="mode-icon">&#127991;</div>
+      <div>
+        <div class="mode-title">เช็คราคาสินค้า</div>
+        <div class="mode-desc">สแกน → แสดงราคาขาย / ส่ง / ทุน ทันที</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-list" onclick="goScreen('list')">
+      <div class="mode-icon">&#128203;</div>
+      <div>
+        <div class="mode-title">รายการ Stock</div>
+        <div class="mode-desc">ดูรายการที่นับไว้ / บันทึก .txt</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-upload" onclick="goScreen('upload')">
+      <div class="mode-icon">&#128193;</div>
+      <div>
+        <div class="mode-title">อัปโหลดข้อมูลสินค้า</div>
+        <div class="mode-desc">ไฟล์ Excel / CSV จาก POS</div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- TAB 1: Product DB -->
-  <div id="pane-db">
-    <div class="card">
-      <div class="card-title">&#128196; อัปโหลดข้อมูลสินค้า</div>
-      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-in').click()"
-        ondragover="event.preventDefault();this.classList.add('drag')"
-        ondragleave="this.classList.remove('drag')"
-        ondrop="handleDrop(event)">
-        <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
-        <div class="upload-icon">&#128193;</div>
-        <div class="upload-label">แตะเพื่อเลือกไฟล์</div>
-        <div class="upload-sub">รองรับ .csv และ .xlsx / .xls</div>
-      </div>
-      <div class="prod-preview" id="prod-preview"></div>
-      <div class="divider"></div>
-      <div style="font-size:12px;color:#8e8e93;line-height:1.6">
-        &#9432; ไฟล์ต้องมีคอลัมน์: <b>Barcode, ชื่อสินค้า, หน่วย</b> (แถวแรกเป็นหัวข้อ)<br>
-        ข้อมูลจะถูกบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำ
-      </div>
+<!-- UPLOAD -->
+<div id="screen-upload" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div><div class="header-title">อัปโหลดสินค้า</div></div>
+  </div>
+  <div style="padding-top:12px">
+    <div class="upload-area" onclick="document.getElementById('file-in').click()">
+      <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
+      <div style="font-size:32px;margin-bottom:8px">&#128193;</div>
+      <div style="font-size:15px;color:#007aff;font-weight:600;margin-bottom:4px">แตะเพื่อเลือกไฟล์</div>
+      <div style="font-size:12px;color:#8e8e93">รองรับ .xlsx, .xls, .csv (ไฟล์ POS ได้เลย)</div>
     </div>
-    <div id="db-status-wrap">
-      <div class="status-pill pill-idle" id="db-pill">
-        <div class="dot dot-idle" id="db-dot"></div>
-        <span id="db-status">ยังไม่ได้โหลดข้อมูล</span>
-      </div>
-    </div>
-    <div style="margin-top:12px">
-      <button class="btn btn-blue" onclick="showTab('scan')">ถัดไป: สแกน Barcode &#8594;</button>
+    <div class="prod-preview" id="prod-preview"></div>
+    <div style="padding:0 16px;font-size:12px;color:#8e8e93;line-height:1.7">
+      &#9432; รองรับไฟล์ POS ที่มีคอลัมน์ CF_BARCODE, CF_ITEMNAME, CF_UNITNAME, CF_ITEMPRICELEVEL_PRICE<br>
+      ข้อมูลบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำ
     </div>
   </div>
+  <div class="msg" id="upload-msg"></div>
+</div>
 
-  <!-- TAB 2: Scanner -->
-  <div id="pane-scan" style="display:none">
-    <div class="card">
-      <div class="card-title">&#128247; สแกน Barcode</div>
-      <div id="video-wrap">
-        <video id="video" autoplay playsinline muted></video>
-        <div id="scan-overlay"><div id="scan-line-box"></div></div>
-        <button id="close-cam">&#x2715;</button>
-      </div>
+<!-- STOCK -->
+<div id="screen-stock" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1">
+      <div class="header-title">นับ Stock</div>
+    </div>
+    <div class="autosave-bar" style="margin:0">
+      <div class="pulse" id="pulse-dot"></div>
+      <span id="save-time" style="font-size:11px;color:#8e8e93">auto-save</span>
+    </div>
+  </div>
+  <div style="padding-top:8px">
+    <div class="scan-counter" id="scan-count">0</div>
+    <div class="scan-counter-label">รายการที่สแกน</div>
+    <div style="padding:0 16px 8px">
       <button class="btn btn-blue" id="scan-btn">&#128247; เปิดกล้องสแกน</button>
-
-      <label style="margin-top:4px">Barcode</label>
+    </div>
+    <div class="card">
+      <label>Barcode</label>
       <input type="text" id="bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
-
       <div class="label-row">
         <label style="margin:0">ชื่อสินค้า</label>
         <span class="badge-af" id="af-badge">auto-filled</span>
       </div>
-      <input type="text" id="name-in" placeholder="ดึงชื่อจากไฟล์อัตโนมัติ" style="margin-top:4px">
-
+      <input type="text" id="name-in" placeholder="ดึงจากไฟล์อัตโนมัติ" style="margin-top:4px">
       <div class="row">
         <div><label>จำนวน</label><input type="number" id="qty-in" value="1" min="0"></div>
-        <div><label>หน่วย</label><input type="text" id="unit-in" placeholder="pcs / kg / กล่อง"></div>
+        <div><label>หน่วย</label><input type="text" id="unit-in" placeholder="pcs/กล่อง/ถุง"></div>
       </div>
-      <button class="btn btn-green" id="add-btn">+ เพิ่ม / อัปเดต Stock</button>
+      <button class="btn btn-green" onclick="addStock()">+ เพิ่ม / อัปเดต stock</button>
       <div class="msg" id="scan-msg"></div>
     </div>
-    <button class="btn btn-gray btn-sm" onclick="showTab('list')">ดูรายการ stock &#8594;</button>
+  </div>
+</div>
+
+<!-- PRICE -->
+<div id="screen-price" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div><div class="header-title">เช็คราคาสินค้า</div></div>
+  </div>
+  <div style="padding:12px 16px 8px">
+    <button class="btn btn-blue" id="price-scan-btn">&#128247; เปิดกล้องสแกน</button>
+    <label>Barcode</label>
+    <input type="text" id="price-bc" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric" oninput="checkPrice(this.value)">
   </div>
 
-  <!-- TAB 3: Stock List -->
-  <div id="pane-list" style="display:none">
-    <div class="card">
-      <div class="total-row">
-        <span style="font-size:16px;font-weight:700">&#128203; รายการ Stock</span>
-        <span class="total-count" id="total"></span>
+  <div id="price-result" style="display:none">
+    <div class="price-result">
+      <div class="price-name" id="pr-name"></div>
+      <div class="price-unit" id="pr-unit"></div>
+      <div class="price-card pc-sell">
+        <div><div class="pc-label">ราคาขาย</div><div class="pc-sub">CF_ITEMPRICELEVEL_PRICE</div></div>
+        <div class="pc-val" id="pr-sell"></div>
       </div>
-      <div class="stock-list" id="stock-list"><div class="empty">ยังไม่มีรายการ<br>ไปที่แท็บ "สแกน" เพื่อเพิ่ม</div></div>
-      <div class="actions">
-        <button class="btn btn-green btn-sm" id="save-btn">&#128190; บันทึก .txt</button>
-        <button class="btn btn-red btn-sm" id="clear-btn">&#128465; ล้าง</button>
+      <div class="price-card pc-fml">
+        <div><div class="pc-label">ราคาสูตร</div><div class="pc-sub">CF_FMLPRICE</div></div>
+        <div class="pc-val" id="pr-fml"></div>
       </div>
-      <div class="msg" id="save-msg"></div>
+      <div class="price-card pc-bot">
+        <div><div class="pc-label">ราคาต่ำสุด</div><div class="pc-sub">BOTTOMPRICE</div></div>
+        <div class="pc-val" id="pr-bot"></div>
+      </div>
+      <div class="price-card pc-top">
+        <div><div class="pc-label">ราคาสูงสุด</div><div class="pc-sub">TOPPRICE</div></div>
+        <div class="pc-val" id="pr-top"></div>
+      </div>
+      <div class="price-bc" id="pr-bc"></div>
     </div>
   </div>
+
+  <div id="price-not-found" style="display:none" class="price-not-found">
+    <div style="font-size:40px;margin-bottom:10px">&#10060;</div>
+    <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:6px">ไม่พบสินค้า</div>
+    <div id="pr-nf-bc" style="font-family:monospace;font-size:13px;color:#8e8e93;margin-bottom:6px"></div>
+    <div style="font-size:13px;color:#8e8e93">ตรวจสอบ barcode หรืออัปโหลดไฟล์สินค้าใหม่</div>
+  </div>
+</div>
+
+<!-- LIST -->
+<div id="screen-list" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1"><div class="header-title">รายการ Stock</div></div>
+    <div id="list-total" style="font-size:13px;color:#8e8e93"></div>
+  </div>
+  <div class="card">
+    <div class="stock-list" id="stock-list"><div class="empty">ยังไม่มีรายการ</div></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-green" onclick="saveTxt()">&#128190; บันทึก .txt</button>
+    <button class="btn btn-red" onclick="clearAll()">&#128465; ล้างทั้งหมด</button>
+  </div>
+  <div class="msg" id="list-msg"></div>
+</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 <script>
-const PROD_KEY = 'stockapp_products_v3';
-let products = {};
-let stock = {};
-let codeReader = null;
-let scanning = false;
+const PROD_KEY='sm_prod_v5', STOCK_KEY='sm_stock_v5', TIME_KEY='sm_time_v5';
+let products={}, stock={}, codeReader=null, scanning=false, scanMode='stock';
 
-function showTab(t) {
-  ['db','scan','list'].forEach(id => {
-    document.getElementById('pane-'+id).style.display = id===t ? 'block' : 'none';
-    document.getElementById('tab-'+id).className = 'tab' + (id===t?' active':'');
-  });
+// ===== NAVIGATION =====
+function goScreen(s) {
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.getElementById('screen-'+s).classList.add('active');
+  stopScan();
+  if(s==='stock') setTimeout(()=>document.getElementById('bc-in').focus(),200);
+  if(s==='price') setTimeout(()=>document.getElementById('price-bc').focus(),200);
+  if(s==='list') renderList();
 }
 
-function setDbStatus(state, txt) {
-  const dot = document.getElementById('db-dot');
-  const pill = document.getElementById('db-pill');
-  const st = document.getElementById('db-status');
-  dot.className = 'dot dot-'+state;
-  pill.className = 'status-pill pill-'+(state==='ok'?'ok':state==='err'?'err':'warn');
-  st.textContent = txt;
+// ===== DB STATUS =====
+function setDbStatus(ok, txt) {
+  document.getElementById('db-dot').className='db-dot'+(ok?' ok':'');
+  document.getElementById('db-status').textContent=txt;
 }
 
-function tryLoadSaved() {
-  try {
-    const saved = localStorage.getItem(PROD_KEY);
-    if (saved) {
-      products = JSON.parse(saved);
-      const count = Object.keys(products).length;
-      setDbStatus('ok', count + ' สินค้า (บันทึกแล้ว)');
-      showPreview(count);
-    }
-  } catch(e) {}
-}
-
-function showPreview(count) {
-  const el = document.getElementById('prod-preview');
-  el.style.display = 'block';
-  const samples = Object.values(products).slice(0,3).map(p=>p.name).join(', ');
-  el.innerHTML = '&#10003; โหลด <b>'+count+'</b> สินค้าแล้ว &nbsp;|&nbsp; ตัวอย่าง: '+samples+(count>3?' ...':'');
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-area').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
-}
-
+// ===== FILE UPLOAD =====
 function handleFile(file) {
-  if (!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (ext === 'csv') {
-    const reader = new FileReader();
-    reader.onload = e => parseCSV(e.target.result);
-    reader.readAsText(file, 'UTF-8');
-  } else if (ext === 'xlsx' || ext === 'xls') {
-    const reader = new FileReader();
-    reader.onload = e => parseXLSX(e.target.result);
-    reader.readAsArrayBuffer(file);
-  } else {
-    setDbStatus('err', 'รองรับเฉพาะ .csv, .xlsx, .xls เท่านั้น');
-  }
+  if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){const r=new FileReader();r.onload=e=>parseCSV(e.target.result);r.readAsText(file,'UTF-8');}
+  else if(ext==='xlsx'||ext==='xls'){const r=new FileReader();r.onload=e=>parseXLSX(e.target.result);r.readAsArrayBuffer(file);}
+  else showMsg('upload-msg','รองรับเฉพาะ .csv, .xlsx, .xls',true);
 }
 
-function detectColumns(headers) {
-  const h = headers.map(x => String(x||'').toUpperCase());
-  // ไฟล์ POS แบบใหม่มี CF_BARCODE, ไฟล์เก่ามี CF_ITEMID
-  const hasCFBarcode = h.indexOf('CF_BARCODE') !== -1;
-  const hasCFItemId  = h.indexOf('CF_ITEMID')  !== -1;
-  const isPOS = hasCFBarcode || hasCFItemId;
-  const bcIdx       = hasCFBarcode ? h.indexOf('CF_BARCODE') : hasCFItemId ? h.indexOf('CF_ITEMID') : 0;
-  const nameIdx     = h.indexOf('CF_ITEMNAME') !== -1 ? h.indexOf('CF_ITEMNAME') : 1;
-  const unitIdx     = h.indexOf('CF_UNITNAME') !== -1 ? h.indexOf('CF_UNITNAME') : 2;
-  const multipleIdx = h.indexOf('MULTIPLE')    !== -1 ? h.indexOf('MULTIPLE')    : -1;
-  return { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS };
+function detectCols(headers) {
+  const h=headers.map(x=>String(x||'').toUpperCase());
+  const hasCFB=h.indexOf('CF_BARCODE')!==-1,hasCFI=h.indexOf('CF_ITEMID')!==-1;
+  return{
+    isPOS:hasCFB||hasCFI,
+    bcIdx:hasCFB?h.indexOf('CF_BARCODE'):hasCFI?h.indexOf('CF_ITEMID'):0,
+    nameIdx:h.indexOf('CF_ITEMNAME')!==-1?h.indexOf('CF_ITEMNAME'):1,
+    unitIdx:h.indexOf('CF_UNITNAME')!==-1?h.indexOf('CF_UNITNAME'):2,
+    multiIdx:h.indexOf('MULTIPLE')!==-1?h.indexOf('MULTIPLE'):-1,
+    sellIdx:h.indexOf('CF_ITEMPRICELEVEL_PRICE')!==-1?h.indexOf('CF_ITEMPRICELEVEL_PRICE'):-1,
+    fmlIdx:h.indexOf('CF_FMLPRICE')!==-1?h.indexOf('CF_FMLPRICE'):-1,
+    botIdx:h.indexOf('BOTTOMPRICE')!==-1?h.indexOf('BOTTOMPRICE'):-1,
+    topIdx:h.indexOf('TOPPRICE')!==-1?h.indexOf('TOPPRICE'):-1,
+  };
+}
+
+function buildProds(rows, c) {
+  products={};
+  rows.forEach(r=>{
+    const bc=String(r[c.bcIdx]||'').trim();
+    const name=String(r[c.nameIdx]||'').trim();
+    const unit=String(r[c.unitIdx]||'').trim();
+    const multiple=c.multiIdx>=0?parseInt(r[c.multiIdx])||1:1;
+    const sellPrice=c.sellIdx>=0?parseFloat(r[c.sellIdx])||0:0;
+    const fmlPrice=c.fmlIdx>=0?parseFloat(r[c.fmlIdx])||0:0;
+    const botPrice=c.botIdx>=0?parseFloat(r[c.botIdx])||0:0;
+    const topPrice=c.topIdx>=0?parseFloat(r[c.topIdx])||0:0;
+    if(bc) products[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice};
+  });
+  const nameToBase={};
+  Object.values(products).forEach(p=>{if(p.multiple===1)nameToBase[p.name]=p.unit;});
+  Object.values(products).forEach(p=>{if(nameToBase[p.name])p.baseUnit=nameToBase[p.name];});
+  localStorage.setItem(PROD_KEY,JSON.stringify(products));
 }
 
 function parseCSV(text) {
-  const rows = text.trim().split('\n');
-  const headers = rows[0].split(',').map(c => c.replace(/^"|"$/g,'').trim());
-  const { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS } = detectColumns(headers);
-  products = {};
-  rows.slice(1).forEach(row => {
-    const cols = row.split(',').map(c => c.replace(/^"|"$/g,'').trim());
-    const bc = cols[bcIdx]||'', name = cols[nameIdx]||'', unit = cols[unitIdx]||'';
-    const multiple = multipleIdx >= 0 ? parseInt(cols[multipleIdx])||1 : 1;
-    if (bc) products[bc] = {name, unit, multiple};
-  });
-  saveAndShow(isPOS ? 'ตรวจพบรูปแบบ POS อัตโนมัติ' : '');
+  const rows=text.trim().split('\n');
+  const c=detectCols(rows[0].split(',').map(x=>x.replace(/^"|"$/g,'').trim()));
+  buildProds(rows.slice(1).map(r=>r.split(',').map(x=>x.replace(/^"|"$/g,'').trim())),c);
+  finishLoad(c.isPOS);
 }
 
-function parseXLSX(buffer) {
-  try {
-    const wb = XLSX.read(buffer, {type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(ws, {header:1});
-    const headers = data[0] || [];
-    const { bcIdx, nameIdx, unitIdx, multipleIdx, isPOS } = detectColumns(headers);
-    products = {};
-    data.slice(1).forEach(row => {
-      const bc       = String(row[bcIdx]||'').trim();
-      const name     = String(row[nameIdx]||'').trim();
-      const unit     = String(row[unitIdx]||'').trim();
-      const multiple = multipleIdx >= 0 ? parseInt(row[multipleIdx])||1 : 1;
-      if (bc) products[bc] = {name, unit, multiple};
-    });
-    saveAndShow(isPOS ? 'ตรวจพบรูปแบบ POS อัตโนมัติ' : '');
-  } catch(e) {
-    setDbStatus('err', 'อ่านไฟล์ไม่ได้ ลองบันทึกเป็น .csv แล้วอัปโหลดใหม่');
+function parseXLSX(buf) {
+  try{
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{header:1});
+    const c=detectCols(data[0]||[]);
+    buildProds(data.slice(1),c);finishLoad(c.isPOS);
+  }catch(e){showMsg('upload-msg','อ่านไฟล์ไม่ได้',true);}
+}
+
+function finishLoad(isPOS) {
+  const count=Object.keys(products).length;
+  setDbStatus(true,count+' สินค้า'+(isPOS?' (POS)':''));
+  const el=document.getElementById('prod-preview');
+  el.style.display='block';
+  el.innerHTML='&#10003; โหลด <b>'+count+'</b> สินค้า &nbsp;|&nbsp; '+Object.values(products).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
+  showMsg('upload-msg','&#10003; โหลด '+count+' สินค้าเรียบร้อย!',false);
+}
+
+// ===== CAMERA =====
+document.getElementById('scan-btn').addEventListener('click',()=>{scanMode='stock';startScan();});
+document.getElementById('price-scan-btn').addEventListener('click',()=>{scanMode='price';startScan();});
+document.getElementById('close-cam').addEventListener('click',stopScan);
+
+function startScan() {
+  if(scanning)return;
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(stream=>{
+      stream.getTracks().forEach(t=>t.stop());
+      document.getElementById('video-wrap').style.display='block';
+      codeReader=new ZXing.BrowserMultiFormatReader();
+      scanning=true;
+      codeReader.listVideoInputDevices().then(devices=>{
+        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
+        const id=back?back.deviceId:(devices[0]?.deviceId||null);
+        codeReader.decodeFromVideoDevice(id,'video',result=>{
+          if(result){
+            const bc=result.getText();
+            if(scanMode==='stock'){
+              document.getElementById('bc-in').value=bc;
+              autofill(bc);
+              stopScan();
+              setTimeout(()=>{const q=document.getElementById('qty-in');q.focus();q.select();},300);
+            } else {
+              document.getElementById('price-bc').value=bc;
+              checkPrice(bc);
+              stopScan();
+            }
+          }
+        });
+      });
+    })
+    .catch(()=>alert('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง'));
+}
+
+function stopScan() {
+  scanning=false;
+  if(codeReader){codeReader.reset();codeReader=null;}
+  document.getElementById('video-wrap').style.display='none';
+}
+
+// ===== AUTOFILL =====
+document.getElementById('bc-in').addEventListener('input',function(){autofill(this.value.trim());});
+
+function autofill(bc) {
+  const badge=document.getElementById('af-badge'),p=products[bc];
+  if(p){
+    document.getElementById('name-in').value=p.name;
+    document.getElementById('unit-in').value=p.unit||'';
+    document.getElementById('qty-in').value=1;
+    badge.style.display='inline';
+    badge.textContent=p.multiple>1?'auto-filled · 1 '+p.unit+' = '+p.multiple+' '+p.baseUnit:'auto-filled';
+  } else {
+    badge.style.display='none';
+    document.getElementById('qty-in').value='1';
   }
 }
 
-function saveAndShow(note) {
-  const count = Object.keys(products).length;
-  localStorage.setItem(PROD_KEY, JSON.stringify(products));
-  const extra = note ? ' — '+note : '';
-  setDbStatus('ok', count + ' สินค้า บันทึกแล้ว ✓' + extra);
-  showPreview(count);
-  showMsg('scan-msg', '&#10003; โหลด '+count+' สินค้าเรียบร้อย' + (note ? ' ('+note+')' : ''), false);
-}
+// ===== ADD STOCK =====
+document.getElementById('bc-in').addEventListener('keydown',e=>{if(e.key==='Enter')addStock();});
 
-document.getElementById('bc-in').addEventListener('input', function() {
-  autofillProduct(this.value.trim());
-});
+function addStock() {
+  const bc  = document.getElementById('bc-in').value.trim();
+  const name= document.getElementById('name-in').value.trim()||(products[bc]?.name||bc);
+  const qty = parseFloat(document.getElementById('qty-in').value)||0;
+  const unit= document.getElementById('unit-in').value.trim()||(products[bc]?.unit||'');
+  if (!bc) { showMsg('scan-msg','กรุณาใส่ barcode',true); return; }
 
-function autofillProduct(bc) {
-  const badge = document.getElementById('af-badge');
   const p = products[bc];
-  if (p) {
-    document.getElementById('name-in').value = p.name;
-    document.getElementById('unit-in').value = p.unit || '';
-    const m = p.multiple || 1;
-    document.getElementById('qty-in').value = m;
-    badge.style.display = 'inline';
-    badge.textContent = m > 1 ? `auto-filled · 1 ${p.unit} = ${m} ชิ้นย่อย` : 'auto-filled';
+  const multiple = p?.multiple || 1;
+
+  // หา baseUnit = unit ของสินค้าชื่อเดียวกันที่มี multiple=1
+  let baseUnit = p?.baseUnit || unit;
+  if (multiple > 1) {
+    const baseProduct = Object.values(products).find(
+      x => x.name === name && x.multiple === 1
+    );
+    if (baseProduct) baseUnit = baseProduct.unit;
+  }
+
+  const baseQty = qty * multiple;
+  const key = name; // รวมด้วยชื่อสินค้าเสมอ
+
+  if (!stock[key]) stock[key] = {name, baseUnit, totalBase:0, scans:[]};
+
+  // อัปเดต baseUnit ถ้าเจอหน่วยย่อยใหม่
+  if (multiple === 1) stock[key].baseUnit = unit;
+
+  stock[key].totalBase += baseQty;
+
+  // รวม scan เดิมที่ unit เดียวกัน
+  const ex = stock[key].scans.find(s => s.unit === unit);
+  if (ex) ex.qty += qty;
+  else stock[key].scans.push({unit, qty, multiple, baseQty});
+
+  autoSave();
+  updateCount();
+  ['bc-in','name-in','unit-in'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qty-in').value='1';
+  document.getElementById('af-badge').style.display='none';
+  document.getElementById('bc-in').focus();
+  showMsg('scan-msg','&#10003; บันทึก '+qty+' '+unit+(multiple>1?' = '+baseQty+' '+baseUnit:''),false);
+}
+
+function updateCount() {
+  const total=Object.values(stock).reduce((s,it)=>s+it.scans.reduce((a,sc)=>a+sc.qty,0),0);
+  document.getElementById('scan-count').textContent=total;
+}
+
+// ===== AUTO SAVE =====
+function autoSave() {
+  try{
+    const now=new Date();
+    localStorage.setItem(STOCK_KEY,JSON.stringify(stock));
+    localStorage.setItem(TIME_KEY,now.toISOString());
+    document.getElementById('save-time').textContent=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const dot=document.getElementById('pulse-dot');
+    dot.style.background='#007aff';
+    setTimeout(()=>{dot.style.background='#34c759';},400);
+  }catch(e){}
+}
+
+// ===== PRICE CHECKER =====
+function checkPrice(bc) {
+  bc=(bc||'').trim();
+  document.getElementById('price-result').style.display='none';
+  document.getElementById('price-not-found').style.display='none';
+  if(!bc)return;
+  const p=products[bc];
+  if(p){
+    document.getElementById('price-result').style.display='block';
+    document.getElementById('pr-name').textContent=p.name||'—';
+    document.getElementById('pr-unit').textContent=p.unit||(p.multiple>1?'1 '+p.unit+' = '+p.multiple+' '+p.baseUnit:'');
+    document.getElementById('pr-sell').textContent=p.sellPrice>0?p.sellPrice.toFixed(2)+' ฿':'—';
+    document.getElementById('pr-fml').textContent=p.fmlPrice>0?p.fmlPrice.toFixed(2)+' ฿':'—';
+    document.getElementById('pr-bot').textContent=p.botPrice>0?p.botPrice.toFixed(2)+' ฿':'—';
+    document.getElementById('pr-top').textContent=p.topPrice>0?p.topPrice.toFixed(2)+' ฿':'—';
+    document.getElementById('pr-bc').textContent=bc;
   } else {
-    badge.style.display = 'none';
-    document.getElementById('qty-in').value = '1';
+    document.getElementById('price-not-found').style.display='block';
+    document.getElementById('pr-nf-bc').textContent=bc;
   }
 }
 
-document.getElementById('add-btn').addEventListener('click', () => {
-  const bc   = document.getElementById('bc-in').value.trim();
-  const name = document.getElementById('name-in').value.trim();
-  const qty  = parseFloat(document.getElementById('qty-in').value) || 0;
-  const unit = document.getElementById('unit-in').value.trim();
-  if (!bc) { showMsg('scan-msg','กรุณาสแกนหรือใส่ barcode',true); return; }
-  if (stock[bc]) {
-    stock[bc].qty += qty;
-    if (name) stock[bc].name = name;
-    if (unit) stock[bc].unit = unit;
-  } else {
-    stock[bc] = { name: name||(products[bc]?.name||'—'), qty, unit: unit||(products[bc]?.unit||'') };
-  }
-  document.getElementById('bc-in').value = '';
-  document.getElementById('name-in').value = '';
-  document.getElementById('qty-in').value = '1';
-  document.getElementById('unit-in').value = '';
-  document.getElementById('af-badge').style.display = 'none';
-  showMsg('scan-msg','&#10003; อัปเดต stock แล้ว',false);
-  renderList();
-});
+// ===== RENDER LIST =====
+function formatQty(item) {
+  const total = item.totalBase;
+  const base  = item.baseUnit;
+
+  // เรียง scans จากหน่วยใหญ่ → เล็ก
+  const bigScans = item.scans
+    .filter(s => s.multiple > 1)
+    .sort((a, b) => b.multiple - a.multiple);
+
+  if (bigScans.length === 0) return total + ' ' + base;
+
+  // คำนวณย้อนกลับจากหน่วยใหญ่สุด
+  let remain = total;
+  const parts = [];
+  bigScans.forEach(s => {
+    const cnt = Math.floor(remain / s.multiple);
+    if (cnt > 0) {
+      parts.push(cnt + ' ' + s.unit);
+      remain -= cnt * s.multiple;
+    }
+  });
+  if (remain > 0) parts.push(remain + ' ' + base);
+
+  const breakdown = parts.length > 0 ? ' (' + parts.join(' + ') + ')' : '';
+  return total + ' ' + base + breakdown;
+}
 
 function renderList() {
-  const list = document.getElementById('stock-list');
-  const keys = Object.keys(stock);
-  document.getElementById('total').textContent = keys.length ? keys.length+' รายการ' : '';
-  if (!keys.length) { list.innerHTML='<div class="empty">ยังไม่มีรายการ<br>ไปที่แท็บ "สแกน" เพื่อเพิ่ม</div>'; return; }
-  list.innerHTML = keys.map(k => {
-    const it = stock[k];
-    return `<div class="stock-item">
-      <div>
-        <div class="item-name">${it.name||'—'}</div>
-        <div class="item-bc">${k}</div>
-      </div>
+  const list=document.getElementById('stock-list'),keys=Object.keys(stock);
+  document.getElementById('list-total').textContent=keys.length?keys.length+' รายการ':'';
+  if(!keys.length){list.innerHTML='<div class="empty">ยังไม่มีรายการ<br>ไปนับ stock ก่อน</div>';return;}
+  list.innerHTML=keys.map(k=>{
+    const it=stock[k];
+    const qs=formatQty(it);
+    const main=qs.split('(')[0].trim();
+    const sub=qs.includes('(')?'('+qs.split('(')[1]:'';
+    return`<div class="stock-item">
+      <div><div class="item-name">${it.name}</div></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="qty-pill">${it.qty} ${it.unit||''}</span>
+        <div style="text-align:right">
+          <div class="qty-pill">${main}</div>
+          ${sub?`<div class="qty-sub">${sub}</div>`:''}
+        </div>
         <button class="del-btn" onclick="removeItem('${k}')">&#x2715;</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function removeItem(k) { delete stock[k]; renderList(); }
+function removeItem(k){delete stock[k];autoSave();renderList();updateCount();}
 
-document.getElementById('save-btn').addEventListener('click', () => {
-  const keys = Object.keys(stock);
-  if (!keys.length) { showMsg('save-msg','ไม่มีรายการที่จะบันทึก',true); return; }
-  const now = new Date();
-  const ds = now.toLocaleDateString('th-TH')+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  let txt = '===========================\n  รายงาน STOCK\n  '+ds+'\n===========================\n\n';
-  txt += 'ลำดับ | Barcode          | ชื่อสินค้า              | จำนวน  | หน่วย\n';
-  txt += '------|------------------|-------------------------|--------|--------\n';
-  keys.forEach((k,i) => {
-    const it = stock[k];
-    txt += `${String(i+1).padEnd(5)} | ${k.padEnd(16)} | ${(it.name||'—').padEnd(23)} | ${String(it.qty).padEnd(6)} | ${it.unit||''}\n`;
+// ===== SAVE TXT =====
+function saveTxt() {
+  const keys=Object.keys(stock);
+  if(!keys.length){showMsg('list-msg','ไม่มีรายการ',true);return;}
+  const now=new Date();
+  const ds=now.toLocaleDateString('th-TH')+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  let txt='===========================\n  รายงาน STOCK\n  '+ds+'\n===========================\n\n';
+  txt+='ลำดับ | ชื่อสินค้า                   | หน่วยย่อย      | รายละเอียด\n';
+  txt+='------|------------------------------|----------------|---------------------------\n';
+  keys.forEach((k,i)=>{
+    const it=stock[k];const qs=formatQty(it);
+    const m=qs.split('(')[0].trim();const s=qs.includes('(')?'('+qs.split('(')[1]:'';
+    txt+=`${String(i+1).padEnd(5)} | ${(it.name||'—').padEnd(28)} | ${m.padEnd(14)} | ${s}\n`;
   });
-  txt += '\n---------------------------\nรวม: '+keys.length+' รายการ\n===========================\n';
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download = 'stock_'+now.toISOString().slice(0,10)+'.txt';
+  txt+='\n---------------------------\nรวม: '+keys.length+' รายการ\n===========================\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download='stock_'+now.toISOString().slice(0,10)+'.txt';
   a.click();
-  showMsg('save-msg','&#10003; บันทึกไฟล์แล้ว ดูใน Downloads',false);
-});
-
-document.getElementById('clear-btn').addEventListener('click', () => {
-  if (!Object.keys(stock).length) return;
-  if (confirm('ล้างรายการ stock ทั้งหมด?')) { stock={}; renderList(); }
-});
-
-document.getElementById('scan-btn').addEventListener('click', startScan);
-document.getElementById('close-cam').addEventListener('click', stopScan);
-
-function startScan() {
-  if (scanning) return;
-  if (typeof ZXing === 'undefined') { showMsg('scan-msg','Scanner ไม่พร้อม ลอง refresh',true); return; }
-  document.getElementById('video-wrap').style.display = 'block';
-  document.getElementById('scan-btn').style.display = 'none';
-  codeReader = new ZXing.BrowserMultiFormatReader();
-  scanning = true;
-  codeReader.decodeFromVideoDevice(null, 'video', result => {
-    if (result) {
-      const bc = result.getText();
-      document.getElementById('bc-in').value = bc;
-      autofillProduct(bc);
-      const p = products[bc];
-      if (p) {
-        const m = p.multiple || 1;
-        const note = m > 1 ? ` (1 ${p.unit} = ${m} ชิ้น)` : '';
-        showMsg('scan-msg','&#10003; พบ: '+p.name+note,false);
-      } else {
-        showMsg('scan-msg','Barcode: '+bc+' — ไม่พบในรายการ','warn');
-      }
-      stopScan();
-    }
-  });
+  showMsg('list-msg','&#10003; บันทึกไฟล์แล้ว ดูใน Downloads',false);
 }
 
-function stopScan() {
-  scanning = false;
-  if (codeReader) { codeReader.reset(); codeReader=null; }
-  document.getElementById('video-wrap').style.display = 'none';
-  document.getElementById('scan-btn').style.display = 'flex';
+function clearAll() {
+  if(!Object.keys(stock).length)return;
+  if(confirm('ล้างรายการ stock ทั้งหมด?')){stock={};autoSave();renderList();updateCount();}
 }
 
-function showMsg(id, msg, type) {
-  const el = document.getElementById(id);
-  el.innerHTML = msg;
-  el.className = 'msg'+(type===true?' err':type==='warn'?' warn':'');
-  setTimeout(() => { el.innerHTML=''; el.className='msg'; }, 4000);
+// ===== MSG =====
+function showMsg(id,msg,isErr) {
+  const el=document.getElementById(id);
+  el.innerHTML=msg;el.className='msg'+(isErr?' err':'');
+  setTimeout(()=>{el.innerHTML='';el.className='msg';},4000);
 }
 
+// ===== INIT =====
+function tryLoadSaved() {
+  try{
+    const sp=localStorage.getItem(PROD_KEY);
+    if(sp){products=JSON.parse(sp);const n=Object.keys(products).length;setDbStatus(true,n+' สินค้า (cache)');}
+    const ss=localStorage.getItem(STOCK_KEY);
+    if(ss){stock=JSON.parse(ss);updateCount();}
+  }catch(e){}
+}
+
+if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('portrait').catch(()=>{});}
 tryLoadSaved();
-renderList();
-
-function installPWA() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(c => {
-      deferredPrompt = null;
-      document.getElementById('install-btn').style.display = 'none';
-    });
-  }
-}
-
-// PWA Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registered'))
-      .catch(e => console.log('SW error:', e));
-  });
-}
-
-// PWA Install prompt (Android)
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('install-btn').style.display = 'flex';
-});
-window.addEventListener('appinstalled', () => {
-  document.getElementById('install-btn').style.display = 'none';
-});
 </script>
 </body>
 </html>
