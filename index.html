@@ -187,27 +187,21 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div id="db-bar" class="db-bar" style="flex-direction:column;align-items:stretch;gap:8px">
       <!-- ข้อมูลสินค้า -->
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="db-dot" id="db-dot"></div>
-          <div>
-            <div class="db-status-text" id="db-status">ยังไม่ได้โหลดข้อมูลสินค้า</div>
-            <div id="db-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
-          </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="db-dot" id="db-dot"></div>
+        <div>
+          <div class="db-status-text" id="db-status">ยังไม่ได้โหลดข้อมูลสินค้า</div>
+          <div id="db-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
-        <span class="db-update" onclick="goScreen('upload')">อัปโหลด</span>
       </div>
       <!-- โปรโมชั่น -->
       <div style="height:0.5px;background:#e5e5ea"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="db-dot" id="promo-dot"></div>
-          <div>
-            <div class="db-status-text" id="promo-status">ยังไม่ได้โหลดโปรโมชั่น</div>
-            <div id="promo-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
-          </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="db-dot" id="promo-dot"></div>
+        <div>
+          <div class="db-status-text" id="promo-status">ยังไม่ได้โหลดโปรโมชั่น</div>
+          <div id="promo-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
-        <span class="db-update" onclick="goScreen('upload')">อัปโหลด</span>
       </div>
     </div>
 
@@ -278,39 +272,45 @@ input:focus{border-color:#007aff;background:#fff}
   <div style="padding-top:12px">
 
     <!-- ส่วนที่ 1: ข้อมูลสินค้า -->
-    <div style="padding:0 16px 6px;font-size:13px;font-weight:600;color:var(--text-primary)">
-      📦 ข้อมูลสินค้า
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="db-dot" id="upload-prod-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">📦 ข้อมูลสินค้า</div>
+          <div id="upload-prod-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="upload-prod-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('file-in').click()">
+        <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
+        <div style="font-size:22px;margin-bottom:4px">&#128193;</div>
+        <div style="font-size:14px;color:#007aff;font-weight:600">แตะเพื่ออัปโหลดไฟล์สินค้า</div>
+        <div style="font-size:12px;color:#8e8e93;margin-top:2px">.xlsx / .xls / .csv จาก POS</div>
+      </div>
+      <div class="prod-preview" id="prod-preview"></div>
     </div>
-    <div class="upload-area" onclick="document.getElementById('file-in').click()">
-      <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
-      <div style="font-size:26px;margin-bottom:6px">&#128193;</div>
-      <div style="font-size:14px;color:#007aff;font-weight:600;margin-bottom:3px">แตะเพื่อเลือกไฟล์สินค้า</div>
-      <div style="font-size:12px;color:#8e8e93">.xlsx / .xls / .csv จาก POS</div>
-    </div>
-    <div class="prod-preview" id="prod-preview"></div>
-    <div id="prod-date-badge" style="display:none;margin:0 16px 10px;padding:7px 12px;background:#f0fdf4;border-radius:8px;border:0.5px solid #bbf7d0;font-size:12px;color:#15803d">
-      &#128197; อัพโหลดเมื่อ: <span id="prod-date-txt"></span>
-    </div>
-
-    <div style="height:0.5px;background:#e5e5ea;margin:10px 16px"></div>
 
     <!-- ส่วนที่ 2: โปรโมชั่น -->
-    <div style="padding:0 16px 6px;font-size:13px;font-weight:600;color:var(--text-primary)">
-      🏷️ โปรโมชั่น
-    </div>
-    <div class="upload-area" onclick="document.getElementById('promo-in').click()">
-      <input type="file" id="promo-in" accept=".xlsx,.xls,.csv" onchange="handlePromoFile(this.files[0])">
-      <div style="font-size:26px;margin-bottom:6px">&#127991;</div>
-      <div style="font-size:14px;color:#e65100;font-weight:600;margin-bottom:3px">แตะเพื่อเลือกไฟล์โปรโมชั่น</div>
-      <div style="font-size:12px;color:#8e8e93">.xlsx จาก ProMaxx (promotion หน้าร้าน)</div>
-    </div>
-    <div id="promo-preview" style="display:none;background:#fff3e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#e65100;margin:0 16px 6px;border:0.5px solid #ffcc80"></div>
-    <div id="promo-date-badge" style="display:none;margin:0 16px 10px;padding:7px 12px;background:#fff3e0;border-radius:8px;border:0.5px solid #ffcc80;font-size:12px;color:#e65100">
-      &#128197; อัพโหลดเมื่อ: <span id="promo-date-txt"></span>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="db-dot" id="upload-promo-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">🏷️ โปรโมชั่น</div>
+          <div id="upload-promo-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ใช้ข้อมูลเริ่มต้น (15 โปรโมชั่น)</div>
+          <div id="upload-promo-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('promo-in').click()" style="border-color:#e65100">
+        <input type="file" id="promo-in" accept=".xlsx,.xls,.csv" onchange="handlePromoFile(this.files[0])">
+        <div style="font-size:22px;margin-bottom:4px">&#127991;</div>
+        <div style="font-size:14px;color:#e65100;font-weight:600">แตะเพื่ออัปโหลดไฟล์โปรโมชั่น</div>
+        <div style="font-size:12px;color:#8e8e93;margin-top:2px">.xlsx จาก ProMaxx</div>
+      </div>
+      <div id="promo-preview" style="display:none;background:#fff3e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#e65100;margin-top:8px;border:0.5px solid #ffcc80"></div>
     </div>
 
-    <div style="padding:0 16px;font-size:12px;color:#8e8e93;line-height:1.7;margin-top:4px">
-      &#9432; ข้อมูลบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำ จนกว่าจะมีข้อมูลใหม่
+    <div style="padding:0 16px;font-size:12px;color:#8e8e93;line-height:1.7">
+      &#9432; ข้อมูลบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำจนกว่าจะมีข้อมูลใหม่
     </div>
   </div>
   <div class="msg" id="upload-msg"></div>
@@ -480,7 +480,7 @@ input:focus{border-color:#007aff;background:#fff}
   </div>
   <div style="padding:8px 16px">
     <button class="btn" id="sales-scan-btn" style="background:#15803d;color:#fff;margin-bottom:8px">&#128247; สแกน barcode</button>
-    <input type="text" id="sales-bc-in" placeholder="หรือพิมพ์ barcode..." inputmode="numeric" style="margin-bottom:8px" oninput="salesAutofill(this.value)">
+    <input type="text" id="sales-bc-in" placeholder="หรือพิมพ์ barcode..." inputmode="numeric" style="margin-bottom:8px">
   </div>
 
   <!-- รายการในตะกร้า -->
@@ -717,6 +717,16 @@ let promotions = {
 function fmtUploadDate(d) {
   return d.toLocaleDateString('th-TH')+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
+
+function fmtFileName(d) {
+  // ชื่อไฟล์รูปแบบ DD-MM-BBBB_HHMM เช่น 19-07-2569_1530
+  const day = String(d.getDate()).padStart(2,'0');
+  const month = String(d.getMonth()+1).padStart(2,'0');
+  const year = d.getFullYear()+543; // พ.ศ.
+  const hour = String(d.getHours()).padStart(2,'0');
+  const min = String(d.getMinutes()).padStart(2,'0');
+  return `${day}-${month}-${year}_${hour}${min}`;
+}
 function setDbStatus(ok, txt) {
   document.getElementById('db-dot').className='db-dot'+(ok?' ok':'');
   document.getElementById('db-status').textContent=txt;
@@ -808,16 +818,38 @@ function finishLoad(isPOS) {
   const now=new Date();
   const dateStr=fmtUploadDate(now);
   localStorage.setItem(PROD_DATE_KEY, now.toISOString());
+
+  // อัพเดทหน้าหลัก
   setDbStatus(true, count+' สินค้า'+(isPOS?' (POS)':''));
   setDbDate(dateStr);
-  // แสดง badge วันที่
-  const badge=document.getElementById('prod-date-badge');
-  const txt=document.getElementById('prod-date-txt');
-  if(badge&&txt){badge.style.display='block';txt.textContent=dateStr;}
+
+  // อัพเดทหน้า upload
+  updateUploadProdStatus(true, count+' สินค้า'+(isPOS?' (POS)':''), dateStr);
+
   const el=document.getElementById('prod-preview');
-  el.style.display='block';
-  el.innerHTML='&#10003; โหลด <b>'+count+'</b> สินค้า &nbsp;|&nbsp; '+Object.values(products).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
-  showMsg('upload-msg','&#10003; โหลด '+count+' สินค้าเรียบร้อย! ('+dateStr+')',false);
+  if(el){
+    el.style.display='block';
+    el.innerHTML='&#10003; โหลด <b>'+count+'</b> สินค้า &nbsp;|&nbsp; '+Object.values(products).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
+  }
+  showMsg('upload-msg','&#10003; โหลด '+count+' สินค้าเรียบร้อย!',false);
+}
+
+function updateUploadProdStatus(ok, txt, dateStr) {
+  const dot=document.getElementById('upload-prod-dot');
+  const st=document.getElementById('upload-prod-status');
+  const dt=document.getElementById('upload-prod-date');
+  if(dot) dot.className='db-dot'+(ok?' ok':'');
+  if(st)  st.textContent=txt;
+  if(dt)  dt.textContent=dateStr?'อัพโหลดเมื่อ: '+dateStr:'';
+}
+
+function updateUploadPromoStatus(ok, txt, dateStr) {
+  const dot=document.getElementById('upload-promo-dot');
+  const st=document.getElementById('upload-promo-status');
+  const dt=document.getElementById('upload-promo-date');
+  if(dot) dot.className='db-dot'+(ok?' ok':'');
+  if(st)  st.textContent=txt;
+  if(dt)  dt.textContent=dateStr?'อัพโหลดเมื่อ: '+dateStr:'';
 }
 
 // ===== PROMO FILE =====
@@ -885,16 +917,14 @@ function parsePromoXLSX(buf) {
     localStorage.setItem(PROMO_DATE_KEY, now.toISOString());
     setPromoStatus(true, count+' โปรโมชั่น (POS)');
     setPromoDate(dateStr);
-    const badge=document.getElementById('promo-date-badge');
-    const txt=document.getElementById('promo-date-txt');
-    if(badge&&txt){badge.style.display='block';txt.textContent=dateStr;}
+    updateUploadPromoStatus(true, count+' โปรโมชั่น (POS)', dateStr);
     const el=document.getElementById('promo-preview');
     if(el){
       el.style.display='block';
       el.innerHTML='&#10003; โหลด <b>'+count+'</b> โปรโมชั่น &nbsp;|&nbsp; '+
         Object.values(promotions).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
     }
-    showMsg('upload-msg','&#10003; โหลด '+count+' โปรโมชั่นเรียบร้อย! ('+dateStr+')',false);
+    showMsg('upload-msg','&#10003; โหลด '+count+' โปรโมชั่นเรียบร้อย!',false);
   } catch(e) {
     showMsg('upload-msg','❌ อ่านไฟล์โปรโมชั่นไม่ได้: '+e.message,true);
   }
@@ -1048,15 +1078,52 @@ function stopSalesScan() {
 document.getElementById('sales-bc-in').addEventListener('keydown', e=>{
   if(e.key==='Enter'){
     const bc=document.getElementById('sales-bc-in').value.trim();
-    if(bc && products[bc]){ addToCart(bc); document.getElementById('sales-bc-in').value=''; }
-    else if(bc) showMsg('sales-msg','❌ ไม่พบสินค้านี้',true);
+    if(!bc) return;
+    if(products[bc]){
+      addToCart(bc);
+      document.getElementById('sales-bc-in').value='';
+      showMsg('sales-msg','✓ เพิ่ม '+products[bc].name,false);
+    } else {
+      showMsg('sales-msg','❌ ไม่พบ barcode: '+bc+' ในฐานข้อมูล',true);
+    }
   }
 });
 
-function salesAutofill(bc) {
-  bc=bc.trim();
-  if(products[bc] && bc.length>=8){ addToCart(bc); document.getElementById('sales-bc-in').value=''; }
-}
+// salesAutofill — สำหรับ scanner ที่ส่งค่าทีเดียว (ไม่ใช่การพิมพ์ทีละตัว)
+// ตรวจจาก timing: ถ้าพิมพ์เร็วมาก (< 100ms/ตัว) = scanner → trigger ทันที
+// ถ้าพิมพ์ช้า = มนุษย์พิมพ์ → รอ Enter
+let lastKeyTime = 0;
+let keyCount = 0;
+let scannerTimer = null;
+
+document.getElementById('sales-bc-in').addEventListener('keyup', e=>{
+  if(e.key==='Enter') return;
+  const now = Date.now();
+  const gap = now - lastKeyTime;
+  lastKeyTime = now;
+
+  if(gap < 80) {
+    // พิมพ์เร็ว = scanner
+    keyCount++;
+    clearTimeout(scannerTimer);
+    scannerTimer = setTimeout(()=>{
+      const bc = document.getElementById('sales-bc-in').value.trim();
+      if(bc && products[bc]){
+        addToCart(bc);
+        document.getElementById('sales-bc-in').value='';
+        showMsg('sales-msg','✓ เพิ่ม '+products[bc].name,false);
+      } else if(bc) {
+        showMsg('sales-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล',true);
+        setTimeout(()=>{ document.getElementById('sales-bc-in').value=''; },1000);
+      }
+      keyCount = 0;
+    }, 100); // รอ 100ms หลังตัวสุดท้าย
+  } else {
+    // พิมพ์ช้า = มนุษย์ → ไม่ทำอะไร รอ Enter
+    clearTimeout(scannerTimer);
+    keyCount = 0;
+  }
+});
 
 function addToCart(bc) {
   const p=products[bc];
@@ -1371,7 +1438,7 @@ function exportSalesExcel() {
   const ws=XLSX.utils.aoa_to_sheet(rows);
   ws['!cols']=[{wch:12},{wch:8},{wch:16},{wch:36},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:12}];
   XLSX.utils.book_append_sheet(wb,ws,'ประวัติขาย');
-  XLSX.writeFile(wb,'sales_'+now.toISOString().slice(0,10)+'.xlsx');
+  XLSX.writeFile(wb,'ยอดขาย_'+fmtFileName(now)+'.xlsx');
   showMsg('saleslog-msg','✓ ส่งออก Excel แล้ว',false);
 }
 
@@ -1392,7 +1459,7 @@ function exportSalesTxt() {
   txt+=`\nยอดรวมทั้งหมด: ฿${totalAmt.toFixed(2)} | ${salesLog.length} บิล\n`;
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download='sales_'+now.toISOString().slice(0,10)+'.txt';
+  a.download='ยอดขาย_'+fmtFileName(now)+'.txt';
   a.click();
   showMsg('saleslog-msg','✓ ส่งออก .txt แล้ว',false);
 }
@@ -1624,7 +1691,7 @@ function saveRecvTxt(){
   });
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download='receive_'+now.toISOString().slice(0,10)+'_'+now.getHours()+''+now.getMinutes()+'.txt';
+  a.download='รับสินค้า_'+fmtFileName(now)+'.txt';
   a.click();
   showMsg('recv-save-msg','✓ ส่งออกไฟล์แล้ว นำเข้า ProMaxx ได้เลย',false);
 }
@@ -2027,7 +2094,7 @@ function saveTxt() {
 
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([txt], {type:'text/plain;charset=utf-8'}));
-  a.download = 'stock_' + now.toISOString().slice(0,10) + '.txt';
+  a.download = 'นับสต๊อค_'+fmtFileName(now)+'.txt';
   a.click();
   showMsg('list-msg','&#10003; บันทึกไฟล์แล้ว ดูใน Downloads', false);
 }
@@ -2086,7 +2153,7 @@ function saveExcel() {
   });
 
   XLSX.utils.book_append_sheet(wb, ws, 'Stock');
-  XLSX.writeFile(wb, 'stock_' + now.toISOString().slice(0,10) + '.xlsx');
+  XLSX.writeFile(wb, 'นับสต๊อค_'+fmtFileName(now)+'.xlsx');
   showMsg('list-msg','&#10003; บันทึก Excel แล้ว ดูใน Downloads', false);
 }
 
@@ -2111,36 +2178,30 @@ function tryLoadSaved() {
     if(sp){
       products=JSON.parse(sp);
       const n=Object.keys(products).length;
+      const ds=prodDate?fmtUploadDate(new Date(prodDate)):'';
       setDbStatus(true, n+' สินค้า (cache)');
-      if(prodDate){
-        const ds=fmtUploadDate(new Date(prodDate));
-        setDbDate(ds);
-        const badge=document.getElementById('prod-date-badge');
-        const txt=document.getElementById('prod-date-txt');
-        if(badge&&txt){badge.style.display='block';txt.textContent=ds;}
-      }
+      setDbDate(ds);
+      updateUploadProdStatus(true, n+' สินค้า (cache)', ds);
     }
-    // โปรโมชั่น — ถ้ามีใน localStorage ให้ override ข้อมูล default
+    // โปรโมชั่น
     const pp=localStorage.getItem(PROMO_KEY);
     const promoDate=localStorage.getItem(PROMO_DATE_KEY);
     if(pp){
       try {
-        const saved = JSON.parse(pp);
-        if(Object.keys(saved).length > 0) promotions = saved;
-      } catch(e){}
+        const saved=JSON.parse(pp);
+        if(Object.keys(saved).length>0) promotions=saved;
+      }catch(e){}
     }
-    // แสดงสถานะโปรโมชั่น (default หรือจาก cache)
     const n=Object.keys(promotions).length;
     if(promoDate){
       const ds=fmtUploadDate(new Date(promoDate));
-      setPromoStatus(true, n+' โปรโมชั่น (cache)');
+      setPromoStatus(true, n+' โปรโมชั่น (POS)');
       setPromoDate(ds);
-      const badge=document.getElementById('promo-date-badge');
-      const txt=document.getElementById('promo-date-txt');
-      if(badge&&txt){badge.style.display='block';txt.textContent=ds;}
+      updateUploadPromoStatus(true, n+' โปรโมชั่น (POS)', ds);
     } else {
-      // ใช้ข้อมูล default ที่ฝังในโค้ด
+      // ใช้ default
       setPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)');
+      updateUploadPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)', '');
     }
     // stock
     const ss=localStorage.getItem(STOCK_KEY);
