@@ -39,6 +39,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mode-sales .mode-icon{background:#dcfce7}
 .mode-receive{background:#fff3e0;border-color:#ffcc80;color:#e65100}
 .mode-receive .mode-icon{background:#ffe0b2}
+.mode-shelf{background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e}
+.mode-shelf .mode-icon{background:#e0f2fe}
 .mode-analyze{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .mode-analyze .mode-icon{background:#fee2e2}
 .mode-saleslog{background:#faf5ff;border-color:#d8b4fe;color:#6b21a8}
@@ -149,6 +151,8 @@ input:focus{border-color:#007aff;background:#fff}
   .mode-sales .mode-icon{background:#166534}
   .mode-receive{background:#3d1f00;border-color:#e65100;color:#ffb74d}
   .mode-receive .mode-icon{background:#bf360c}
+  .mode-shelf{background:#082f49;border-color:#0369a1;color:#7dd3fc}
+  .mode-shelf .mode-icon{background:#0c4a6e}
   .mode-analyze{background:#450a0a;border-color:#991b1b;color:#fca5a5}
   .mode-analyze .mode-icon{background:#7f1d1d}
   .mode-saleslog{background:#3b0764;border-color:#7e22ce;color:#d8b4fe}
@@ -268,6 +272,14 @@ input:focus{border-color:#007aff;background:#fff}
       <div>
         <div class="mode-title">วิเคราะห์สินค้าค้าง</div>
         <div class="mode-desc">หาสินค้าขายไม่ได้ / ขายช้า</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-shelf" onclick="goScreen('shelf')">
+      <div class="mode-icon">&#128085;</div>
+      <div>
+        <div class="mode-title">สแกนหน้าชั้น</div>
+        <div class="mode-desc">ยิงสินค้าบนชั้น → เห็นสถานะทันที</div>
       </div>
     </div>
 
@@ -642,6 +654,63 @@ input:focus{border-color:#007aff;background:#fff}
       <div class="msg" id="recv-save-msg"></div>
     </div>
   </div>
+</div>
+
+<!-- SHELF SCAN -->
+<div id="screen-shelf" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1"><div class="header-title">สแกนหน้าชั้น</div></div>
+    <span id="shelf-count-hd" style="font-size:13px;color:#8e8e93">0 รายการ</span>
+  </div>
+  <div style="padding:8px 16px">
+    <button class="btn" id="shelf-scan-btn" style="background:#0369a1;color:#fff;margin-bottom:8px">
+      &#128247; เปิดกล้องสแกน (ต่อเนื่อง)
+    </button>
+    <input type="text" id="shelf-bc-in" placeholder="หรือพิมพ์ barcode..." inputmode="numeric" style="margin-bottom:6px">
+  </div>
+
+  <!-- ถ้าไม่มีไฟล์ยอดขาย -->
+  <div id="shelf-no-sales" style="display:none" class="card">
+    <div style="text-align:center;padding:12px 0;font-size:14px;color:#9a3412">
+      &#9888;&#65039; ยังไม่มีข้อมูลยอดขาย<br>
+      <span style="font-size:12px;color:#8e8e93">กรุณาอัพโหลดไฟล์ยอดขายที่เมนู "วิเคราะห์สินค้าค้าง" ก่อน</span>
+    </div>
+  </div>
+
+  <!-- รายการที่สแกน -->
+  <div class="card" style="margin-top:0;padding-top:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:600">รายการสินค้าบนชั้น</span>
+      <button onclick="clearShelf()" style="font-size:12px;color:#ff3b30;background:none;border:none;cursor:pointer">ล้าง</button>
+    </div>
+
+    <!-- filter tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button id="shelf-tab-all" onclick="shelfFilter('all')"
+        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #0369a1;background:#0369a1;color:#fff">
+        ทั้งหมด <span id="shelf-n-all">0</span>
+      </button>
+      <button id="shelf-tab-zero" onclick="shelfFilter('zero')"
+        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e5ea;background:#fff;color:#8e8e93">
+        ❌ ขายไม่ได้ <span id="shelf-n-zero">0</span>
+      </button>
+      <button id="shelf-tab-slow" onclick="shelfFilter('slow')"
+        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e5ea;background:#fff;color:#8e8e93">
+        ⚠️ ขายช้า <span id="shelf-n-slow">0</span>
+      </button>
+    </div>
+
+    <div id="shelf-list" style="max-height:380px;overflow-y:auto">
+      <div class="empty">ยังไม่มีรายการ — เริ่มสแกนได้เลย</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:0 16px 8px">
+    <button class="btn btn-green" style="flex:1" onclick="exportShelfExcel()">&#128202; Excel</button>
+    <button class="btn btn-blue" style="flex:1" onclick="exportShelfTxt()">&#128190; .txt</button>
+  </div>
+  <div class="msg" id="shelf-msg"></div>
 </div>
 
 <!-- ANALYZE -->
@@ -1354,14 +1423,22 @@ function goScreen(s) {
   if(s==='receipt'){ saveSaleToLog(); buildReceipt(); }
   if(s==='saleslog') renderSalesLog();
   if(s==='analyze')  initAnalyzeScreen();
+  if(s==='shelf')   { initShelfScreen(); setTimeout(()=>document.getElementById('shelf-bc-in').focus(),200); }
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.getElementById('screen-'+s).classList.add('active');
-  stopScan(); stopPriceScan(); stopRecvScan(); stopSalesScan();
+  stopScan(); stopPriceScan(); stopRecvScan(); stopSalesScan(); stopShelfScan();
   if(s==='stock')   setTimeout(()=>document.getElementById('bc-in').focus(),200);
   if(s==='price')   setTimeout(()=>document.getElementById('price-bc').focus(),200);
   if(s==='receive') setTimeout(()=>document.getElementById('recv-bc-in').focus(),200);
   if(s==='sales')   setTimeout(()=>document.getElementById('sales-bc-in').focus(),200);
   if(s==='list')    renderList();
+}
+
+function initShelfScreen() {
+  const hasData = Object.keys(salesFileData).length > 0;
+  document.getElementById('shelf-no-sales').style.display = hasData ? 'none' : 'block';
+  updateShelfCounts();
+  renderShelfList();
 }
 
 function buildReceipt() {
@@ -1418,6 +1495,208 @@ function newSale() {
   cart=[]; appliedPromos=[];
   renderCart(); calcPromo();
   goScreen('sales');
+}
+
+// ===== SHELF SCAN =====
+let shelfItems = []; // [{bc, name, unit, soldQty, soldAmt, group, status, time}]
+let shelfFilter_current = 'all';
+let shelfCamReader = null, shelfScanning = false;
+const SHELF_THRESHOLD_DEFAULT = 5;
+
+document.getElementById('shelf-scan-btn').addEventListener('click', startShelfScan);
+
+function startShelfScan() {
+  if(shelfScanning){ stopShelfScan(); return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(stream=>{
+      stream.getTracks().forEach(t=>t.stop());
+      document.getElementById('video-wrap').style.display='block';
+      document.getElementById('shelf-scan-btn').textContent='⏹ ปิดกล้อง';
+      shelfCamReader = new ZXing.BrowserMultiFormatReader();
+      shelfScanning = true;
+      shelfCamReader.listVideoInputDevices().then(devices=>{
+        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
+        const id=back?back.deviceId:(devices[0]?.deviceId||null);
+        let lastBC='', lastTime=0;
+        shelfCamReader.decodeFromVideoDevice(id,'video',result=>{
+          if(result){
+            const bc=result.getText();
+            const now=Date.now();
+            if(bc===lastBC && now-lastTime<2000) return; // ป้องกันสแกนซ้ำ
+            lastBC=bc; lastTime=now;
+            addShelfItem(bc);
+          }
+        });
+      });
+    }).catch(()=>alert('ไม่สามารถเปิดกล้องได้'));
+}
+
+function stopShelfScan() {
+  shelfScanning=false;
+  if(shelfCamReader){shelfCamReader.reset();shelfCamReader=null;}
+  document.getElementById('video-wrap').style.display='none';
+  document.getElementById('shelf-scan-btn').textContent='📷 เปิดกล้องสแกน (ต่อเนื่อง)';
+}
+
+// พิมพ์ barcode แล้วกด Enter
+document.getElementById('shelf-bc-in').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const bc=document.getElementById('shelf-bc-in').value.trim();
+    if(bc){ addShelfItem(bc); document.getElementById('shelf-bc-in').value=''; }
+  }
+});
+
+// scanner ยิงเร็ว
+let shelfBcLastKey=0;
+let shelfBcTimer=null;
+document.getElementById('shelf-bc-in').addEventListener('keyup', e=>{
+  if(e.key==='Enter') return;
+  const now=Date.now();
+  const gap=now-shelfBcLastKey;
+  shelfBcLastKey=now;
+  if(gap<80){
+    clearTimeout(shelfBcTimer);
+    shelfBcTimer=setTimeout(()=>{
+      const bc=document.getElementById('shelf-bc-in').value.trim();
+      if(bc){ addShelfItem(bc); document.getElementById('shelf-bc-in').value=''; }
+    },100);
+  }
+});
+
+function addShelfItem(bc) {
+  const p = products[bc];
+  if(!p){ showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc,true); return; }
+
+  // ตรวจว่ายิงซ้ำไหม
+  const existing = shelfItems.find(it=>it.bc===bc);
+  if(existing){
+    existing.count = (existing.count||1) + 1;
+    showMsg('shelf-msg','&#128257; '+p.name+' (ยิงแล้ว '+existing.count+' ครั้ง)',false);
+    renderShelfList();
+    return;
+  }
+
+  const threshold = parseInt(document.getElementById('min-qty-threshold')?.value)||SHELF_THRESHOLD_DEFAULT;
+  const s = salesFileData[bc];
+  const soldQty = s ? s.qty : 0;
+  const soldAmt = s ? s.amount : 0;
+  const group   = s ? s.group : '';
+  const status  = !Object.keys(salesFileData).length ? 'unknown'
+                : soldQty===0 ? 'zero'
+                : soldQty < threshold ? 'slow' : 'ok';
+
+  shelfItems.unshift({bc, name:p.name, unit:p.unit||'', soldQty, soldAmt, group, status, count:1});
+
+  // เสียงแจ้งเตือนถ้าขายไม่ได้/ช้า
+  if(status==='zero') showMsg('shelf-msg','❌ '+p.name+' — ขายได้ 0 ชิ้น!',true);
+  else if(status==='slow') showMsg('shelf-msg','⚠️ '+p.name+' — ขายช้า ('+soldQty+' ชิ้น)',false);
+  else if(status==='unknown') showMsg('shelf-msg','&#128230; '+p.name+' — ไม่มีข้อมูลยอดขาย',false);
+  else showMsg('shelf-msg','✅ '+p.name+' — ขายได้ '+soldQty+' ชิ้น',false);
+
+  updateShelfCounts();
+  renderShelfList();
+}
+
+function updateShelfCounts() {
+  const all  = shelfItems.length;
+  const zero = shelfItems.filter(it=>it.status==='zero').length;
+  const slow = shelfItems.filter(it=>it.status==='slow').length;
+  document.getElementById('shelf-n-all').textContent  = all;
+  document.getElementById('shelf-n-zero').textContent = zero;
+  document.getElementById('shelf-n-slow').textContent = slow;
+  document.getElementById('shelf-count-hd').textContent = all+' รายการ';
+}
+
+function shelfFilter(type) {
+  shelfFilter_current = type;
+  ['all','zero','slow'].forEach(t=>{
+    const btn = document.getElementById('shelf-tab-'+t);
+    if(t===type){
+      btn.style.background='#0369a1'; btn.style.color='#fff'; btn.style.borderColor='#0369a1';
+    } else {
+      btn.style.background='#fff'; btn.style.color='#8e8e93'; btn.style.borderColor='#e5e5ea';
+    }
+  });
+  renderShelfList();
+}
+
+function renderShelfList() {
+  const list = document.getElementById('shelf-list');
+  const items = shelfFilter_current==='all' ? shelfItems
+              : shelfItems.filter(it=>it.status===shelfFilter_current);
+  if(!items.length){ list.innerHTML='<div class="empty">ไม่มีรายการ</div>'; return; }
+
+  list.innerHTML = items.map(it=>{
+    const [bg, color, badge] =
+      it.status==='zero'    ? ['#fef2f2','#991b1b','❌ ขายได้ 0 ชิ้น'] :
+      it.status==='slow'    ? ['#fffbeb','#92400e','⚠️ ขายช้า '+it.soldQty+' ชิ้น'] :
+      it.status==='unknown' ? ['#f0f9ff','#0c4a6e','❓ ไม่มีข้อมูล'] :
+                              ['#f0fdf4','#166534','✅ '+it.soldQty+' ชิ้น'];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid #f0f0f0">
+      <div style="flex:1;min-width:0">
+        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
+        <div class="item-bc">${it.bc}${it.group?' | '+it.group:''}</div>
+      </div>
+      <div style="flex-shrink:0;margin-left:8px;text-align:right">
+        <div style="background:${bg};color:${color};border-radius:7px;padding:3px 9px;font-size:12px;font-weight:600">${badge}</div>
+        ${it.count>1?`<div style="font-size:10px;color:#c7c7cc;margin-top:2px">สแกน ${it.count} ครั้ง</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearShelf() {
+  if(!shelfItems.length) return;
+  if(confirm('ล้างรายการสแกนทั้งหมด?')){
+    shelfItems=[]; shelfFilter_current='all';
+    updateShelfCounts(); renderShelfList();
+    shelfFilter('all');
+  }
+}
+
+function exportShelfExcel() {
+  if(!shelfItems.length){showMsg('shelf-msg','ไม่มีรายการ',true);return;}
+  const now=new Date();
+  const rows=[
+    ['รายงานสแกนหน้าชั้น — '+fmtUploadDate(now)],
+    [],
+    ['Barcode','ชื่อสินค้า','หน่วย','จำนวนขาย','ยอดขาย (฿)','หมวดหมู่','สถานะ']
+  ];
+  shelfItems.forEach(it=>{
+    const st = it.status==='zero'?'ขายได้ 0 ชิ้น'
+             : it.status==='slow'?`ขายช้า ${it.soldQty} ชิ้น`
+             : it.status==='unknown'?'ไม่มีข้อมูลยอดขาย'
+             : `ขายได้ ${it.soldQty} ชิ้น`;
+    rows.push([it.bc, it.name, it.unit, it.soldQty, parseFloat(it.soldAmt.toFixed(2)), it.group, st]);
+  });
+  rows.push([]); rows.push(['รวม',shelfItems.length,'รายการ']);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:16},{wch:40},{wch:8},{wch:14},{wch:14},{wch:20},{wch:22}];
+  XLSX.utils.book_append_sheet(wb,ws,'สแกนหน้าชั้น');
+  XLSX.writeFile(wb,'สแกนหน้าชั้น_'+fmtFileName(now)+'.xlsx');
+  showMsg('shelf-msg','✓ ส่งออก Excel แล้ว',false);
+}
+
+function exportShelfTxt() {
+  if(!shelfItems.length){showMsg('shelf-msg','ไม่มีรายการ',true);return;}
+  const now=new Date();
+  let txt=`รายงานสแกนหน้าชั้น\n${fmtUploadDate(now)}\n${'='.repeat(40)}\n\n`;
+  shelfItems.forEach((it,i)=>{
+    const st=it.status==='zero'?'❌ ขายได้ 0 ชิ้น'
+            :it.status==='slow'?`⚠️ ขายช้า ${it.soldQty} ชิ้น`
+            :it.status==='unknown'?'❓ ไม่มีข้อมูล'
+            :`✅ ขายได้ ${it.soldQty} ชิ้น`;
+    txt+=`${i+1}. ${it.name}\n   ${it.bc} | ${st}\n`;
+  });
+  txt+=`\nรวม: ${shelfItems.length} รายการ\n`;
+  txt+=`❌ ขายไม่ได้: ${shelfItems.filter(it=>it.status==='zero').length} รายการ\n`;
+  txt+=`⚠️ ขายช้า: ${shelfItems.filter(it=>it.status==='slow').length} รายการ\n`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download='สแกนหน้าชั้น_'+fmtFileName(now)+'.txt';
+  a.click();
+  showMsg('shelf-msg','✓ ส่งออก .txt แล้ว',false);
 }
 
 // ===== ANALYZE SLOW-MOVING PRODUCTS =====
