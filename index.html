@@ -39,6 +39,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mode-sales .mode-icon{background:#dcfce7}
 .mode-receive{background:#fff3e0;border-color:#ffcc80;color:#e65100}
 .mode-receive .mode-icon{background:#ffe0b2}
+.mode-analyze{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.mode-analyze .mode-icon{background:#fee2e2}
 .mode-saleslog{background:#faf5ff;border-color:#d8b4fe;color:#6b21a8}
 .mode-saleslog .mode-icon{background:#ede9fe}
 .mode-list{background:#fff;border-color:#e5e5ea;color:#1c1c1e}
@@ -147,6 +149,8 @@ input:focus{border-color:#007aff;background:#fff}
   .mode-sales .mode-icon{background:#166534}
   .mode-receive{background:#3d1f00;border-color:#e65100;color:#ffb74d}
   .mode-receive .mode-icon{background:#bf360c}
+  .mode-analyze{background:#450a0a;border-color:#991b1b;color:#fca5a5}
+  .mode-analyze .mode-icon{background:#7f1d1d}
   .mode-saleslog{background:#3b0764;border-color:#7e22ce;color:#d8b4fe}
   .mode-saleslog .mode-icon{background:#6b21a8}
   .mode-list,.mode-upload{background:#1c1c1e;border-color:#2c2c2e}
@@ -256,6 +260,14 @@ input:focus{border-color:#007aff;background:#fff}
       <div>
         <div class="mode-title">ประวัติการขาย</div>
         <div class="mode-desc">ดูยอดขาย / ส่งออก Excel</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-analyze" onclick="goScreen('analyze')">
+      <div class="mode-icon">&#128202;</div>
+      <div>
+        <div class="mode-title">วิเคราะห์สินค้าค้าง</div>
+        <div class="mode-desc">หาสินค้าขายไม่ได้ / ขายช้า</div>
       </div>
     </div>
 
@@ -628,6 +640,82 @@ input:focus{border-color:#007aff;background:#fff}
         <button class="btn btn-red" style="flex:1;margin:0" onclick="clearRecv()">&#128465; ล้าง</button>
       </div>
       <div class="msg" id="recv-save-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYZE -->
+<div id="screen-analyze" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1"><div class="header-title">วิเคราะห์สินค้าค้าง</div></div>
+  </div>
+  <div style="padding:8px 0">
+
+    <!-- อัพโหลดไฟล์ยอดขาย -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="db-dot" id="sales-file-dot"></div>
+        <div>
+          <div style="font-size:14px;font-weight:600">ไฟล์ยอดขาย</div>
+          <div id="sales-file-status" style="font-size:12px;color:#8e8e93">ยังไม่ได้อัพโหลด</div>
+          <div id="sales-file-date" style="font-size:11px;color:#c7c7cc"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('sales-file-in').click()" style="border-color:#991b1b;padding:12px">
+        <input type="file" id="sales-file-in" accept=".xlsx,.xls,.csv" onchange="handleSalesFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:4px">&#128202;</div>
+        <div style="font-size:13px;color:#991b1b;font-weight:600">อัพโหลดไฟล์ยอดขาย</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">จาก ProMaxx (สินค้าที่ขายได้)</div>
+      </div>
+    </div>
+
+    <!-- ตั้งเกณฑ์ -->
+    <div class="card" id="analyze-settings" style="display:none">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">&#9881;&#65039; ตั้งเกณฑ์วิเคราะห์</div>
+      <label>จำนวนขายขั้นต่ำ (ชิ้น) — ถ้าขายได้น้อยกว่านี้ถือว่า "ขายช้า"</label>
+      <input type="number" id="min-qty-threshold" value="5" min="0" style="margin-bottom:10px">
+      <button class="btn" style="background:#991b1b;color:#fff" onclick="runAnalysis()">&#128269; วิเคราะห์เลย</button>
+    </div>
+
+    <!-- ผลลัพธ์ -->
+    <div id="analyze-result" style="display:none">
+
+      <!-- สรุป -->
+      <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:8px">
+        <div style="flex:1;background:#fef2f2;border-radius:10px;padding:10px;text-align:center;border:0.5px solid #fecaca" onclick="filterAnalyze('zero')">
+          <div style="font-size:11px;color:#991b1b;margin-bottom:2px">ขายไม่ได้เลย</div>
+          <div style="font-size:22px;font-weight:700;color:#991b1b" id="count-zero">0</div>
+          <div style="font-size:10px;color:#c7c7cc">กดเพื่อดู</div>
+        </div>
+        <div style="flex:1;background:#fff7ed;border-radius:10px;padding:10px;text-align:center;border:0.5px solid #fed7aa" onclick="filterAnalyze('slow')">
+          <div style="font-size:11px;color:#9a3412;margin-bottom:2px">ขายช้า</div>
+          <div style="font-size:22px;font-weight:700;color:#9a3412" id="count-slow">0</div>
+          <div style="font-size:10px;color:#c7c7cc">กดเพื่อดู</div>
+        </div>
+        <div style="flex:1;background:#f0fdf4;border-radius:10px;padding:10px;text-align:center;border:0.5px solid #bbf7d0" onclick="filterAnalyze('all')">
+          <div style="font-size:11px;color:#15803d;margin-bottom:2px">สินค้าทั้งหมด</div>
+          <div style="font-size:22px;font-weight:700;color:#15803d" id="count-all">0</div>
+          <div style="font-size:10px;color:#c7c7cc">กดเพื่อดู</div>
+        </div>
+      </div>
+
+      <!-- filter ที่เลือก -->
+      <div style="padding:0 16px 6px;font-size:13px;color:#8e8e93" id="analyze-filter-label">แสดง: ขายไม่ได้เลย</div>
+
+      <!-- รายการ -->
+      <div class="card" style="margin-top:0">
+        <div id="analyze-list" style="max-height:320px;overflow-y:auto">
+          <div class="empty">รอผลวิเคราะห์...</div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div style="display:flex;gap:8px;padding:0 16px">
+        <button class="btn btn-green" style="flex:1" onclick="exportAnalyzeExcel()">&#128202; Excel</button>
+        <button class="btn btn-blue" style="flex:1" onclick="exportAnalyzeTxt()">&#128190; .txt</button>
+      </div>
+      <div class="msg" id="analyze-msg"></div>
     </div>
   </div>
 </div>
@@ -1265,6 +1353,7 @@ function renderCart() {
 function goScreen(s) {
   if(s==='receipt'){ saveSaleToLog(); buildReceipt(); }
   if(s==='saleslog') renderSalesLog();
+  if(s==='analyze')  initAnalyzeScreen();
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.getElementById('screen-'+s).classList.add('active');
   stopScan(); stopPriceScan(); stopRecvScan(); stopSalesScan();
@@ -1329,6 +1418,303 @@ function newSale() {
   cart=[]; appliedPromos=[];
   renderCart(); calcPromo();
   goScreen('sales');
+}
+
+// ===== ANALYZE SLOW-MOVING PRODUCTS =====
+const SALES_FILE_KEY = 'sm_salesfile_v1';
+const SALES_FILE_DATE_KEY = 'sm_salesfile_date_v1';
+let salesFileData = {}; // {barcode: {name, unit, qty, amount, group}}
+let analyzeResults = {zero:[], slow:[], all:[]};
+let currentFilter = 'zero';
+
+function handleSalesFile(file) {
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext==='xlsx'||ext==='xls') {
+    const r=new FileReader();
+    r.onload=e=>parseSalesXLSX(e.target.result);
+    r.readAsArrayBuffer(file);
+  } else if(ext==='csv') {
+    const r=new FileReader();
+    r.onload=e=>parseSalesCSV(e.target.result);
+    r.readAsText(file,'UTF-8');
+  } else {
+    showMsg('analyze-msg','รองรับเฉพาะ .xlsx, .xls, .csv',true);
+  }
+}
+
+function parseSalesXLSX(buf) {
+  try {
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{header:1});
+    const h=data[0].map(x=>String(x||'').toUpperCase());
+    const bcIdx    = h.indexOf('ITEMID');
+    const nameIdx  = h.indexOf('ITEMNAME');
+    const unitIdx  = h.indexOf('CF_UNITNAME');
+    const qtyIdx   = h.indexOf('BASEQUANTITY');
+    const amtIdx   = h.indexOf('AMOUNT');
+    const grpIdx   = h.indexOf('CF_ITEMGROUPL1_GROUPNAME');
+
+    if(bcIdx===-1){ showMsg('analyze-msg','❌ ไม่พบคอลัมน์ ITEMID ในไฟล์',true); return; }
+
+    salesFileData = {};
+    data.slice(1).forEach(row=>{
+      const bc = String(row[bcIdx]||'').trim();
+      if(!bc) return;
+      if(!salesFileData[bc]) {
+        salesFileData[bc] = {
+          name:  String(row[nameIdx]||'').trim(),
+          unit:  String(row[unitIdx]||'').trim(),
+          qty:   0,
+          amount:0,
+          group: String(row[grpIdx]||'').trim()
+        };
+      }
+      salesFileData[bc].qty    += parseFloat(row[qtyIdx]||0);
+      salesFileData[bc].amount += parseFloat(row[amtIdx]||0);
+    });
+
+    finishSalesFileLoad();
+  } catch(e) {
+    showMsg('analyze-msg','❌ อ่านไฟล์ไม่ได้: '+e.message,true);
+  }
+}
+
+function parseSalesCSV(text) {
+  // similar to xlsx but from csv
+  showMsg('analyze-msg','❌ กรุณาใช้ไฟล์ .xlsx จาก ProMaxx',true);
+}
+
+function finishSalesFileLoad() {
+  const count = Object.keys(salesFileData).length;
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+  try {
+    localStorage.setItem(SALES_FILE_KEY, JSON.stringify(salesFileData));
+    localStorage.setItem(SALES_FILE_DATE_KEY, now.toISOString());
+  } catch(e) {}
+
+  const dot=document.getElementById('sales-file-dot');
+  const st=document.getElementById('sales-file-status');
+  const dt=document.getElementById('sales-file-date');
+  if(dot) dot.className='db-dot ok';
+  if(st) st.textContent=count+' สินค้าที่ขายได้';
+  if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
+  document.getElementById('analyze-settings').style.display='block';
+  showMsg('analyze-msg','✓ โหลด '+count+' รายการขาย พร้อมวิเคราะห์',false);
+}
+
+function runAnalysis() {
+  if(!Object.keys(products).length) {
+    showMsg('analyze-msg','❌ กรุณาอัพโหลดข้อมูลสินค้าก่อน',true); return;
+  }
+  if(!Object.keys(salesFileData).length) {
+    showMsg('analyze-msg','❌ กรุณาอัพโหลดไฟล์ยอดขายก่อน',true); return;
+  }
+
+  const threshold = parseInt(document.getElementById('min-qty-threshold').value)||5;
+  analyzeResults = {zero:[], slow:[], all:[]};
+
+  // วนผ่านสินค้าทั้งหมดใน POS
+  Object.entries(products).forEach(([bc, prod])=>{
+    if((prod.multiple||1) > 1) return; // เฉพาะหน่วยย่อยสุด
+    const sales = salesFileData[bc];
+    const soldQty = sales ? sales.qty : 0;
+    const soldAmt = sales ? sales.amount : 0;
+    const item = {
+      bc, name:prod.name, unit:prod.unit||'',
+      soldQty, soldAmt,
+      group: sales?.group||'',
+      status: soldQty===0 ? 'zero' : soldQty < threshold ? 'slow' : 'ok'
+    };
+    analyzeResults.all.push(item);
+    if(item.status==='zero') analyzeResults.zero.push(item);
+    if(item.status==='slow') analyzeResults.slow.push(item);
+  });
+
+  // เรียงตามยอดขายน้อย→มาก
+  ['zero','slow','all'].forEach(k=>{
+    analyzeResults[k].sort((a,b)=>a.soldQty-b.soldQty);
+  });
+
+  document.getElementById('count-zero').textContent = analyzeResults.zero.length;
+  document.getElementById('count-slow').textContent = analyzeResults.slow.length;
+  document.getElementById('count-all').textContent  = analyzeResults.all.length;
+  document.getElementById('analyze-result').style.display='block';
+  filterAnalyze('zero');
+
+  // บันทึก Excel อัตโนมัติทันที
+  autoExportAnalyzeExcel(threshold);
+}
+
+function autoExportAnalyzeExcel(threshold) {
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+
+  // เรียง: 0 → ช้า → ปกติ
+  const sorted = [
+    ...analyzeResults.zero,
+    ...analyzeResults.slow,
+    ...analyzeResults.all.filter(it=>it.status==='ok')
+  ];
+
+  const zero_count = analyzeResults.zero.length;
+  const slow_count = analyzeResults.slow.length;
+  const ok_count   = analyzeResults.all.length - zero_count - slow_count;
+
+  const rows = [];
+
+  // แถว 1: หัวข้อ
+  rows.push([`รายงานวิเคราะห์สินค้าค้างสต๊อค — เกณฑ์ขายช้า < ${threshold} ชิ้น`,'','','','','','']);
+  // แถว 2: วันที่
+  rows.push([`สร้างเมื่อ: ${ds}`,'','','','','','']);
+  // แถว 3: ว่าง
+  rows.push(['','','','','','','']);
+  // แถว 4: Header
+  rows.push(['Barcode','ชื่อสินค้า','หน่วย','จำนวนขาย (ชิ้น)','ยอดขาย (บาท)','หมวดหมู่','สถานะ']);
+
+  // แถว data
+  sorted.forEach(it=>{
+    const statusTh = it.status==='zero' ? 'ขายได้ 0 ชิ้น'
+                   : it.status==='slow' ? `ขายได้ ${it.soldQty} ชิ้น (ช้า)`
+                   : `ขายได้ ${it.soldQty} ชิ้น`;
+    rows.push([it.bc, it.name, it.unit,
+               it.soldQty, parseFloat(it.soldAmt.toFixed(2)),
+               it.group, statusTh]);
+  });
+
+  // แถวว่าง + สรุป
+  rows.push(['','','','','','','']);
+  rows.push(['สรุป','','','','','','']);
+  rows.push(['ขายได้ 0 ชิ้น', zero_count, 'รายการ','','','','']);
+  rows.push([`ขายช้า (< ${threshold} ชิ้น)`, slow_count, 'รายการ','','','','']);
+  rows.push(['ขายปกติ', ok_count, 'รายการ','','','','']);
+  rows.push(['รวมทั้งหมด', analyzeResults.all.length, 'รายการ','','','','']);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // ความกว้างคอลัมน์
+  ws['!cols'] = [{wch:16},{wch:42},{wch:8},{wch:16},{wch:14},{wch:22},{wch:24}];
+
+  // Style header row (แถว index 3)
+  const headerStyle = {
+    font:{bold:true, color:{rgb:'FFFFFF'}},
+    fill:{fgColor:{rgb:'1E40AF'}},
+    alignment:{horizontal:'center',vertical:'center'}
+  };
+  ['A','B','C','D','E','F','G'].forEach(col=>{
+    const cell = ws[col+'4'];
+    if(cell) cell.s = headerStyle;
+  });
+
+  // Style data rows
+  sorted.forEach((it, i)=>{
+    const rowNum = 5 + i; // แถว Excel เริ่มที่ 5
+    const statusCol = ws['G'+rowNum];
+    if(statusCol) {
+      if(it.status==='zero'){
+        statusCol.s={font:{color:{rgb:'991B1B'},bold:true},fill:{fgColor:{rgb:'FEE2E2'}}};
+      } else if(it.status==='slow'){
+        statusCol.s={font:{color:{rgb:'92400E'},bold:true},fill:{fgColor:{rgb:'FEF3C7'}}};
+      } else {
+        statusCol.s={font:{color:{rgb:'166534'}},fill:{fgColor:{rgb:'F0FDF4'}}};
+      }
+    }
+    // สีพื้นแถว
+    if(it.status==='zero'||it.status==='slow'){
+      ['A','B','C','D','E','F'].forEach(col=>{
+        const c=ws[col+rowNum];
+        if(c) c.s={fill:{fgColor:{rgb: it.status==='zero'?'FFF5F5':'FFFBEB'}}};
+      });
+    }
+  });
+
+  // Style สรุป
+  const sumStartRow = 5 + sorted.length + 2;
+  const sumColors = ['FF4444','FF8800','16A34A','1E40AF'];
+  [0,1,2,3].forEach((j,idx)=>{
+    const r = sumStartRow + 1 + j;
+    const c = ws['A'+r];
+    const c2 = ws['B'+r];
+    if(c)  c.s  = {font:{color:{rgb:sumColors[idx]},bold:true}};
+    if(c2) c2.s = {font:{color:{rgb:sumColors[idx]},bold:true}};
+  });
+
+  // Freeze แถว header
+  ws['!freeze'] = {xSplit:0, ySplit:4};
+
+  XLSX.utils.book_append_sheet(wb, ws, 'วิเคราะห์สินค้าค้าง');
+  XLSX.writeFile(wb, 'วิเคราะห์สินค้าค้าง_'+fmtFileName(now)+'.xlsx');
+  showMsg('analyze-msg','✓ บันทึก Excel อัตโนมัติแล้ว! ดูใน Downloads', false);
+}
+
+function filterAnalyze(type) {
+  currentFilter = type;
+  const labels = {zero:'ขายไม่ได้เลย', slow:'ขายช้า', all:'สินค้าทั้งหมด'};
+  document.getElementById('analyze-filter-label').textContent='แสดง: '+labels[type];
+
+  const list = document.getElementById('analyze-list');
+  const items = analyzeResults[type];
+  if(!items.length){ list.innerHTML='<div class="empty">ไม่มีรายการ</div>'; return; }
+
+  list.innerHTML = items.map(it=>{
+    const color = it.status==='zero'?'#991b1b':it.status==='slow'?'#9a3412':'#15803d';
+    const bg    = it.status==='zero'?'#fef2f2':it.status==='slow'?'#fff7ed':'#f0fdf4';
+    const badge = it.status==='zero'?'ขายไม่ได้':it.status==='slow'?'ขายช้า':'ปกติ';
+    return `<div class="stock-item">
+      <div style="flex:1;min-width:0">
+        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
+        <div class="item-bc">${it.bc} ${it.group?'| '+it.group:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="text-align:right">
+          <div style="background:${bg};color:${color};border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600">${badge}</div>
+          <div style="font-size:11px;color:#8e8e93;margin-top:2px">ขาย ${it.soldQty} ${it.unit}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportAnalyzeExcel() {
+  const items = analyzeResults[currentFilter];
+  if(!items.length){ showMsg('analyze-msg','ไม่มีรายการ',true); return; }
+  const now = new Date();
+  const labels = {zero:'ขายไม่ได้', slow:'ขายช้า', all:'ทั้งหมด'};
+  const rows = [
+    ['รายงานวิเคราะห์สินค้าค้าง — '+labels[currentFilter]+' — '+fmtUploadDate(now)],
+    [],
+    ['Barcode','ชื่อสินค้า','หน่วย','จำนวนขาย','ยอดเงิน','หมวดหมู่','สถานะ']
+  ];
+  items.forEach(it=>{
+    rows.push([it.bc, it.name, it.unit, it.soldQty, it.soldAmt, it.group,
+      it.status==='zero'?'ขายไม่ได้เลย':it.status==='slow'?'ขายช้า':'ปกติ']);
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:16},{wch:40},{wch:8},{wch:12},{wch:12},{wch:20},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'วิเคราะห์');
+  XLSX.writeFile(wb,'สินค้าค้าง_'+labels[currentFilter]+'_'+fmtFileName(now)+'.xlsx');
+  showMsg('analyze-msg','✓ ส่งออก Excel แล้ว',false);
+}
+
+function exportAnalyzeTxt() {
+  const items = analyzeResults[currentFilter];
+  if(!items.length){ showMsg('analyze-msg','ไม่มีรายการ',true); return; }
+  const now = new Date();
+  const labels = {zero:'ขายไม่ได้เลย', slow:'ขายช้า', all:'ทั้งหมด'};
+  let txt = `รายงานสินค้าค้าง — ${labels[currentFilter]}\n${fmtUploadDate(now)}\n${'='.repeat(50)}\n\n`;
+  items.forEach((it,i)=>{
+    txt+=`${i+1}. ${it.name}\n   BC: ${it.bc} | ขาย: ${it.soldQty} ${it.unit} | ฿${it.soldAmt.toFixed(2)}\n`;
+  });
+  txt+=`\nรวม: ${items.length} รายการ\n`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download='สินค้าค้าง_'+labels[currentFilter]+'_'+fmtFileName(now)+'.txt';
+  a.click();
+  showMsg('analyze-msg','✓ ส่งออก .txt แล้ว',false);
 }
 
 // ===== SALES HISTORY =====
@@ -1782,28 +2168,45 @@ function saveAccum() {
 }
 
 // รับ input จากช่อง barcode ในโหมดสะสม
+let accumBcTimer = null;
 document.getElementById('accum-bc-in').addEventListener('input', function() {
   const bc = this.value.trim();
   if (!bc) return;
   if (products[bc]) {
+    clearTimeout(accumBcTimer);
     accumQty = 0;
     document.getElementById('accum-qty').textContent = '0';
     loadAccumProduct(bc);
   } else if (bc.length >= 8) {
-    // ไม่มีในฐานข้อมูล — แจ้งเตือนและล้างช่อง
-    showMsg('accum-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล', true);
-    setTimeout(()=>{ this.value=''; this.focus(); }, 800);
+    // รอให้พิมพ์หยุดก่อน 600ms
+    clearTimeout(accumBcTimer);
+    accumBcTimer = setTimeout(()=>{
+      if(!products[document.getElementById('accum-bc-in').value.trim()]) {
+        showMsg('accum-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล', true);
+        setTimeout(()=>{ document.getElementById('accum-bc-in').value=''; document.getElementById('accum-bc-in').focus(); }, 800);
+      }
+    }, 600);
   }
 });
 
 // ===== AUTOFILL =====
+let stockBcTimer = null;
 document.getElementById('bc-in').addEventListener('input', function() {
   const bc = this.value.trim();
-  autofill(bc);
-  // ถ้า barcode ครบแล้วแต่ไม่มีในฐานข้อมูล
-  if (bc.length >= 8 && !products[bc]) {
-    showMsg('scan-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล', true);
-    setTimeout(()=>{ this.value=''; this.focus(); }, 800);
+  // autofill ทันทีถ้าเจอในฐานข้อมูล
+  if(products[bc]) {
+    autofill(bc);
+    return;
+  }
+  // ถ้ายังไม่เจอ — รอให้พิมพ์หยุดก่อน 600ms แล้วค่อยแจ้งเตือน
+  clearTimeout(stockBcTimer);
+  if(bc.length >= 8) {
+    stockBcTimer = setTimeout(()=>{
+      if(!products[document.getElementById('bc-in').value.trim()]) {
+        showMsg('scan-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล', true);
+        setTimeout(()=>{ document.getElementById('bc-in').value=''; document.getElementById('bc-in').focus(); }, 800);
+      }
+    }, 600);
   }
 });
 
@@ -2176,7 +2579,25 @@ function showMsg(id,msg,isErr) {
 }
 
 // ===== INIT =====
-function tryLoadSaved() {
+function initAnalyzeScreen() {
+  // โหลด salesFileData จาก cache ถ้ามี
+  try {
+    const s=localStorage.getItem(SALES_FILE_KEY);
+    const d=localStorage.getItem(SALES_FILE_DATE_KEY);
+    if(s && Object.keys(salesFileData).length===0) {
+      salesFileData=JSON.parse(s);
+      const count=Object.keys(salesFileData).length;
+      const ds=d?fmtUploadDate(new Date(d)):'';
+      const dot=document.getElementById('sales-file-dot');
+      const st=document.getElementById('sales-file-status');
+      const dt=document.getElementById('sales-file-date');
+      if(dot) dot.className='db-dot ok';
+      if(st) st.textContent=count+' สินค้าที่ขายได้ (cache)';
+      if(dt) dt.textContent=ds?'อัพโหลดเมื่อ: '+ds:'';
+      document.getElementById('analyze-settings').style.display='block';
+    }
+  } catch(e){}
+}
   try{
     // ข้อมูลสินค้า
     const sp=localStorage.getItem(PROD_KEY);
