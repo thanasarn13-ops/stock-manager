@@ -301,28 +301,28 @@ input:focus{border-color:#007aff;background:#fff}
   </div>
   <div style="padding-top:12px">
 
-    <!-- ส่วนที่ 1: ข้อมูลสินค้า -->
+    <!-- ไฟล์ 1: R05_146 ข้อมูลสินค้าทั้งหมด -->
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="db-dot" id="upload-prod-dot"></div>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">📦 ข้อมูลสินค้า</div>
+          <div style="font-size:15px;font-weight:600">📦 ข้อมูลสินค้า + Barcode</div>
           <div id="upload-prod-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
           <div id="upload-prod-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
       </div>
       <div class="upload-area" onclick="document.getElementById('file-in').click()">
-        <input type="file" id="file-in" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
-        <div style="font-size:22px;margin-bottom:4px">&#128193;</div>
-        <div style="font-size:14px;color:#007aff;font-weight:600">แตะเพื่ออัปโหลดไฟล์สินค้า</div>
-        <div style="font-size:12px;color:#8e8e93;margin-top:2px">.xlsx / .xls / .csv จาก POS</div>
+        <input type="file" id="file-in" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:3px">📄</div>
+        <div style="font-size:13px;color:#007aff;font-weight:600">R05_146_รายงานรายละเอียดสินค้าทั้งหมด.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้เป็นทั้งข้อมูลสินค้าและแปลง barcode หน่วยใหญ่→ย่อย</div>
       </div>
       <div class="prod-preview" id="prod-preview"></div>
     </div>
 
-    <!-- ส่วนที่ 2: โปรโมชั่น -->
+    <!-- ไฟล์ 2: R17_103 โปรโมชั่น -->
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="db-dot" id="upload-promo-dot"></div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:600">🏷️ โปรโมชั่น</div>
@@ -332,66 +332,47 @@ input:focus{border-color:#007aff;background:#fff}
       </div>
       <div class="upload-area" onclick="document.getElementById('promo-in').click()" style="border-color:#e65100">
         <input type="file" id="promo-in" accept=".xlsx,.xls,.csv" onchange="handlePromoFile(this.files[0])">
-        <div style="font-size:22px;margin-bottom:4px">&#127991;</div>
-        <div style="font-size:14px;color:#e65100;font-weight:600">แตะเพื่ออัปโหลดไฟล์โปรโมชั่น</div>
-        <div style="font-size:12px;color:#8e8e93;margin-top:2px">.xlsx จาก ProMaxx</div>
+        <div style="font-size:20px;margin-bottom:3px">🏷️</div>
+        <div style="font-size:13px;color:#e65100;font-weight:600">R17_103_โปรโมชั่นหน้าร้าน.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ข้อมูลโปรโมชั่นสำหรับระบบขาย</div>
       </div>
       <div id="promo-preview" style="display:none;background:#fff3e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#e65100;margin-top:8px;border:0.5px solid #ffcc80"></div>
     </div>
 
-    <!-- ส่วนที่ 3: Master Barcode -->
+    <!-- ไฟล์ 3: R04_101 รับสินค้าเข้า -->
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <div class="db-dot" id="upload-master-dot"></div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">🔗 Master Barcode</div>
-          <div id="upload-master-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด — barcode หน่วยใหญ่จะหาไม่เจอ</div>
-          <div id="upload-master-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
-        </div>
-      </div>
-      <div class="upload-area" onclick="document.getElementById('master-in').click()" style="border-color:#6d28d9;padding:12px">
-        <input type="file" id="master-in" accept=".xlsx,.xls,.csv" onchange="handleMasterFile(this.files[0])">
-        <div style="font-size:20px;margin-bottom:4px">🔗</div>
-        <div style="font-size:13px;color:#6d28d9;font-weight:600">อัปโหลด R05_146 รายละเอียดสินค้าทั้งหมด</div>
-        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้แปลง barcode แพค/ลัง → หน่วยย่อย</div>
-      </div>
-      <div id="master-preview" style="display:none;background:#f5f3ff;border-radius:10px;padding:9px 12px;font-size:13px;color:#6d28d9;margin-top:8px;border:0.5px solid #ddd6fe"></div>
-    </div>
-
-    <!-- ส่วนที่ 4: ไฟล์รับสินค้าเข้า -->
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="db-dot" id="upload-po-dot"></div>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">📥 ไฟล์รับสินค้าเข้า (PO)</div>
+          <div style="font-size:15px;font-weight:600">📥 รับสินค้าเข้า</div>
           <div id="upload-po-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
           <div id="upload-po-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
       </div>
-      <div class="upload-area" onclick="document.getElementById('po-in').click()" style="border-color:#0369a1;padding:12px">
+      <div class="upload-area" onclick="document.getElementById('po-in').click()" style="border-color:#0369a1">
         <input type="file" id="po-in" accept=".xlsx,.xls" onchange="handlePOFile(this.files[0])">
-        <div style="font-size:20px;margin-bottom:4px">📥</div>
-        <div style="font-size:13px;color:#0369a1;font-weight:600">รับเข้าสินค้าตามวันที่.XLSX</div>
-        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้ดูวันที่รับสินค้าเข้าล่าสุด</div>
+        <div style="font-size:20px;margin-bottom:3px">📥</div>
+        <div style="font-size:13px;color:#0369a1;font-weight:600">R04_101_รับเข้าสินค้าตามวันที่.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">วันที่รับสินค้าเข้า — ใช้ในสแกนหน้าชั้น</div>
       </div>
       <div id="po-preview" style="display:none;background:#eff6ff;border-radius:10px;padding:9px 12px;font-size:13px;color:#1e40af;margin-top:8px;border:0.5px solid #bfdbfe"></div>
     </div>
 
-    <!-- ส่วนที่ 5: ไฟล์ขายออกตามวันที่ -->
+    <!-- ไฟล์ 4: R06_101 ขายออกตามวันที่ -->
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="db-dot" id="upload-salesdate-dot"></div>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">📤 ไฟล์ขายออกตามวันที่</div>
+          <div style="font-size:15px;font-weight:600">📤 ขายออกตามวันที่</div>
           <div id="upload-salesdate-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
           <div id="upload-salesdate-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
       </div>
-      <div class="upload-area" onclick="document.getElementById('salesdate-in').click()" style="border-color:#15803d;padding:12px">
+      <div class="upload-area" onclick="document.getElementById('salesdate-in').click()" style="border-color:#15803d">
         <input type="file" id="salesdate-in" accept=".xlsx,.xls" onchange="handleSalesDateFile(this.files[0])">
-        <div style="font-size:20px;margin-bottom:4px">📤</div>
-        <div style="font-size:13px;color:#15803d;font-weight:600">ขายออกสินค้าตามวันที่.XLSX</div>
-        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้ดูวันที่ขายออกล่าสุด</div>
+        <div style="font-size:20px;margin-bottom:3px">📤</div>
+        <div style="font-size:13px;color:#15803d;font-weight:600">R06_101_ขายออกสินค้าตามวันที่.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">วันที่ขายออก — ใช้ในสแกนหน้าชั้นและวิเคราะห์</div>
       </div>
       <div id="salesdate-preview" style="display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#166534;margin-top:8px;border:0.5px solid #bbf7d0"></div>
     </div>
@@ -1028,6 +1009,7 @@ function detectCols(headers) {
   return{
     isPOS:hasCFB||hasCFI,
     bcIdx:hasCFB?h.indexOf('CF_BARCODE'):hasCFI?h.indexOf('CF_ITEMID'):0,
+    itemIdIdx:hasCFI?h.indexOf('CF_ITEMID'):-1,  // CF_ITEMID = baseBC
     nameIdx:h.indexOf('CF_ITEMNAME')!==-1?h.indexOf('CF_ITEMNAME'):1,
     unitIdx:h.indexOf('CF_UNITNAME')!==-1?h.indexOf('CF_UNITNAME'):2,
     multiIdx:h.indexOf('MULTIPLE')!==-1?h.indexOf('MULTIPLE'):-1,
@@ -1049,7 +1031,9 @@ function buildProds(rows, c) {
     const fmlPrice=c.fmlIdx>=0?parseFloat(r[c.fmlIdx])||0:0;
     const botPrice=c.botIdx>=0?parseFloat(r[c.botIdx])||0:0;
     const topPrice=c.topIdx>=0?parseFloat(r[c.topIdx])||0:0;
-    if(bc) products[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice};
+    // CF_ITEMID คือ barcode หน่วยย่อยสุด (baseBC)
+    const baseBC=c.itemIdIdx>=0?String(r[c.itemIdIdx]||'').trim():bc;
+    if(bc) products[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice,baseBC};
   });
   const nameToBase={};
   Object.values(products).forEach(p=>{if(p.multiple===1)nameToBase[p.name]=p.unit;});
@@ -1075,24 +1059,41 @@ function parseXLSX(buf) {
 }
 
 function finishLoad(isPOS) {
-  const count=Object.keys(products).length;
-  const now=new Date();
-  const dateStr=fmtUploadDate(now);
+  const count = Object.keys(products).length;
+  const now = new Date();
+  const dateStr = fmtUploadDate(now);
   localStorage.setItem(PROD_DATE_KEY, now.toISOString());
 
+  // สร้าง masterMap จากข้อมูลสินค้าเดียวกัน (R05_146)
+  // products เก็บด้วย bc→{name,unit,multiple,baseUnit,sellPrice,...}
+  // masterMap ต้องการ bc→{baseBC, name, unit, multiple}
+  masterMap = {};
+  Object.entries(products).forEach(([bc, p]) => {
+    masterMap[bc] = {
+      baseBC: p.multiple > 1 ? (p.baseBC || bc) : bc,
+      name: p.name,
+      unit: p.unit,
+      multiple: p.multiple || 1
+    };
+  });
+  localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
+
+  const multiCount = Object.values(masterMap).filter(m => m.multiple > 1).length;
+
   // อัพเดทหน้าหลัก
-  setDbStatus(true, count+' สินค้า'+(isPOS?' (POS)':''));
+  setDbStatus(true, count+' สินค้า (R05)');
   setDbDate(dateStr);
 
   // อัพเดทหน้า upload
-  updateUploadProdStatus(true, count+' สินค้า'+(isPOS?' (POS)':''), dateStr);
+  updateUploadProdStatus(true, count+' สินค้า · แปลงหน่วยใหญ่ได้ '+multiCount+' รายการ', dateStr);
 
-  const el=document.getElementById('prod-preview');
+  const el = document.getElementById('prod-preview');
   if(el){
     el.style.display='block';
-    el.innerHTML='&#10003; โหลด <b>'+count+'</b> สินค้า &nbsp;|&nbsp; '+Object.values(products).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
+    el.innerHTML='✓ โหลด <b>'+count+'</b> สินค้า (รวม <b>'+multiCount+'</b> barcode หน่วยใหญ่) &nbsp;|&nbsp; '
+      +Object.values(products).filter(p=>p.multiple===1).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
   }
-  showMsg('upload-msg','&#10003; โหลด '+count+' สินค้าเรียบร้อย!',false);
+  showMsg('upload-msg','✓ โหลด R05_146 เรียบร้อย! '+count+' สินค้า พร้อมแปลงทุก barcode',false);
 }
 
 function updateUploadProdStatus(ok, txt, dateStr) {
@@ -3283,21 +3284,9 @@ function tryLoadSaved() {
       setPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)');
       updateUploadPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)', '');
     }
-    // master barcode mapping
+    // master barcode mapping (โหลดจาก localStorage — สร้างพร้อมกับ products)
     const mp=localStorage.getItem(MASTER_KEY);
-    const masterDate=localStorage.getItem(MASTER_DATE_KEY);
-    if(mp){
-      try{ masterMap=JSON.parse(mp); }catch(e){}
-      const count=Object.keys(masterMap).length;
-      const multiCount=Object.values(masterMap).filter(m=>m.multiple>1).length;
-      const ds=masterDate?fmtUploadDate(new Date(masterDate)):'';
-      const dot=document.getElementById('upload-master-dot');
-      const st=document.getElementById('upload-master-status');
-      const dt=document.getElementById('upload-master-date');
-      if(dot) dot.className='db-dot ok';
-      if(st) st.textContent=count+' barcode ('+multiCount+' หน่วยใหญ่ที่แปลงได้)';
-      if(dt&&ds) dt.textContent='อัพโหลดเมื่อ: '+ds;
-    }
+    if(mp){ try{ masterMap=JSON.parse(mp); }catch(e){} }
     // PO data
     const pp2=localStorage.getItem(PO_KEY);
     if(pp2){ try{ poData=JSON.parse(pp2); }catch(e){} }
