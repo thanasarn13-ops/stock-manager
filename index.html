@@ -339,6 +339,63 @@ input:focus{border-color:#007aff;background:#fff}
       <div id="promo-preview" style="display:none;background:#fff3e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#e65100;margin-top:8px;border:0.5px solid #ffcc80"></div>
     </div>
 
+    <!-- ส่วนที่ 3: Master Barcode -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="db-dot" id="upload-master-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">🔗 Master Barcode</div>
+          <div id="upload-master-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด — barcode หน่วยใหญ่จะหาไม่เจอ</div>
+          <div id="upload-master-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('master-in').click()" style="border-color:#6d28d9;padding:12px">
+        <input type="file" id="master-in" accept=".xlsx,.xls,.csv" onchange="handleMasterFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:4px">🔗</div>
+        <div style="font-size:13px;color:#6d28d9;font-weight:600">อัปโหลด R05_146 รายละเอียดสินค้าทั้งหมด</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้แปลง barcode แพค/ลัง → หน่วยย่อย</div>
+      </div>
+      <div id="master-preview" style="display:none;background:#f5f3ff;border-radius:10px;padding:9px 12px;font-size:13px;color:#6d28d9;margin-top:8px;border:0.5px solid #ddd6fe"></div>
+    </div>
+
+    <!-- ส่วนที่ 4: ไฟล์รับสินค้าเข้า -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="db-dot" id="upload-po-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">📥 ไฟล์รับสินค้าเข้า (PO)</div>
+          <div id="upload-po-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="upload-po-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('po-in').click()" style="border-color:#0369a1;padding:12px">
+        <input type="file" id="po-in" accept=".xlsx,.xls" onchange="handlePOFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:4px">📥</div>
+        <div style="font-size:13px;color:#0369a1;font-weight:600">รับเข้าสินค้าตามวันที่.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้ดูวันที่รับสินค้าเข้าล่าสุด</div>
+      </div>
+      <div id="po-preview" style="display:none;background:#eff6ff;border-radius:10px;padding:9px 12px;font-size:13px;color:#1e40af;margin-top:8px;border:0.5px solid #bfdbfe"></div>
+    </div>
+
+    <!-- ส่วนที่ 5: ไฟล์ขายออกตามวันที่ -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="db-dot" id="upload-salesdate-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">📤 ไฟล์ขายออกตามวันที่</div>
+          <div id="upload-salesdate-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="upload-salesdate-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('salesdate-in').click()" style="border-color:#15803d;padding:12px">
+        <input type="file" id="salesdate-in" accept=".xlsx,.xls" onchange="handleSalesDateFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:4px">📤</div>
+        <div style="font-size:13px;color:#15803d;font-weight:600">ขายออกสินค้าตามวันที่.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้ดูวันที่ขายออกล่าสุด</div>
+      </div>
+      <div id="salesdate-preview" style="display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#166534;margin-top:8px;border:0.5px solid #bbf7d0"></div>
+    </div>
+
     <div style="padding:0 16px;font-size:12px;color:#8e8e93;line-height:1.7">
       &#9432; ข้อมูลบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำจนกว่าจะมีข้อมูลใหม่
     </div>
@@ -686,7 +743,7 @@ input:focus{border-color:#007aff;background:#fff}
     </div>
 
     <!-- filter tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:10px">
+    <div style="display:flex;gap:6px;margin-bottom:8px">
       <button id="shelf-tab-all" onclick="shelfFilter('all')"
         style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #0369a1;background:#0369a1;color:#fff">
         ทั้งหมด <span id="shelf-n-all">0</span>
@@ -699,6 +756,23 @@ input:focus{border-color:#007aff;background:#fff}
         style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e5ea;background:#fff;color:#8e8e93">
         ⚠️ ขายช้า <span id="shelf-n-slow">0</span>
       </button>
+    </div>
+
+    <!-- ช่วงวันที่ดูยอดขาย -->
+    <div style="background:#f8f8f8;border-radius:10px;padding:10px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:#1c1c1e;margin-bottom:7px">📅 ดูยอดขายช่วงวันที่</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:10px;color:#8e8e93;margin-bottom:2px">จากวันที่</div>
+          <input type="date" id="shelf-date-from" style="width:100%;padding:6px 8px;border:0.5px solid #e5e5ea;border-radius:8px;font-size:13px;background:#fff">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:10px;color:#8e8e93;margin-bottom:2px">ถึงวันที่</div>
+          <input type="date" id="shelf-date-to" style="width:100%;padding:6px 8px;border:0.5px solid #e5e5ea;border-radius:8px;font-size:13px;background:#fff">
+        </div>
+        <button onclick="applyShelfDateFilter()" style="padding:8px 12px;background:#0369a1;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:14px">คำนวณ</button>
+      </div>
+      <div id="shelf-date-result" style="display:none;margin-top:8px;padding:8px;background:#eff6ff;border-radius:8px;font-size:12px;color:#1e40af"></div>
     </div>
 
     <div id="shelf-list" style="max-height:380px;overflow-y:auto">
@@ -856,7 +930,31 @@ input:focus{border-color:#007aff;background:#fff}
 const PROD_KEY='sm_prod_v5', STOCK_KEY='sm_stock_v5', TIME_KEY='sm_time_v5';
 const PROD_DATE_KEY='sm_prod_date_v5', PROMO_DATE_KEY='sm_promo_date_v5';
 const SALES_KEY='sm_sales_v1';
+const MASTER_KEY='sm_master_v1', MASTER_DATE_KEY='sm_master_date_v1';
+const PO_KEY='sm_po_v1', PO_DATE_KEY='sm_po_date_v1';
+const SALES_DATE_KEY='sm_salesdate_v1', SALES_DATE_FILE_KEY='sm_salesdate_file_v1';
 let products={}, stock={}, codeReader=null, scanning=false, scanMode='stock';
+// masterMap: bc → {baseBC, name, unit, multiple}
+// ใช้แปลง barcode หน่วยใหญ่ → barcode หน่วยย่อยสุด
+let masterMap = {};
+// poData: baseBC → {firstDate, lastDate, totalQty}
+let poData = {};
+// salesDateData: baseBC → {firstDate, lastDate, totalQty}
+let salesDateData = {};
+
+// แปลง barcode ใดๆ → barcode หน่วยย่อยสุด
+function resolveBC(bc) {
+  if(!bc) return bc;
+  const m = masterMap[bc];
+  return m ? m.baseBC : bc;
+}
+
+// ดึงชื่อสินค้าจาก bc (รองรับทั้งหน่วยใหญ่และย่อย)
+function resolveName(bc) {
+  const baseBC = resolveBC(bc);
+  const p = products[baseBC] || products[bc];
+  return p ? p.name : (masterMap[bc]?.name || '');
+}
 
 // โปรโมชั่นฝังตรงในโค้ด (อัพเดทจากไฟล์ XLSX อัตโนมัติเมื่ออัพโหลด)
 let promotions = {
@@ -1017,6 +1115,170 @@ function updateUploadPromoStatus(ok, txt, dateStr) {
 
 // ===== PROMO FILE =====
 const PROMO_KEY='sm_promotions_v1';
+
+// ===== PO FILE (รับสินค้าเข้า) =====
+function handlePOFile(file) {
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>parsePOXLSX(e.target.result, file.name);
+  r.readAsArrayBuffer(file);
+}
+
+function parsePOXLSX(buf, fname) {
+  try {
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{header:1});
+    const h=data[0].map(x=>String(x||'').toUpperCase());
+    // TRANDATE=col1, SCANCODE=col14, BASEQUANTITY=col17
+    const dateIdx = h.indexOf('TRANDATE') !== -1 ? h.indexOf('TRANDATE') : 1;
+    const bcIdx   = h.indexOf('SCANCODE') !== -1 ? h.indexOf('SCANCODE') : 14;
+    const qtyIdx  = h.indexOf('BASEQUANTITY') !== -1 ? h.indexOf('BASEQUANTITY') : 17;
+
+    poData = {};
+    data.slice(1).forEach(row=>{
+      const bc  = String(row[bcIdx]||'').trim();
+      const dateRaw = row[dateIdx];
+      const qty = parseFloat(row[qtyIdx]||0);
+      if(!bc || !dateRaw) return;
+      const dateStr = String(dateRaw).slice(0,10);
+      const base = resolveBC(bc);
+      if(!poData[base]) poData[base]={firstDate:dateStr,lastDate:dateStr,totalQty:0};
+      if(dateStr < poData[base].firstDate) poData[base].firstDate=dateStr;
+      if(dateStr > poData[base].lastDate)  poData[base].lastDate=dateStr;
+      poData[base].totalQty += qty;
+    });
+
+    const count=Object.keys(poData).length;
+    const now=new Date(); const ds=fmtUploadDate(now);
+    localStorage.setItem(PO_KEY, JSON.stringify(poData));
+    localStorage.setItem(PO_DATE_KEY, now.toISOString());
+    const dot=document.getElementById('upload-po-dot');
+    const st=document.getElementById('upload-po-status');
+    const dt=document.getElementById('upload-po-date');
+    if(dot) dot.className='db-dot ok';
+    if(st) st.textContent=count+' สินค้าที่มีข้อมูลรับเข้า';
+    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
+    const el=document.getElementById('po-preview');
+    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> รายการรับสินค้าเข้า';}
+    showMsg('upload-msg','✓ โหลดไฟล์รับเข้า '+count+' รายการแล้ว',false);
+  } catch(e){ showMsg('upload-msg','❌ อ่านไฟล์รับเข้าไม่ได้: '+e.message,true); }
+}
+
+// ===== SALES DATE FILE (ขายออกตามวันที่) =====
+function handleSalesDateFile(file) {
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>parseSalesDateXLSX(e.target.result);
+  r.readAsArrayBuffer(file);
+}
+
+function parseSalesDateXLSX(buf) {
+  try {
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{header:1});
+    const h=data[0].map(x=>String(x||'').toUpperCase());
+    // TRANDATE=col3, SCANCODE=col17, BASEQUANTITY=col21
+    const dateIdx = h.indexOf('TRANDATE') !== -1 ? h.indexOf('TRANDATE') : 3;
+    const bcIdx   = h.indexOf('SCANCODE') !== -1 ? h.indexOf('SCANCODE') : 17;
+    const qtyIdx  = h.indexOf('BASEQUANTITY') !== -1 ? h.indexOf('BASEQUANTITY') : 21;
+    const amtIdx  = h.indexOf('AMOUNT') !== -1 ? h.indexOf('AMOUNT') : 25;
+
+    salesDateData = {};
+    data.slice(1).forEach(row=>{
+      const bc  = String(row[bcIdx]||'').trim();
+      const dateRaw = row[dateIdx];
+      const qty = parseFloat(row[qtyIdx]||0);
+      const amt = parseFloat(row[amtIdx]||0);
+      if(!bc || !dateRaw) return;
+      const dateStr = String(dateRaw).slice(0,10);
+      const base = resolveBC(bc);
+      if(!salesDateData[base]) salesDateData[base]={firstDate:dateStr,lastDate:dateStr,totalQty:0,totalAmt:0};
+      if(dateStr < salesDateData[base].firstDate) salesDateData[base].firstDate=dateStr;
+      if(dateStr > salesDateData[base].lastDate)  salesDateData[base].lastDate=dateStr;
+      salesDateData[base].totalQty += qty;
+      salesDateData[base].totalAmt += amt;
+    });
+
+    const count=Object.keys(salesDateData).length;
+    const now=new Date(); const ds=fmtUploadDate(now);
+    localStorage.setItem(SALES_DATE_KEY, JSON.stringify(salesDateData));
+    localStorage.setItem(SALES_DATE_FILE_KEY, now.toISOString());
+    const dot=document.getElementById('upload-salesdate-dot');
+    const st=document.getElementById('upload-salesdate-status');
+    const dt=document.getElementById('upload-salesdate-date');
+    if(dot) dot.className='db-dot ok';
+    if(st) st.textContent=count+' สินค้าที่มีข้อมูลการขาย';
+    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
+    const el=document.getElementById('salesdate-preview');
+    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> รายการขายออก';}
+    showMsg('upload-msg','✓ โหลดไฟล์ขายออก '+count+' รายการแล้ว',false);
+  } catch(e){ showMsg('upload-msg','❌ อ่านไฟล์ขายออกไม่ได้: '+e.message,true); }
+}
+function handleMasterFile(file) {
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext==='xlsx'||ext==='xls') {
+    const r=new FileReader();
+    r.onload=e=>parseMasterXLSX(e.target.result);
+    r.readAsArrayBuffer(file);
+  } else {
+    showMsg('upload-msg','❌ ไฟล์ master รองรับเฉพาะ .xlsx / .xls',true);
+  }
+}
+
+function parseMasterXLSX(buf) {
+  try {
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{header:1});
+    const h=data[0].map(x=>String(x||'').toUpperCase());
+    const bcIdx     = h.indexOf('CF_BARCODE');
+    const itemIdIdx = h.indexOf('CF_ITEMID');
+    const nameIdx   = h.indexOf('CF_ITEMNAME');
+    const unitIdx   = h.indexOf('CF_UNITNAME');
+    const multIdx   = h.indexOf('MULTIPLE');
+
+    if(bcIdx===-1||itemIdIdx===-1){
+      showMsg('upload-msg','❌ ไม่พบคอลัมน์ CF_BARCODE หรือ CF_ITEMID',true); return;
+    }
+
+    masterMap = {};
+    data.slice(1).forEach(row=>{
+      const bc     = String(row[bcIdx]||'').trim();
+      const baseBC = String(row[itemIdIdx]||'').trim(); // CF_ITEMID = barcode หน่วยย่อย
+      const name   = String(row[nameIdx]||'').trim();
+      const unit   = String(row[unitIdx]||'').trim();
+      const mult   = parseInt(row[multIdx]||1)||1;
+      if(bc && baseBC) masterMap[bc] = {baseBC, name, unit, multiple:mult};
+    });
+
+    const count = Object.keys(masterMap).length;
+    const multiCount = Object.values(masterMap).filter(m=>m.multiple>1).length;
+    const now = new Date();
+    const ds = fmtUploadDate(now);
+
+    localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
+    localStorage.setItem(MASTER_DATE_KEY, now.toISOString());
+
+    // อัพเดท UI
+    const dot=document.getElementById('upload-master-dot');
+    const st=document.getElementById('upload-master-status');
+    const dt=document.getElementById('upload-master-date');
+    if(dot) dot.className='db-dot ok';
+    if(st) st.textContent=count+' barcode ('+multiCount+' หน่วยใหญ่ที่แปลงได้)';
+    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
+    const el=document.getElementById('master-preview');
+    if(el){
+      el.style.display='block';
+      el.innerHTML='✓ โหลด <b>'+count+'</b> barcode &nbsp;|&nbsp; แปลงหน่วยใหญ่ได้ <b>'+multiCount+'</b> รายการ';
+    }
+    showMsg('upload-msg','✓ โหลด Master Barcode '+count+' รายการ ใช้กับสแกนหน้าชั้นได้เลย!',false);
+  } catch(e) {
+    showMsg('upload-msg','❌ อ่านไฟล์ master ไม่ได้: '+e.message,true);
+  }
+}
 
 function handlePromoFile(file) {
   if(!file)return;
@@ -1564,37 +1826,73 @@ document.getElementById('shelf-bc-in').addEventListener('keyup', e=>{
 });
 
 function addShelfItem(bc) {
-  const p = products[bc];
-  if(!p){ showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc,true); return; }
+  // แปลง barcode หน่วยใหญ่ → หน่วยย่อยก่อน
+  const baseBC = resolveBC(bc);
+  const p = products[baseBC] || products[bc];
+  const displayName = p ? p.name : (masterMap[bc]?.name || '');
 
-  // ตรวจว่ายิงซ้ำไหม
-  const existing = shelfItems.find(it=>it.bc===bc);
+  if(!p && !masterMap[bc]){
+    showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc,true); return;
+  }
+
+  // ตรวจว่ายิงซ้ำไหม (เก็บด้วย baseBC)
+  const existing = shelfItems.find(it=>it.bc===baseBC);
   if(existing){
     existing.count = (existing.count||1) + 1;
-    showMsg('shelf-msg','&#128257; '+p.name+' (ยิงแล้ว '+existing.count+' ครั้ง)',false);
+    showMsg('shelf-msg','↻ '+displayName+' (ยิงแล้ว '+existing.count+' ครั้ง)',false);
     renderShelfList();
     return;
   }
 
   const threshold = parseInt(document.getElementById('min-qty-threshold')?.value)||SHELF_THRESHOLD_DEFAULT;
-  const s = salesFileData[bc];
+  const s = salesFileData[baseBC] || salesFileData[bc];
   const soldQty = s ? s.qty : 0;
   const soldAmt = s ? s.amount : 0;
   const group   = s ? s.group : '';
-  const status  = !Object.keys(salesFileData).length ? 'unknown'
-                : soldQty===0 ? 'zero'
-                : soldQty < threshold ? 'slow' : 'ok';
 
-  shelfItems.unshift({bc, name:p.name, unit:p.unit||'', soldQty, soldAmt, group, status, count:1});
+  // แสดงหน่วยที่สแกน
+  const scannedUnit = masterMap[bc]?.unit || p?.unit || '';
+  const scannedMult = masterMap[bc]?.multiple || 1;
+  const unitInfo = scannedMult > 1 ? ` (สแกน ${scannedUnit} = ${scannedMult} ${p?.unit||''})` : '';
 
-  // เสียงแจ้งเตือนถ้าขายไม่ได้/ช้า
-  if(status==='zero') showMsg('shelf-msg','❌ '+p.name+' — ขายได้ 0 ชิ้น!',true);
-  else if(status==='slow') showMsg('shelf-msg','⚠️ '+p.name+' — ขายช้า ('+soldQty+' ชิ้น)',false);
-  else if(status==='unknown') showMsg('shelf-msg','&#128230; '+p.name+' — ไม่มีข้อมูลยอดขาย',false);
-  else showMsg('shelf-msg','✅ '+p.name+' — ขายได้ '+soldQty+' ชิ้น',false);
+  const status = !Object.keys(salesFileData).length ? 'unknown'
+               : soldQty===0 ? 'zero'
+               : soldQty < threshold ? 'slow' : 'ok';
+
+  // ดึงข้อมูลวันที่
+  const po   = poData[baseBC];
+  const sd   = salesDateData[baseBC];
+  const today = new Date();
+
+  // วันที่รับเข้าล่าสุด
+  const lastRecvDate = po?.lastDate || null;
+  // วันที่ขายล่าสุด
+  const lastSaleDate = sd?.lastDate || null;
+  // วันในสต๊อค = วันนี้ - วันที่รับเข้าล่าสุด
+  let daysInStock = null;
+  if(lastRecvDate) {
+    const recvD = new Date(lastRecvDate);
+    daysInStock = Math.floor((today - recvD) / (1000*60*60*24));
+  }
+
+  shelfItems.unshift({bc:baseBC, name:displayName, unit:p?.unit||scannedUnit,
+                      soldQty, soldAmt, group, status, count:1,
+                      scannedBC:bc, unitInfo,
+                      lastRecvDate, lastSaleDate, daysInStock});
+
+  if(status==='zero') showMsg('shelf-msg','❌ '+displayName+' — ขายได้ 0 ชิ้น!'+unitInfo,true);
+  else if(status==='slow') showMsg('shelf-msg','⚠️ '+displayName+' — ขายช้า ('+soldQty+' ชิ้น)'+unitInfo,false);
+  else if(status==='unknown') showMsg('shelf-msg','📦 '+displayName+' — ไม่มีข้อมูลยอดขาย',false);
+  else showMsg('shelf-msg','✅ '+displayName+' — ขายได้ '+soldQty+' ชิ้น'+unitInfo,false);
 
   updateShelfCounts();
   renderShelfList();
+}
+
+function fmtThDate(dateStr) {
+  if(!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
 }
 
 function updateShelfCounts() {
@@ -1632,17 +1930,91 @@ function renderShelfList() {
       it.status==='slow'    ? ['#fffbeb','#92400e','⚠️ ขายช้า '+it.soldQty+' ชิ้น'] :
       it.status==='unknown' ? ['#f0f9ff','#0c4a6e','❓ ไม่มีข้อมูล'] :
                               ['#f0fdf4','#166534','✅ '+it.soldQty+' ชิ้น'];
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid #f0f0f0">
-      <div style="flex:1;min-width:0">
-        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
-        <div class="item-bc">${it.bc}${it.group?' | '+it.group:''}</div>
+
+    // วันในสต๊อค แสดงสีตามความนาน
+    let daysColor='#8e8e93', daysText='—';
+    if(it.daysInStock!==null){
+      daysText = it.daysInStock+' วัน';
+      daysColor = it.daysInStock>60?'#991b1b':it.daysInStock>30?'#9a3412':'#15803d';
+    }
+
+    return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
+          <div class="item-bc" style="margin-top:1px">${it.bc}${it.group?' · '+it.group:''}</div>
+        </div>
+        <div style="flex-shrink:0;margin-left:8px;text-align:right">
+          <div style="background:${bg};color:${color};border-radius:7px;padding:3px 9px;font-size:12px;font-weight:600">${badge}</div>
+          ${it.count>1?`<div style="font-size:10px;color:#c7c7cc;margin-top:2px">สแกน ${it.count} ครั้ง</div>`:''}
+        </div>
       </div>
-      <div style="flex-shrink:0;margin-left:8px;text-align:right">
-        <div style="background:${bg};color:${color};border-radius:7px;padding:3px 9px;font-size:12px;font-weight:600">${badge}</div>
-        ${it.count>1?`<div style="font-size:10px;color:#c7c7cc;margin-top:2px">สแกน ${it.count} ครั้ง</div>`:''}
+      <!-- วันที่ 3 ช่อง -->
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 7px;text-align:center">
+          <div style="font-size:9px;color:#8e8e93;margin-bottom:1px">📥 รับเข้าล่าสุด</div>
+          <div style="font-size:11px;font-weight:600;color:#1e40af">${fmtThDate(it.lastRecvDate)}</div>
+        </div>
+        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 7px;text-align:center">
+          <div style="font-size:9px;color:#8e8e93;margin-bottom:1px">📤 ขายล่าสุด</div>
+          <div style="font-size:11px;font-weight:600;color:#15803d">${fmtThDate(it.lastSaleDate)}</div>
+        </div>
+        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 7px;text-align:center">
+          <div style="font-size:9px;color:#8e8e93;margin-bottom:1px">📦 ในสต๊อค</div>
+          <div style="font-size:11px;font-weight:600;color:${daysColor}">${daysText}</div>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function applyShelfDateFilter() {
+  const fromStr = document.getElementById('shelf-date-from').value;
+  const toStr   = document.getElementById('shelf-date-to').value;
+  const result  = document.getElementById('shelf-date-result');
+
+  if(!fromStr || !toStr){ result.style.display='block'; result.textContent='กรุณาเลือกวันที่ให้ครบ'; return; }
+  if(!Object.keys(salesDateData).length){ result.style.display='block'; result.textContent='❌ ยังไม่มีข้อมูลขายออกตามวันที่ — อัพโหลดไฟล์ก่อนครับ'; return; }
+  if(!shelfItems.length){ result.style.display='block'; result.textContent='ยังไม่มีสินค้าที่สแกน'; return; }
+
+  // คำนวณยอดขายในช่วงวันที่สำหรับสินค้าที่สแกน
+  // ต้องโหลดข้อมูลดิบจาก salesDateData และกรองตามวันที่
+  // ใช้ข้อมูลใน salesDateData ที่มีอยู่ (เก็บเฉพาะ firstDate/lastDate/totalQty)
+  // ต้องประมาณจากช่วงวันที่ทับซ้อน
+
+  const fromDate = new Date(fromStr);
+  const toDate   = new Date(toStr);
+  const dayRange = Math.ceil((toDate-fromDate)/(1000*60*60*24))+1;
+
+  let lines = [];
+  let grandTotal = 0;
+
+  shelfItems.forEach(it=>{
+    const sd = salesDateData[it.bc];
+    if(!sd){ lines.push(`• ${it.name}: ไม่มีข้อมูลขาย`); return; }
+
+    const sdFrom = new Date(sd.firstDate);
+    const sdTo   = new Date(sd.lastDate);
+    const sdDays = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
+    const dailyAvg = sd.totalQty / sdDays;
+
+    // overlap ช่วงวันที่
+    const overlapFrom = new Date(Math.max(fromDate, sdFrom));
+    const overlapTo   = new Date(Math.min(toDate, sdTo));
+    const overlapDays = Math.max(0, Math.ceil((overlapTo-overlapFrom)/(1000*60*60*24))+1);
+
+    const estQty = Math.round(dailyAvg * overlapDays);
+    const estAmt = (sd.totalAmt/sd.totalQty) * estQty || 0;
+    grandTotal += estAmt;
+    lines.push(`• ${it.name.substring(0,22)}: ~${estQty} ${it.unit} (~฿${estAmt.toFixed(0)})`);
+  });
+
+  const fromTh = fromDate.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+  const toTh   = toDate.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+
+  result.style.display='block';
+  result.innerHTML = `<div style="font-weight:600;margin-bottom:6px">📅 ${fromTh} – ${toTh} (${dayRange} วัน) ยอดรวม ~฿${grandTotal.toFixed(0)}</div>`
+    + lines.map(l=>`<div>${l}</div>`).join('');
 }
 
 function clearShelf() {
@@ -2911,6 +3283,27 @@ function tryLoadSaved() {
       setPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)');
       updateUploadPromoStatus(true, n+' โปรโมชั่น (ค่าเริ่มต้น)', '');
     }
+    // master barcode mapping
+    const mp=localStorage.getItem(MASTER_KEY);
+    const masterDate=localStorage.getItem(MASTER_DATE_KEY);
+    if(mp){
+      try{ masterMap=JSON.parse(mp); }catch(e){}
+      const count=Object.keys(masterMap).length;
+      const multiCount=Object.values(masterMap).filter(m=>m.multiple>1).length;
+      const ds=masterDate?fmtUploadDate(new Date(masterDate)):'';
+      const dot=document.getElementById('upload-master-dot');
+      const st=document.getElementById('upload-master-status');
+      const dt=document.getElementById('upload-master-date');
+      if(dot) dot.className='db-dot ok';
+      if(st) st.textContent=count+' barcode ('+multiCount+' หน่วยใหญ่ที่แปลงได้)';
+      if(dt&&ds) dt.textContent='อัพโหลดเมื่อ: '+ds;
+    }
+    // PO data
+    const pp2=localStorage.getItem(PO_KEY);
+    if(pp2){ try{ poData=JSON.parse(pp2); }catch(e){} }
+    // Sales date data
+    const sd2=localStorage.getItem(SALES_DATE_KEY);
+    if(sd2){ try{ salesDateData=JSON.parse(sd2); }catch(e){} }
     // stock
     const ss=localStorage.getItem(STOCK_KEY);
     if(ss){stock=JSON.parse(ss);updateCount();renderStockInline();}
