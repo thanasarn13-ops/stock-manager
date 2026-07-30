@@ -194,8 +194,8 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v1.3</div>
-        <div>25/07/2569</div>
+        <div>v1.4</div>
+        <div>30/07/2569</div>
       </div>
     </div>
 
@@ -1701,7 +1701,7 @@ function onShelfDateChange() {
   document.getElementById('shelf-range-label').textContent = `ช่วง ${days} วัน`;
   // re-calc ทุก item พร้อมแปลงหน่วย
   shelfItems.forEach(it => {
-    const baseRaw = calcSoldQtyInRange(it.bc);
+    const baseRaw = calcSoldQtyInRange(it.bc, it.scannedBC);
     it.soldQtyRange = baseRaw === null ? null
       : it.scannedMult > 1 ? Math.floor(baseRaw / it.scannedMult) : baseRaw;
     // อัพเดทสถานะตามช่วงวันที่ใหม่
@@ -1716,16 +1716,18 @@ function onShelfDateChange() {
   setTimeout(()=>{ const el=document.getElementById('shelf-bc-in'); if(el) el.focus(); }, 100);
 }
 
-function calcSoldQtyInRange(bc) {
+function calcSoldQtyInRange(baseBC, origBC) {
   const fromStr = document.getElementById('shelf-date-from')?.value;
   const toStr   = document.getElementById('shelf-date-to')?.value;
   if(!fromStr || !toStr || !Object.keys(salesDateData).length) return null;
 
-  // ค้นหาด้วย bc เดิมก่อน แล้วค่อย resolveBC
-  const sd = salesDateData[bc] || salesDateData[resolveBC(bc)];
+  // ค้นหาด้วยทุก key ที่เป็นไปได้
+  const sd = salesDateData[baseBC]
+          || (origBC ? salesDateData[origBC] : null)
+          || salesDateData[resolveBC(baseBC)];
   if(!sd) return 0;
 
-  // ถ้ามีข้อมูลรายวัน → บวกเฉพาะวันที่อยู่ในช่วง (แม่นยำ 100%)
+  // มีข้อมูลรายวัน → บวกเฉพาะวันในช่วง (แม่นยำ 100%)
   if(sd.daily && Object.keys(sd.daily).length > 0) {
     let total = 0;
     Object.entries(sd.daily).forEach(([date, qty]) => {
@@ -1734,9 +1736,10 @@ function calcSoldQtyInRange(bc) {
     return Math.round(total);
   }
 
-  // fallback: ถ้าไม่มี daily (โหลดจาก cache เก่า) → ประมาณจาก totalQty
-  const sdFrom  = new Date(sd.firstDate);
-  const sdTo    = new Date(sd.lastDate);
+  // fallback: ประมาณจาก totalQty (กรณีโหลดจาก cache เก่า)
+  if(!sd.totalQty) return 0;
+  const sdFrom = new Date(sd.firstDate);
+  const sdTo   = new Date(sd.lastDate);
   if(isNaN(sdFrom.getTime()) || isNaN(sdTo.getTime())) return 0;
   const sdDays   = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
   const dailyAvg = sd.totalQty / sdDays;
@@ -1854,7 +1857,7 @@ function addShelfItem(bc) {
     : (soldQtyBase || 0);
 
   // คำนวณยอดขายในช่วงวันที่ (หน่วยย่อย แล้วแปลง)
-  const soldRangeBase = calcSoldQtyInRange(baseBC);
+  const soldRangeBase = calcSoldQtyInRange(baseBC, bc);
   const soldQtyRange  = soldRangeBase === null ? null
     : scannedMult > 1 ? Math.floor(soldRangeBase / scannedMult) : soldRangeBase;
 
