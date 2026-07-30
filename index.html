@@ -1965,55 +1965,6 @@ function renderShelfList() {
   }).join('');
 }
 
-function applyShelfDateFilter() {
-  const fromStr = document.getElementById('shelf-date-from').value;
-  const toStr   = document.getElementById('shelf-date-to').value;
-  const result  = document.getElementById('shelf-date-result');
-
-  if(!fromStr || !toStr){ result.style.display='block'; result.textContent='กรุณาเลือกวันที่ให้ครบ'; return; }
-  if(!Object.keys(salesDateData).length){ result.style.display='block'; result.textContent='❌ ยังไม่มีข้อมูลขายออกตามวันที่ — อัพโหลดไฟล์ก่อนครับ'; return; }
-  if(!shelfItems.length){ result.style.display='block'; result.textContent='ยังไม่มีสินค้าที่สแกน'; return; }
-
-  // คำนวณยอดขายในช่วงวันที่สำหรับสินค้าที่สแกน
-  // ต้องโหลดข้อมูลดิบจาก salesDateData และกรองตามวันที่
-  // ใช้ข้อมูลใน salesDateData ที่มีอยู่ (เก็บเฉพาะ firstDate/lastDate/totalQty)
-  // ต้องประมาณจากช่วงวันที่ทับซ้อน
-
-  const fromDate = new Date(fromStr);
-  const toDate   = new Date(toStr);
-  const dayRange = Math.ceil((toDate-fromDate)/(1000*60*60*24))+1;
-
-  let lines = [];
-  let grandTotal = 0;
-
-  shelfItems.forEach(it=>{
-    const sd = salesDateData[it.bc];
-    if(!sd){ lines.push(`• ${it.name}: ไม่มีข้อมูลขาย`); return; }
-
-    const sdFrom = new Date(sd.firstDate);
-    const sdTo   = new Date(sd.lastDate);
-    const sdDays = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
-    const dailyAvg = sd.totalQty / sdDays;
-
-    // overlap ช่วงวันที่
-    const overlapFrom = new Date(Math.max(fromDate, sdFrom));
-    const overlapTo   = new Date(Math.min(toDate, sdTo));
-    const overlapDays = Math.max(0, Math.ceil((overlapTo-overlapFrom)/(1000*60*60*24))+1);
-
-    const estQty = Math.round(dailyAvg * overlapDays);
-    const estAmt = (sd.totalAmt/sd.totalQty) * estQty || 0;
-    grandTotal += estAmt;
-    lines.push(`• ${it.name.substring(0,22)}: ~${estQty} ${it.unit} (~฿${estAmt.toFixed(0)})`);
-  });
-
-  const fromTh = fromDate.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
-  const toTh   = toDate.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
-
-  result.style.display='block';
-  result.innerHTML = `<div style="font-weight:600;margin-bottom:6px">📅 ${fromTh} – ${toTh} (${dayRange} วัน) ยอดรวม ~฿${grandTotal.toFixed(0)}</div>`
-    + lines.map(l=>`<div>${l}</div>`).join('');
-}
-
 function clearShelf() {
   if(!shelfItems.length) return;
   if(confirm('ล้างรายการสแกนทั้งหมด?')){
