@@ -1683,45 +1683,54 @@ function setShelfDateRange(days) {
   document.getElementById('shelf-date-from').value = from.toISOString().slice(0,10);
   document.getElementById('shelf-date-to').value   = today.toISOString().slice(0,10);
   onShelfDateChange();
-  // re-calc ทุก item ที่สแกนไว้แล้ว
-  shelfItems.forEach(it => { it.soldQtyRange = calcSoldQtyInRange(it.bc); });
-  renderShelfList();
 }
 
 function onShelfDateChange() {
   const from = document.getElementById('shelf-date-from').value;
   const to   = document.getElementById('shelf-date-to').value;
-  if(from && to) {
-    const days = Math.ceil((new Date(to)-new Date(from))/(1000*60*60*24))+1;
-    document.getElementById('shelf-range-label').textContent = `ช่วง ${days} วัน`;
-    // re-calc ทุก item ที่สแกนไว้แล้ว
-    shelfItems.forEach(it => { it.soldQtyRange = calcSoldQtyInRange(it.bc); });
-    updateShelfCounts();
-    renderShelfList();
-  }
+  if(!from || !to) return;
+  const days = Math.ceil((new Date(to)-new Date(from))/(1000*60*60*24))+1;
+  document.getElementById('shelf-range-label').textContent = `ช่วง ${days} วัน`;
+  // re-calc ทุก item พร้อมแปลงหน่วย
+  shelfItems.forEach(it => {
+    const baseRaw = calcSoldQtyInRange(it.bc);
+    it.soldQtyRange = baseRaw === null ? null
+      : it.scannedMult > 1 ? Math.floor(baseRaw / it.scannedMult) : baseRaw;
+    // อัพเดทสถานะตามช่วงวันที่ใหม่
+    const evalQty = it.soldQtyRange !== null ? it.soldQtyRange : it.soldQtyScanned;
+    it.status = !Object.keys(salesDateData).length ? 'unknown'
+              : evalQty === 0 ? 'zero'
+              : evalQty < 5 ? 'slow' : 'ok';
+  });
+  updateShelfCounts();
+  renderShelfList();
+  // lock cursor กลับช่องสแกน
+  setTimeout(()=>{ const el=document.getElementById('shelf-bc-in'); if(el) el.focus(); }, 100);
 }
 
-function calcSoldQtyInRange(baseBC) {
+function calcSoldQtyInRange(bc) {
   const fromStr = document.getElementById('shelf-date-from')?.value;
   const toStr   = document.getElementById('shelf-date-to')?.value;
   if(!fromStr || !toStr || !Object.keys(salesDateData).length) return null;
 
-  const sd = salesDateData[baseBC];
+  // ค้นหาด้วย bc เดิมก่อน แล้วค่อย resolveBC
+  const sd = salesDateData[bc] || salesDateData[resolveBC(bc)];
   if(!sd || !sd.totalQty) return 0;
 
-  // คำนวณ overlap ระหว่างช่วงที่เลือกกับช่วงที่มีข้อมูล
-  const from    = new Date(fromStr);
-  const to      = new Date(toStr);
-  const sdFrom  = new Date(sd.firstDate);
-  const sdTo    = new Date(sd.lastDate);
-  const sdDays  = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
+  const from   = new Date(fromStr);
+  const to     = new Date(toStr);
+  const sdFrom = new Date(sd.firstDate);
+  const sdTo   = new Date(sd.lastDate);
+  if(isNaN(sdFrom.getTime()) || isNaN(sdTo.getTime())) return 0;
+  const sdDays   = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
   const dailyAvg = sd.totalQty / sdDays;
 
-  const overlapFrom = new Date(Math.max(from, sdFrom));
-  const overlapTo   = new Date(Math.min(to, sdTo));
+  const overlapFrom = new Date(Math.max(from.getTime(), sdFrom.getTime()));
+  const overlapTo   = new Date(Math.min(to.getTime(),   sdTo.getTime()));
   const overlapDays = Math.max(0, Math.ceil((overlapTo-overlapFrom)/(1000*60*60*24))+1);
 
-  return Math.round(dailyAvg * overlapDays);
+  const result = Math.round(dailyAvg * overlapDays);
+  return isNaN(result) ? 0 : result;
 }
 
 // ===== SHELF SCAN =====
@@ -1752,6 +1761,7 @@ function startShelfScan() {
             if(bc===lastBC && now-lastTime<2000) return; // ป้องกันสแกนซ้ำ
             lastBC=bc; lastTime=now;
             addShelfItem(bc);
+            // กล้องยังเปิดรอสแกนต่อ ไม่ต้องปิด
           }
         });
       });
@@ -1770,6 +1780,7 @@ document.getElementById('shelf-bc-in').addEventListener('keydown', e=>{
   if(e.key==='Enter'){
     const bc=document.getElementById('shelf-bc-in').value.trim();
     if(bc){ addShelfItem(bc); document.getElementById('shelf-bc-in').value=''; }
+    document.getElementById('shelf-bc-in').focus();
   }
 });
 
@@ -1821,16 +1832,15 @@ function addShelfItem(bc) {
   const soldAmt     = sd?.totalAmt  || 0;
   const group       = '';
 
-  // แปลงยอดขายเป็นหน่วยที่สแกน
+  // แปลงยอดขายเป็นหน่วยที่สแกน (ป้องกัน NaN)
   const soldQtyScanned = scannedMult > 1
-    ? Math.floor(soldQtyBase / scannedMult)  // แปลง ขวด→แพค
-    : soldQtyBase;
+    ? Math.floor((soldQtyBase || 0) / scannedMult)
+    : (soldQtyBase || 0);
 
   // คำนวณยอดขายในช่วงวันที่ (หน่วยย่อย แล้วแปลง)
   const soldRangeBase = calcSoldQtyInRange(baseBC);
-  const soldQtyRange  = soldRangeBase !== null
-    ? (scannedMult > 1 ? Math.floor(soldRangeBase / scannedMult) : soldRangeBase)
-    : null;
+  const soldQtyRange  = soldRangeBase === null ? null
+    : scannedMult > 1 ? Math.floor(soldRangeBase / scannedMult) : soldRangeBase;
 
   // ดึงวันที่
   const po          = poData[baseBC];
@@ -1873,6 +1883,8 @@ function addShelfItem(bc) {
 
   updateShelfCounts();
   renderShelfList();
+  // lock cursor กลับช่องสแกนทันที
+  setTimeout(()=>{ const el=document.getElementById('shelf-bc-in'); if(el) el.focus(); }, 50);
 }
 
 function fmtThDate(dateStr) {
