@@ -1181,19 +1181,8 @@ function parseMasterXLSX(buf) {
     localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
     localStorage.setItem(MASTER_DATE_KEY, now.toISOString());
 
-    // อัพเดท UI
-    const dot=document.getElementById('upload-master-dot');
-    const st=document.getElementById('upload-master-status');
-    const dt=document.getElementById('upload-master-date');
-    if(dot) dot.className='db-dot ok';
-    if(st) st.textContent=count+' barcode ('+multiCount+' หน่วยใหญ่ที่แปลงได้)';
-    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
-    const el=document.getElementById('master-preview');
-    if(el){
-      el.style.display='block';
-      el.innerHTML='✓ โหลด <b>'+count+'</b> barcode &nbsp;|&nbsp; แปลงหน่วยใหญ่ได้ <b>'+multiCount+'</b> รายการ';
-    }
-    showMsg('upload-msg','✓ โหลด Master Barcode '+count+' รายการ ใช้กับสแกนหน้าชั้นได้เลย!',false);
+    // master ถูก merge เข้า prod แล้ว ไม่มี UI แยก
+    showMsg('upload-msg','✓ โหลด Master Barcode '+count+' รายการ ('+multiCount+' หน่วยใหญ่)',false);
   } catch(e) {
     showMsg('upload-msg','❌ อ่านไฟล์ master ไม่ได้: '+e.message,true);
   }
@@ -1616,10 +1605,11 @@ function goScreen(s) {
 }
 
 function initShelfScreen() {
-  const hasData = Object.keys(salesFileData).length > 0;
-  document.getElementById('shelf-no-sales').style.display = hasData ? 'none' : 'block';
   updateShelfCounts();
   renderShelfList();
+  if(!Object.keys(salesDateData).length) {
+    showMsg('shelf-msg','⚠️ ยังไม่มีข้อมูลยอดขาย — อัพโหลด R06_101 ในหน้าอัพโหลดก่อนครับ', true);
+  }
 }
 
 function buildReceipt() {
@@ -2889,15 +2879,6 @@ function initAnalyzeScreen() {
     const d=localStorage.getItem(SALES_FILE_DATE_KEY);
     if(s && Object.keys(salesFileData).length===0) {
       salesFileData=JSON.parse(s);
-      const count=Object.keys(salesFileData).length;
-      const ds=d?fmtUploadDate(new Date(d)):'';
-      const dot=document.getElementById('sales-file-dot');
-      const st=document.getElementById('sales-file-status');
-      const dt=document.getElementById('sales-file-date');
-      if(dot) dot.className='db-dot ok';
-      if(st) st.textContent=count+' สินค้าที่ขายได้ (cache)';
-      if(dt) dt.textContent=ds?'อัพโหลดเมื่อ: '+ds:'';
-      document.getElementById('analyze-settings').style.display='block';
     }
   } catch(e){}
 }
