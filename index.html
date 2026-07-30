@@ -1062,10 +1062,13 @@ function parsePOXLSX(buf, fname) {
       if(!bc || !dateRaw) return;
       const dateStr = String(dateRaw).slice(0,10);
       const base = resolveBC(bc);
-      if(!poData[base]) poData[base]={firstDate:dateStr,lastDate:dateStr,totalQty:0};
-      if(dateStr < poData[base].firstDate) poData[base].firstDate=dateStr;
-      if(dateStr > poData[base].lastDate)  poData[base].lastDate=dateStr;
-      poData[base].totalQty += qty;
+      const keys = base !== bc ? [base, bc] : [bc];
+      keys.forEach(key => {
+        if(!poData[key]) poData[key]={firstDate:dateStr,lastDate:dateStr,totalQty:0};
+        if(dateStr < poData[key].firstDate) poData[key].firstDate=dateStr;
+        if(dateStr > poData[key].lastDate)  poData[key].lastDate=dateStr;
+        poData[key].totalQty += qty;
+      });
     });
 
     const count=Object.keys(poData).length;
@@ -1112,12 +1115,16 @@ function parseSalesDateXLSX(buf) {
       const amt = parseFloat(row[amtIdx]||0);
       if(!bc || !dateRaw) return;
       const dateStr = String(dateRaw).slice(0,10);
+      // เก็บทั้ง baseBC และ bc เดิม เพื่อรองรับกรณี masterMap ยังไม่โหลด
       const base = resolveBC(bc);
-      if(!salesDateData[base]) salesDateData[base]={firstDate:dateStr,lastDate:dateStr,totalQty:0,totalAmt:0};
-      if(dateStr < salesDateData[base].firstDate) salesDateData[base].firstDate=dateStr;
-      if(dateStr > salesDateData[base].lastDate)  salesDateData[base].lastDate=dateStr;
-      salesDateData[base].totalQty += qty;
-      salesDateData[base].totalAmt += amt;
+      const keys = base !== bc ? [base, bc] : [bc];
+      keys.forEach(key => {
+        if(!salesDateData[key]) salesDateData[key]={firstDate:dateStr,lastDate:dateStr,totalQty:0,totalAmt:0};
+        if(dateStr < salesDateData[key].firstDate) salesDateData[key].firstDate=dateStr;
+        if(dateStr > salesDateData[key].lastDate)  salesDateData[key].lastDate=dateStr;
+        salesDateData[key].totalQty += qty;
+        salesDateData[key].totalAmt += amt;
+      });
     });
 
     const count=Object.keys(salesDateData).length;
@@ -1808,9 +1815,9 @@ function addShelfItem(bc) {
     return;
   }
 
-  // ดึงยอดขายหน่วยย่อย (ชิ้น)
-  const sd          = salesDateData[baseBC];
-  const soldQtyBase = sd?.totalQty || 0;   // จำนวนหน่วยย่อยที่ขายได้
+  // ดึงยอดขาย — ค้นหาด้วย baseBC ก่อน ถ้าไม่เจอลอง bc เดิม (กรณีอัพโหลดก่อน R05)
+  const sd = salesDateData[baseBC] || salesDateData[bc];
+  const soldQtyBase = sd?.totalQty || 0;
   const soldAmt     = sd?.totalAmt  || 0;
   const group       = '';
 
