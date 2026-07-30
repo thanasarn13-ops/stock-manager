@@ -1101,45 +1101,53 @@ function parseSalesDateXLSX(buf) {
     const ws=wb.Sheets[wb.SheetNames[0]];
     const data=XLSX.utils.sheet_to_json(ws,{header:1});
     const h=data[0].map(x=>String(x||'').toUpperCase());
-    // TRANDATE=col3, SCANCODE=col17, BASEQUANTITY=col21
-    const dateIdx = h.indexOf('TRANDATE') !== -1 ? h.indexOf('TRANDATE') : 3;
-    const bcIdx   = h.indexOf('SCANCODE') !== -1 ? h.indexOf('SCANCODE') : 17;
-    const qtyIdx  = h.indexOf('BASEQUANTITY') !== -1 ? h.indexOf('BASEQUANTITY') : 21;
-    const amtIdx  = h.indexOf('AMOUNT') !== -1 ? h.indexOf('AMOUNT') : 25;
+    const dateIdx = h.indexOf('TRANDATE')    !== -1 ? h.indexOf('TRANDATE')    : 3;
+    const bcIdx   = h.indexOf('SCANCODE')   !== -1 ? h.indexOf('SCANCODE')   : 17;
+    const qtyIdx  = h.indexOf('BASEQUANTITY')!== -1 ? h.indexOf('BASEQUANTITY'): 21;
+    const amtIdx  = h.indexOf('AMOUNT')     !== -1 ? h.indexOf('AMOUNT')     : 25;
 
+    // เก็บรายวันจริง: {bc: {daily:{date:qty}, totalQty, totalAmt, firstDate, lastDate}}
     salesDateData = {};
     data.slice(1).forEach(row=>{
-      const bc  = String(row[bcIdx]||'').trim();
+      const bc      = String(row[bcIdx]||'').trim();
       const dateRaw = row[dateIdx];
-      const qty = parseFloat(row[qtyIdx]||0);
-      const amt = parseFloat(row[amtIdx]||0);
-      if(!bc || !dateRaw) return;
+      const qty     = parseFloat(row[qtyIdx]||0);
+      const amt     = parseFloat(row[amtIdx]||0);
+      if(!bc || !dateRaw || qty===0) return;
       const dateStr = String(dateRaw).slice(0,10);
-      // เก็บทั้ง baseBC และ bc เดิม เพื่อรองรับกรณี masterMap ยังไม่โหลด
-      const base = resolveBC(bc);
-      const keys = base !== bc ? [base, bc] : [bc];
-      keys.forEach(key => {
-        if(!salesDateData[key]) salesDateData[key]={firstDate:dateStr,lastDate:dateStr,totalQty:0,totalAmt:0};
-        if(dateStr < salesDateData[key].firstDate) salesDateData[key].firstDate=dateStr;
-        if(dateStr > salesDateData[key].lastDate)  salesDateData[key].lastDate=dateStr;
-        salesDateData[key].totalQty += qty;
-        salesDateData[key].totalAmt += amt;
+      const base    = resolveBC(bc);
+      const keys    = base !== bc ? [base, bc] : [bc];
+      keys.forEach(key=>{
+        if(!salesDateData[key]) salesDateData[key]={daily:{},totalQty:0,totalAmt:0,firstDate:dateStr,lastDate:dateStr};
+        const d = salesDateData[key];
+        d.daily[dateStr] = (d.daily[dateStr]||0) + qty;
+        d.totalQty += qty;
+        d.totalAmt += amt;
+        if(dateStr < d.firstDate) d.firstDate=dateStr;
+        if(dateStr > d.lastDate)  d.lastDate=dateStr;
       });
     });
 
-    const count=Object.keys(salesDateData).length;
+    const count = Object.keys(salesDateData).length;
     const now=new Date(); const ds=fmtUploadDate(now);
-    localStorage.setItem(SALES_DATE_KEY, JSON.stringify(salesDateData));
+    try { localStorage.setItem(SALES_DATE_KEY, JSON.stringify(salesDateData)); } catch(e) {
+      // localStorage เต็ม → ตัด daily ออก เก็บแค่ summary
+      const compact = {};
+      Object.entries(salesDateData).forEach(([k,v])=>{
+        compact[k]={totalQty:v.totalQty,totalAmt:v.totalAmt,firstDate:v.firstDate,lastDate:v.lastDate};
+      });
+      localStorage.setItem(SALES_DATE_KEY, JSON.stringify(compact));
+    }
     localStorage.setItem(SALES_DATE_FILE_KEY, now.toISOString());
     const dot=document.getElementById('upload-salesdate-dot');
     const st=document.getElementById('upload-salesdate-status');
     const dt=document.getElementById('upload-salesdate-date');
     if(dot) dot.className='db-dot ok';
-    if(st) st.textContent=count+' สินค้าที่มีข้อมูลการขาย';
+    if(st) st.textContent=count+' สินค้า (ข้อมูลรายวัน)';
     if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
     const el=document.getElementById('salesdate-preview');
-    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> รายการขายออก';}
-    showMsg('upload-msg','✓ โหลดไฟล์ขายออก '+count+' รายการแล้ว',false);
+    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> สินค้า — ดูยอดขายรายวันแม่นยำ 100%';}
+    showMsg('upload-msg','✓ โหลดไฟล์ขายออก '+count+' สินค้า (ข้อมูลรายวัน) เรียบร้อย!',false);
   } catch(e){ showMsg('upload-msg','❌ อ่านไฟล์ขายออกไม่ได้: '+e.message,true); }
 }
 function handleMasterFile(file) {
@@ -1715,21 +1723,29 @@ function calcSoldQtyInRange(bc) {
 
   // ค้นหาด้วย bc เดิมก่อน แล้วค่อย resolveBC
   const sd = salesDateData[bc] || salesDateData[resolveBC(bc)];
-  if(!sd || !sd.totalQty) return 0;
+  if(!sd) return 0;
 
-  const from   = new Date(fromStr);
-  const to     = new Date(toStr);
-  const sdFrom = new Date(sd.firstDate);
-  const sdTo   = new Date(sd.lastDate);
+  // ถ้ามีข้อมูลรายวัน → บวกเฉพาะวันที่อยู่ในช่วง (แม่นยำ 100%)
+  if(sd.daily && Object.keys(sd.daily).length > 0) {
+    let total = 0;
+    Object.entries(sd.daily).forEach(([date, qty]) => {
+      if(date >= fromStr && date <= toStr) total += qty;
+    });
+    return Math.round(total);
+  }
+
+  // fallback: ถ้าไม่มี daily (โหลดจาก cache เก่า) → ประมาณจาก totalQty
+  const sdFrom  = new Date(sd.firstDate);
+  const sdTo    = new Date(sd.lastDate);
   if(isNaN(sdFrom.getTime()) || isNaN(sdTo.getTime())) return 0;
   const sdDays   = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
   const dailyAvg = sd.totalQty / sdDays;
-
-  const overlapFrom = new Date(Math.max(from.getTime(), sdFrom.getTime()));
-  const overlapTo   = new Date(Math.min(to.getTime(),   sdTo.getTime()));
-  const overlapDays = Math.max(0, Math.ceil((overlapTo-overlapFrom)/(1000*60*60*24))+1);
-
-  const result = Math.round(dailyAvg * overlapDays);
+  const from     = new Date(fromStr);
+  const to       = new Date(toStr);
+  const oFrom    = new Date(Math.max(from.getTime(), sdFrom.getTime()));
+  const oTo      = new Date(Math.min(to.getTime(),   sdTo.getTime()));
+  const oDays    = Math.max(0, Math.ceil((oTo-oFrom)/(1000*60*60*24))+1);
+  const result   = Math.round(dailyAvg * oDays);
   return isNaN(result) ? 0 : result;
 }
 
