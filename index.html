@@ -194,8 +194,8 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v1.4</div>
-        <div>30/07/2569</div>
+        <div>v1.5</div>
+        <div>03/08/2569</div>
       </div>
     </div>
 
@@ -331,40 +331,21 @@ input:focus{border-color:#007aff;background:#fff}
       <div id="promo-preview" style="display:none;background:#fff3e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#e65100;margin-top:8px;border:0.5px solid #ffcc80"></div>
     </div>
 
-    <!-- ไฟล์ 3: R04_101 รับสินค้าเข้า -->
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div class="db-dot" id="upload-po-dot"></div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">📥 รับสินค้าเข้า</div>
-          <div id="upload-po-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
-          <div id="upload-po-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
-        </div>
-      </div>
-      <div class="upload-area" onclick="document.getElementById('po-in').click()" style="border-color:#0369a1">
-        <input type="file" id="po-in" accept=".xlsx,.xls" onchange="handlePOFile(this.files[0])">
-        <div style="font-size:20px;margin-bottom:3px">📥</div>
-        <div style="font-size:13px;color:#0369a1;font-weight:600">R04_101_รับเข้าสินค้าตามวันที่.XLSX</div>
-        <div style="font-size:11px;color:#8e8e93;margin-top:2px">วันที่รับสินค้าเข้า — ใช้ในสแกนหน้าชั้น</div>
-      </div>
-      <div id="po-preview" style="display:none;background:#eff6ff;border-radius:10px;padding:9px 12px;font-size:13px;color:#1e40af;margin-top:8px;border:0.5px solid #bfdbfe"></div>
-    </div>
-
-    <!-- ไฟล์ 4: R06_101 ขายออกตามวันที่ -->
+    <!-- ไฟล์ 3: R06_104 ยอดขายสินค้า -->
     <div class="card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="db-dot" id="upload-salesdate-dot"></div>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:600">📤 ขายออกตามวันที่</div>
+          <div style="font-size:15px;font-weight:600">📊 ยอดขายสินค้า</div>
           <div id="upload-salesdate-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
           <div id="upload-salesdate-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
       </div>
       <div class="upload-area" onclick="document.getElementById('salesdate-in').click()" style="border-color:#15803d">
         <input type="file" id="salesdate-in" accept=".xlsx,.xls" onchange="handleSalesDateFile(this.files[0])">
-        <div style="font-size:20px;margin-bottom:3px">📤</div>
-        <div style="font-size:13px;color:#15803d;font-weight:600">R06_101_ขายออกสินค้าตามวันที่.XLSX</div>
-        <div style="font-size:11px;color:#8e8e93;margin-top:2px">วันที่ขายออก — ใช้ในสแกนหน้าชั้นและวิเคราะห์</div>
+        <div style="font-size:20px;margin-bottom:3px">📊</div>
+        <div style="font-size:13px;color:#15803d;font-weight:600">R06_104_สินค้าขาย.XLSX</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ยอดขายรวมทุกรายการ ใช้สำหรับสแกนหน้าชั้น</div>
       </div>
       <div id="salesdate-preview" style="display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#166534;margin-top:8px;border:0.5px solid #bbf7d0"></div>
     </div>
@@ -695,31 +676,6 @@ input:focus{border-color:#007aff;background:#fff}
   </div>
   <div style="padding:8px 0">
 
-    <!-- เลือกช่วงวันที่ก่อนสแกน -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px">📅 เลือกช่วงวันที่ดูยอดขาย</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <div style="flex:1">
-          <div style="font-size:11px;color:#8e8e93;margin-bottom:3px">จากวันที่</div>
-          <input type="date" id="shelf-date-from" onchange="onShelfDateChange()"
-            style="width:100%;padding:7px 10px;border:1px solid #e5e5ea;border-radius:8px;font-size:13px">
-        </div>
-        <div style="flex:1">
-          <div style="font-size:11px;color:#8e8e93;margin-bottom:3px">ถึงวันที่</div>
-          <input type="date" id="shelf-date-to" onchange="onShelfDateChange()"
-            style="width:100%;padding:7px 10px;border:1px solid #e5e5ea;border-radius:8px;font-size:13px">
-        </div>
-      </div>
-      <!-- ปุ่มเลือกช่วงเร็ว -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button onclick="setShelfDateRange(7)"  style="flex:1;padding:6px;border-radius:8px;border:1px solid #e5e5ea;background:#f2f2f7;font-size:12px;cursor:pointer">7 วัน</button>
-        <button onclick="setShelfDateRange(14)" style="flex:1;padding:6px;border-radius:8px;border:1px solid #e5e5ea;background:#f2f2f7;font-size:12px;cursor:pointer">14 วัน</button>
-        <button onclick="setShelfDateRange(30)" style="flex:1;padding:6px;border-radius:8px;border:1px solid #e5e5ea;background:#f2f2f7;font-size:12px;cursor:pointer">30 วัน</button>
-        <button onclick="setShelfDateRange(90)" style="flex:1;padding:6px;border-radius:8px;border:1px solid #e5e5ea;background:#f2f2f7;font-size:12px;cursor:pointer">90 วัน</button>
-      </div>
-      <div id="shelf-range-label" style="font-size:11px;color:#8e8e93;margin-top:6px;text-align:center"></div>
-    </div>
-
     <!-- สแกน -->
     <div style="padding:0 16px 8px;display:flex;gap:8px">
       <button class="btn" id="shelf-scan-btn" style="background:#0369a1;color:#fff;flex:1">
@@ -728,29 +684,13 @@ input:focus{border-color:#007aff;background:#fff}
       <button onclick="clearShelf()" style="padding:10px 14px;border-radius:10px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:13px;cursor:pointer">ล้าง</button>
     </div>
     <div style="padding:0 16px 8px">
-      <input type="text" id="shelf-bc-in" placeholder="หรือพิมพ์ barcode แล้วกด Enter..." inputmode="numeric">
-    </div>
-
-    <!-- filter tabs -->
-    <div style="display:flex;gap:6px;padding:0 16px;margin-bottom:8px">
-      <button id="shelf-tab-all" onclick="shelfFilter('all')"
-        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #0369a1;background:#0369a1;color:#fff">
-        ทั้งหมด <span id="shelf-n-all">0</span>
-      </button>
-      <button id="shelf-tab-zero" onclick="shelfFilter('zero')"
-        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e5ea;background:#fff;color:#8e8e93">
-        ❌ ขายไม่ได้ <span id="shelf-n-zero">0</span>
-      </button>
-      <button id="shelf-tab-slow" onclick="shelfFilter('slow')"
-        style="flex:1;padding:6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e5ea;background:#fff;color:#8e8e93">
-        ⚠️ ขายช้า <span id="shelf-n-slow">0</span>
-      </button>
+      <input type="text" id="shelf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
     </div>
 
     <!-- รายการ -->
     <div class="card" style="margin-top:0">
-      <div id="shelf-list" style="max-height:400px;overflow-y:auto">
-        <div class="empty">เลือกช่วงวันที่แล้วเริ่มสแกนได้เลย</div>
+      <div id="shelf-list" style="max-height:500px;overflow-y:auto">
+        <div class="empty">เริ่มสแกนได้เลย</div>
       </div>
     </div>
 
@@ -1035,752 +975,105 @@ function updateUploadPromoStatus(ok, txt, dateStr) {
 // ===== PROMO FILE =====
 const PROMO_KEY='sm_promotions_v1';
 
-// ===== PO FILE (รับสินค้าเข้า) =====
-function handlePOFile(file) {
+// ===== SALES FILE (R06_104) =====
+const SALES_FILE104_KEY = 'sm_sales104_v1';
+let salesData104 = {}; // baseBC → {name, unit, baseQty, totalAmt}
+
+function handleSalesDateFile(file) {
   if(!file) return;
-  const r=new FileReader();
-  r.onload=e=>parsePOXLSX(e.target.result, file.name);
+  const r = new FileReader();
+  r.onload = e => parseSales104XLSX(e.target.result);
   r.readAsArrayBuffer(file);
 }
 
-function parsePOXLSX(buf, fname) {
+function parseSales104XLSX(buf) {
   try {
-    const wb=XLSX.read(buf,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    const h=data[0].map(x=>String(x||'').toUpperCase());
-    // TRANDATE=col1, SCANCODE=col14, BASEQUANTITY=col17
-    const dateIdx = h.indexOf('TRANDATE') !== -1 ? h.indexOf('TRANDATE') : 1;
-    const bcIdx   = h.indexOf('SCANCODE') !== -1 ? h.indexOf('SCANCODE') : 14;
-    const qtyIdx  = h.indexOf('BASEQUANTITY') !== -1 ? h.indexOf('BASEQUANTITY') : 17;
+    const wb = XLSX.read(buf, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, {header:1});
+    const h = data[0].map(x => String(x||'').toUpperCase());
+    const bcIdx   = h.indexOf('ITEMID');
+    const nameIdx = h.indexOf('ITEMNAME');
+    const unitIdx = h.indexOf('CF_UNITNAME');
+    const qtyIdx  = h.indexOf('BASEQUANTITY');
+    const amtIdx  = h.indexOf('AMOUNT');
+    if(bcIdx === -1) { showMsg('upload-msg','❌ ไม่พบคอลัมน์ ITEMID',true); return; }
 
-    poData = {};
-    data.slice(1).forEach(row=>{
+    salesData104 = {};
+    data.slice(1).forEach(row => {
       const bc  = String(row[bcIdx]||'').trim();
-      const dateRaw = row[dateIdx];
+      if(!bc) return;
       const qty = parseFloat(row[qtyIdx]||0);
-      if(!bc || !dateRaw) return;
-      const dateStr = String(dateRaw).slice(0,10);
+      const amt = parseFloat(row[amtIdx]||0);
+      // เก็บด้วย bc เดิม และ baseBC (resolveBC)
       const base = resolveBC(bc);
       const keys = base !== bc ? [base, bc] : [bc];
       keys.forEach(key => {
-        if(!poData[key]) poData[key]={firstDate:dateStr,lastDate:dateStr,totalQty:0};
-        if(dateStr < poData[key].firstDate) poData[key].firstDate=dateStr;
-        if(dateStr > poData[key].lastDate)  poData[key].lastDate=dateStr;
-        poData[key].totalQty += qty;
+        if(!salesData104[key]) salesData104[key] = {
+          name: String(row[nameIdx]||''), unit: String(row[unitIdx]||''),
+          baseQty: 0, totalAmt: 0
+        };
+        salesData104[key].baseQty  += qty;
+        salesData104[key].totalAmt += amt;
       });
     });
 
-    const count=Object.keys(poData).length;
-    const now=new Date(); const ds=fmtUploadDate(now);
-    localStorage.setItem(PO_KEY, JSON.stringify(poData));
-    localStorage.setItem(PO_DATE_KEY, now.toISOString());
-    const dot=document.getElementById('upload-po-dot');
-    const st=document.getElementById('upload-po-status');
-    const dt=document.getElementById('upload-po-date');
-    if(dot) dot.className='db-dot ok';
-    if(st) st.textContent=count+' สินค้าที่มีข้อมูลรับเข้า';
-    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
-    const el=document.getElementById('po-preview');
-    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> รายการรับสินค้าเข้า';}
-    showMsg('upload-msg','✓ โหลดไฟล์รับเข้า '+count+' รายการแล้ว',false);
-  } catch(e){ showMsg('upload-msg','❌ อ่านไฟล์รับเข้าไม่ได้: '+e.message,true); }
-}
+    const count = Object.keys(salesData104).length;
+    const now = new Date(); const ds = fmtUploadDate(now);
+    try { localStorage.setItem(SALES_FILE104_KEY, JSON.stringify(salesData104)); } catch(e){}
+    localStorage.setItem('sm_sales104_date', now.toISOString());
 
-// ===== SALES DATE FILE (ขายออกตามวันที่) =====
-function handleSalesDateFile(file) {
-  if(!file) return;
-  const r=new FileReader();
-  r.onload=e=>parseSalesDateXLSX(e.target.result);
-  r.readAsArrayBuffer(file);
-}
-
-function parseSalesDateXLSX(buf) {
-  try {
-    const wb=XLSX.read(buf,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    const h=data[0].map(x=>String(x||'').toUpperCase());
-    const dateIdx = h.indexOf('TRANDATE')    !== -1 ? h.indexOf('TRANDATE')    : 3;
-    const bcIdx   = h.indexOf('SCANCODE')   !== -1 ? h.indexOf('SCANCODE')   : 17;
-    const qtyIdx  = h.indexOf('BASEQUANTITY')!== -1 ? h.indexOf('BASEQUANTITY'): 21;
-    const amtIdx  = h.indexOf('AMOUNT')     !== -1 ? h.indexOf('AMOUNT')     : 25;
-
-    // เก็บรายวันจริง: {bc: {daily:{date:qty}, totalQty, totalAmt, firstDate, lastDate}}
-    salesDateData = {};
-    data.slice(1).forEach(row=>{
-      const bc      = String(row[bcIdx]||'').trim();
-      const dateRaw = row[dateIdx];
-      const qty     = parseFloat(row[qtyIdx]||0);
-      const amt     = parseFloat(row[amtIdx]||0);
-      if(!bc || !dateRaw || qty===0) return;
-      const dateStr = String(dateRaw).slice(0,10);
-      const base    = resolveBC(bc);
-      const keys    = base !== bc ? [base, bc] : [bc];
-      keys.forEach(key=>{
-        if(!salesDateData[key]) salesDateData[key]={daily:{},totalQty:0,totalAmt:0,firstDate:dateStr,lastDate:dateStr};
-        const d = salesDateData[key];
-        d.daily[dateStr] = (d.daily[dateStr]||0) + qty;
-        d.totalQty += qty;
-        d.totalAmt += amt;
-        if(dateStr < d.firstDate) d.firstDate=dateStr;
-        if(dateStr > d.lastDate)  d.lastDate=dateStr;
-      });
-    });
-
-    const count = Object.keys(salesDateData).length;
-    const now=new Date(); const ds=fmtUploadDate(now);
-    try { localStorage.setItem(SALES_DATE_KEY, JSON.stringify(salesDateData)); } catch(e) {
-      // localStorage เต็ม → ตัด daily ออก เก็บแค่ summary
-      const compact = {};
-      Object.entries(salesDateData).forEach(([k,v])=>{
-        compact[k]={totalQty:v.totalQty,totalAmt:v.totalAmt,firstDate:v.firstDate,lastDate:v.lastDate};
-      });
-      localStorage.setItem(SALES_DATE_KEY, JSON.stringify(compact));
-    }
-    localStorage.setItem(SALES_DATE_FILE_KEY, now.toISOString());
     const dot=document.getElementById('upload-salesdate-dot');
     const st=document.getElementById('upload-salesdate-status');
     const dt=document.getElementById('upload-salesdate-date');
     if(dot) dot.className='db-dot ok';
-    if(st) st.textContent=count+' สินค้า (ข้อมูลรายวัน)';
-    if(dt) dt.textContent='อัพโหลดเมื่อ: '+ds;
+    if(st) st.textContent = count+' สินค้า';
+    if(dt) dt.textContent = 'อัพโหลดเมื่อ: '+ds;
     const el=document.getElementById('salesdate-preview');
-    if(el){el.style.display='block';el.innerHTML='✓ โหลด <b>'+count+'</b> สินค้า — ดูยอดขายรายวันแม่นยำ 100%';}
-    showMsg('upload-msg','✓ โหลดไฟล์ขายออก '+count+' สินค้า (ข้อมูลรายวัน) เรียบร้อย!',false);
-  } catch(e){ showMsg('upload-msg','❌ อ่านไฟล์ขายออกไม่ได้: '+e.message,true); }
-}
-function handleMasterFile(file) {
-  if(!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
-  if(ext==='xlsx'||ext==='xls') {
-    const r=new FileReader();
-    r.onload=e=>parseMasterXLSX(e.target.result);
-    r.readAsArrayBuffer(file);
-  } else {
-    showMsg('upload-msg','❌ ไฟล์ master รองรับเฉพาะ .xlsx / .xls',true);
-  }
-}
-
-function parseMasterXLSX(buf) {
-  try {
-    const wb=XLSX.read(buf,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    const h=data[0].map(x=>String(x||'').toUpperCase());
-    const bcIdx     = h.indexOf('CF_BARCODE');
-    const itemIdIdx = h.indexOf('CF_ITEMID');
-    const nameIdx   = h.indexOf('CF_ITEMNAME');
-    const unitIdx   = h.indexOf('CF_UNITNAME');
-    const multIdx   = h.indexOf('MULTIPLE');
-
-    if(bcIdx===-1||itemIdIdx===-1){
-      showMsg('upload-msg','❌ ไม่พบคอลัมน์ CF_BARCODE หรือ CF_ITEMID',true); return;
-    }
-
-    masterMap = {};
-    data.slice(1).forEach(row=>{
-      const bc     = String(row[bcIdx]||'').trim();
-      const baseBC = String(row[itemIdIdx]||'').trim(); // CF_ITEMID = barcode หน่วยย่อย
-      const name   = String(row[nameIdx]||'').trim();
-      const unit   = String(row[unitIdx]||'').trim();
-      const mult   = parseInt(row[multIdx]||1)||1;
-      if(bc && baseBC) masterMap[bc] = {baseBC, name, unit, multiple:mult};
-    });
-
-    const count = Object.keys(masterMap).length;
-    const multiCount = Object.values(masterMap).filter(m=>m.multiple>1).length;
-    const now = new Date();
-    const ds = fmtUploadDate(now);
-
-    localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
-    localStorage.setItem(MASTER_DATE_KEY, now.toISOString());
-
-    // master ถูก merge เข้า prod แล้ว ไม่มี UI แยก
-    showMsg('upload-msg','✓ โหลด Master Barcode '+count+' รายการ ('+multiCount+' หน่วยใหญ่)',false);
-  } catch(e) {
-    showMsg('upload-msg','❌ อ่านไฟล์ master ไม่ได้: '+e.message,true);
-  }
-}
-
-function handlePromoFile(file) {
-  if(!file)return;
-  const ext=file.name.split('.').pop().toLowerCase();
-  if(ext==='xlsx'||ext==='xls'){
-    const r=new FileReader();
-    r.onload=e=>parsePromoXLSX(e.target.result);
-    r.readAsArrayBuffer(file);
-  } else {
-    showMsg('upload-msg','ไฟล์โปรโมชั่นรองรับเฉพาะ .xlsx / .xls',true);
-  }
-}
-
-function parsePromoXLSX(buf) {
-  try {
-    const wb=XLSX.read(buf,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    const h=data[0].map(x=>String(x||'').toUpperCase());
-    const proIdIdx   = h.indexOf('CF_PROID');
-    const proNameIdx = h.indexOf('CF_PROMOTIONNAME');
-    const itemIdIdx  = h.indexOf('CF_ITEMID');
-    const msgIdx     = h.indexOf('MSGONBILLING');
-
-    // Debug: ตรวจสอบ headers
-    if(proIdIdx===-1){
-      showMsg('upload-msg','❌ ไม่พบคอลัมน์ CF_PROID — ตรวจสอบไฟล์ว่าเป็นไฟล์โปรโมชั่นถูกต้องไหม',true);
-      return;
-    }
-
-    const newPromos = {};
-    data.slice(1).forEach(row=>{
-      const pid = String(row[proIdIdx]||'').trim();
-      if(!pid) return;
-      const name = String(row[proNameIdx]||'').trim();
-      if(!newPromos[pid]) {
-        const buyQty = extractBuyQtyFromName(pid) || extractBuyQtyFromName(name) || 2;
-        newPromos[pid] = {
-          name,
-          condQty: buyQty,
-          msg: String(row[msgIdx]||'').trim(),
-          items: []
-        };
-      }
-      const itemId = String(row[itemIdIdx]||'').trim();
-      if(itemId && !newPromos[pid].items.find(it=>it.id===itemId)) {
-        newPromos[pid].items.push({id: itemId});
-      }
-    });
-
-    const count = Object.keys(newPromos).length;
-    if(count===0){
-      showMsg('upload-msg','❌ ไม่พบโปรโมชั่นในไฟล์ — ตรวจสอบว่าเลือกไฟล์ถูกต้องไหม',true);
-      return;
-    }
-
-    promotions = newPromos;
-    const now=new Date();
-    const dateStr=fmtUploadDate(now);
-    localStorage.setItem(PROMO_KEY, JSON.stringify(promotions));
-    localStorage.setItem(PROMO_DATE_KEY, now.toISOString());
-    setPromoStatus(true, count+' โปรโมชั่น (POS)');
-    setPromoDate(dateStr);
-    updateUploadPromoStatus(true, count+' โปรโมชั่น (POS)', dateStr);
-    const el=document.getElementById('promo-preview');
-    if(el){
-      el.style.display='block';
-      el.innerHTML='&#10003; โหลด <b>'+count+'</b> โปรโมชั่น &nbsp;|&nbsp; '+
-        Object.values(promotions).slice(0,3).map(p=>p.name).join(', ')+(count>3?' ...':'');
-    }
-    showMsg('upload-msg','&#10003; โหลด '+count+' โปรโมชั่นเรียบร้อย!',false);
-  } catch(e) {
-    showMsg('upload-msg','❌ อ่านไฟล์โปรโมชั่นไม่ได้: '+e.message,true);
-  }
-}
-
-// ===== CAMERA =====
-document.getElementById('scan-btn').addEventListener('click',()=>{scanMode='stock';startScan();});
-document.getElementById('price-scan-btn').addEventListener('click',()=>{scanMode='price';startPriceScan();});
-document.getElementById('close-cam').addEventListener('click',stopScan);
-document.getElementById('price-close-cam').addEventListener('click',stopPriceScan);
-
-// ===== SCAN (นับ stock) =====
-function startScan() {
-  if(scanning)return;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(stream=>{
-      stream.getTracks().forEach(t=>t.stop());
-      document.getElementById('video-wrap').style.display='block';
-      codeReader=new ZXing.BrowserMultiFormatReader();
-      scanning=true;
-      codeReader.listVideoInputDevices().then(devices=>{
-        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
-        const id=back?back.deviceId:(devices[0]?.deviceId||null);
-        let lastBC='', lastTime=0;
-        codeReader.decodeFromVideoDevice(id,'video',result=>{
-          if(result){
-            const bc=result.getText();
-            const now=Date.now();
-
-            // ตรวจสอบว่ามีในฐานข้อมูลก่อนเสมอ
-            if (!products[bc]) {
-              showMsg('scan-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล', true);
-              return; // ไม่ทำอะไร กล้องยังเปิดรอสแกนต่อ
-            }
-
-            if (countMode==='accum') {
-              // โหมดสะสม — สแกน barcode ใหม่ → reset / สแกน bc เดิม → +1
-              if (bc !== accumBC) {
-                if (accumBC && accumQty > 0) saveAccum();
-                accumQty = 1;
-                loadAccumProduct(bc);
-              } else {
-                if (now - lastTime < 800) return;
-                accumQty++;
-              }
-              lastBC=bc; lastTime=now;
-              document.getElementById('accum-qty').textContent = accumQty;
-              stopScan();
-            } else {
-              // โหมดปกติ
-              document.getElementById('bc-in').value=bc;
-              autofill(bc);
-              stopScan();
-              setTimeout(()=>{const q=document.getElementById('qty-in');q.focus();q.select();},300);
-            }
-          }
-        });
-      });
-    })
-    .catch(()=>alert('ไม่สามารถเปิดกล้องได้'));
-}
-
-function stopScan() {
-  scanning=false;
-  if(codeReader){codeReader.reset();codeReader=null;}
-  document.getElementById('video-wrap').style.display='none';
-}
-
-// ===== SCAN (เช็คราคา — ต่อเนื่อง) =====
-let priceCamReader=null, priceScanning=false;
-
-function startPriceScan() {
-  if(priceScanning)return;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(stream=>{
-      stream.getTracks().forEach(t=>t.stop());
-      document.getElementById('price-video-wrap').style.display='block';
-      document.getElementById('price-scan-btn').textContent='⏹ ปิดกล้อง';
-      priceCamReader=new ZXing.BrowserMultiFormatReader();
-      priceScanning=true;
-      priceCamReader.listVideoInputDevices().then(devices=>{
-        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
-        const id=back?back.deviceId:(devices[0]?.deviceId||null);
-        let lastBC='', lastTime=0;
-        priceCamReader.decodeFromVideoDevice(id,'price-video',result=>{
-          if(result){
-            const bc=result.getText();
-            const now=Date.now();
-            // ป้องกันสแกนซ้ำ barcode เดิมภายใน 2 วินาที
-            if(bc===lastBC && now-lastTime<2000) return;
-            lastBC=bc; lastTime=now;
-            document.getElementById('price-bc').value=bc;
-            checkPrice(bc);
-            // กล้องยังเปิดค้างอยู่ — พร้อมสแกนต่อทันที
-          }
-        });
-      });
-    })
-    .catch(()=>alert('ไม่สามารถเปิดกล้องได้'));
-}
-
-function stopPriceScan() {
-  priceScanning=false;
-  if(priceCamReader){priceCamReader.reset();priceCamReader=null;}
-  document.getElementById('price-video-wrap').style.display='none';
-  document.getElementById('price-scan-btn').textContent='📷 เปิดกล้องสแกน (ต่อเนื่อง)';
-}
-
-function stopPriceScan() {
-  priceScanning=false;
-  if(priceCamReader){priceCamReader.reset();priceCamReader=null;}
-  document.getElementById('price-video-wrap').style.display='none';
-  document.getElementById('price-scan-btn').textContent='📷 เปิดกล้องสแกน (ต่อเนื่อง)';
-}
-
-// ===== SALES MODE =====
-let cart = []; // [{bc, name, unit, price, qty, promoId}]
-let salesCamReader = null, salesScanning = false;
-
-document.getElementById('sales-scan-btn').addEventListener('click', startSalesScan);
-
-function startSalesScan() {
-  if(salesScanning) return;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(stream=>{
-      stream.getTracks().forEach(t=>t.stop());
-      document.getElementById('video-wrap').style.display='block';
-      salesCamReader=new ZXing.BrowserMultiFormatReader();
-      salesScanning=true;
-      salesCamReader.listVideoInputDevices().then(devices=>{
-        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
-        const id=back?back.deviceId:(devices[0]?.deviceId||null);
-        salesCamReader.decodeFromVideoDevice(id,'video',result=>{
-          if(result){
-            const bc=result.getText();
-            if(!products[bc]){showMsg('sales-msg','❌ ไม่พบสินค้านี้ในฐานข้อมูล',true);return;}
-            addToCart(bc);
-            stopSalesScan();
-          }
-        });
-      });
-    }).catch(()=>alert('ไม่สามารถเปิดกล้องได้'));
-}
-
-function stopSalesScan() {
-  salesScanning=false;
-  if(salesCamReader){salesCamReader.reset();salesCamReader=null;}
-  document.getElementById('video-wrap').style.display='none';
-}
-
-document.getElementById('sales-bc-in').addEventListener('keydown', e=>{
-  if(e.key==='Enter'){
-    const bc=document.getElementById('sales-bc-in').value.trim();
-    if(!bc) return;
-    if(products[bc]){
-      addToCart(bc);
-      document.getElementById('sales-bc-in').value='';
-      showMsg('sales-msg','✓ เพิ่ม '+products[bc].name,false);
-    } else {
-      showMsg('sales-msg','❌ ไม่พบ barcode: '+bc+' ในฐานข้อมูล',true);
-    }
-  }
-});
-
-// salesAutofill — สำหรับ scanner ที่ส่งค่าทีเดียว (ไม่ใช่การพิมพ์ทีละตัว)
-// ตรวจจาก timing: ถ้าพิมพ์เร็วมาก (< 100ms/ตัว) = scanner → trigger ทันที
-// ถ้าพิมพ์ช้า = มนุษย์พิมพ์ → รอ Enter
-let lastKeyTime = 0;
-let keyCount = 0;
-let scannerTimer = null;
-
-document.getElementById('sales-bc-in').addEventListener('keyup', e=>{
-  if(e.key==='Enter') return;
-  const now = Date.now();
-  const gap = now - lastKeyTime;
-  lastKeyTime = now;
-
-  if(gap < 80) {
-    // พิมพ์เร็ว = scanner
-    keyCount++;
-    clearTimeout(scannerTimer);
-    scannerTimer = setTimeout(()=>{
-      const bc = document.getElementById('sales-bc-in').value.trim();
-      if(bc && products[bc]){
-        addToCart(bc);
-        document.getElementById('sales-bc-in').value='';
-        showMsg('sales-msg','✓ เพิ่ม '+products[bc].name,false);
-      } else if(bc) {
-        showMsg('sales-msg','❌ ไม่พบ barcode นี้ในฐานข้อมูล',true);
-        setTimeout(()=>{ document.getElementById('sales-bc-in').value=''; },1000);
-      }
-      keyCount = 0;
-    }, 100); // รอ 100ms หลังตัวสุดท้าย
-  } else {
-    // พิมพ์ช้า = มนุษย์ → ไม่ทำอะไร รอ Enter
-    clearTimeout(scannerTimer);
-    keyCount = 0;
-  }
-});
-
-function addToCart(bc) {
-  const p=products[bc];
-  if(!p) return;
-  // หาใน cart ก่อน
-  const existing=cart.find(it=>it.bc===bc);
-  if(existing) { existing.qty++; }
-  else { cart.push({bc, name:p.name, unit:p.unit||'', price:p.sellPrice||0, qty:1}); }
-  calcPromo();
-  renderCart();
-}
-
-function removeFromCart(bc) {
-  const idx=cart.findIndex(it=>it.bc===bc);
-  if(idx===-1) return;
-  if(cart[idx].qty>1) cart[idx].qty--;
-  else cart.splice(idx,1);
-  calcPromo();
-  renderCart();
-  setTimeout(()=>{ const el=document.getElementById('sales-bc-in'); if(el) el.focus(); },100);
-}
-
-function clearCart() {
-  if(!cart.length) return;
-  if(confirm('ล้างรายการทั้งหมด?')){
-    cart=[]; calcPromo(); renderCart();
-    setTimeout(()=>{ const el=document.getElementById('sales-bc-in'); if(el) el.focus(); },100);
-  }
-}
-
-// ===== PROMOTION ENGINE =====
-let appliedPromos = []; // [{promoId, name, discountAmt, msg}]
-
-function calcPromo() {
-  appliedPromos = [];
-
-  for(const [pid, promo] of Object.entries(promotions)) {
-    const promoItemIds = promo.items.map(it=>it.id);
-    const cartItemsInPromo = cart.filter(it => promoItemIds.includes(it.bc));
-    const totalQtyInPromo = cartItemsInPromo.reduce((s,it)=>s+it.qty, 0);
-
-    // ราคาโปร: อ่านจากชื่อ pid เช่น "แอทแทค 2 ชิ้น 99บ." → condQty=2, price=99
-    const promoPrice = extractPriceFromName(pid);
-    if(!promoPrice) continue;
-
-    // condQty: จำนวนที่ต้องซื้อ อ่านจากชื่อด้วย เช่น "10 ห่อ" หรือ "3 ถุง"
-    const buyQty = extractBuyQtyFromName(pid) || promo.condQty || 2;
-
-    if(totalQtyInPromo < buyQty) continue;
-
-    // กี่รอบโปร
-    const rounds = Math.floor(totalQtyInPromo / buyQty);
-
-    // ราคาปกติของ buyQty ชิ้นแรก (เรียงจากถูกไปแพง เพื่อได้ส่วนลดมากสุด)
-    const sortedItems = cartItemsInPromo
-      .flatMap(it => Array(it.qty).fill(it.price))
-      .sort((a,b)=>a-b);
-
-    // ราคาปกติของ rounds*buyQty ชิ้นแรก
-    const normalForPromo = sortedItems.slice(0, rounds*buyQty).reduce((s,p)=>s+p, 0);
-    const discount = normalForPromo - (promoPrice * rounds);
-
-    if(discount > 0) {
-      appliedPromos.push({
-        promoId: pid,
-        name: promo.name || pid,
-        buyQty, rounds, promoPrice, discount,
-        msg: promo.msg || pid
-      });
-    }
-  }
-
-  // อัพเดทสรุปยอด
-  const normalTotal = cart.reduce((s,it)=>s+(it.price*it.qty),0);
-  const totalDiscount = appliedPromos.reduce((s,p)=>s+p.discount,0);
-  const grandTotal = normalTotal - totalDiscount;
-
-  document.getElementById('sales-normal-price').textContent = '฿ '+normalTotal.toFixed(2);
-  document.getElementById('sales-discount').textContent = '- ฿ '+totalDiscount.toFixed(2);
-  document.getElementById('sales-discount-row').style.display = totalDiscount>0?'flex':'none';
-  document.getElementById('sales-grand-total').textContent = '฿ '+grandTotal.toFixed(2);
-  document.getElementById('sales-total-hd').textContent = '฿ '+grandTotal.toFixed(2);
-
-  const card=document.getElementById('promo-applied-card');
-  const list=document.getElementById('promo-applied-list');
-  if(appliedPromos.length>0){
-    card.style.display='block';
-    list.innerHTML=appliedPromos.map(p=>
-      `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #bbf7d0;font-size:13px">
-        <span style="color:#166534">🏷️ ${p.name}</span>
-        <span style="color:#15803d;font-weight:600">-฿${p.discount.toFixed(2)}</span>
-      </div>`
-    ).join('');
-  } else { card.style.display='none'; }
-}
-
-function extractPriceFromName(name) {
-  // หาตัวเลขหลังคำว่า บาท, บ., ราคา, เหลือ
-  const m = name.match(/(?:บาท|บ\.|เหลือ\s*|ราคา\s*)(\d+)/);
-  if(m) return parseInt(m[1]);
-  // fallback: ตัวเลขสุดท้ายในชื่อ
-  const nums = name.match(/\d+/g);
-  if(!nums) return null;
-  // กรอง 2-4 หลักเท่านั้น (ราคาไม่ใช่ตัวเลขเดี่ยว)
-  const prices = nums.filter(n => parseInt(n) >= 10).map(Number);
-  return prices.length ? prices[prices.length-1] : null;
-}
-
-function extractBuyQtyFromName(name) {
-  // "2 ชิ้น", "2 ถุง", "10 ห่อ", "3 แพค", "2 ขวด"
-  const m = name.match(/(\d+)\s*(?:ชิ้น|ถุง|ห่อ|แพค|แพ็ค|ขวด|กล่อง)/);
-  return m ? parseInt(m[1]) : null;
-}
-
-function renderCart() {
-  const list=document.getElementById('cart-list');
-  if(!cart.length){list.innerHTML='<div class="empty">ยังไม่มีสินค้าในตะกร้า</div>';return;}
-  list.innerHTML=cart.map(it=>`
-    <div class="stock-item">
-      <div style="flex:1;min-width:0">
-        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
-        <div class="item-bc">฿${it.price.toFixed(2)} × ${it.qty} = ฿${(it.price*it.qty).toFixed(2)}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <button onclick="removeFromCart('${it.bc}')" style="width:28px;height:28px;border-radius:50%;border:0.5px solid #e5e5ea;background:#f2f2f7;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-        <span style="font-size:16px;font-weight:600;min-width:20px;text-align:center">${it.qty}</span>
-        <button onclick="addToCart('${it.bc}')" style="width:28px;height:28px;border-radius:50%;border:0.5px solid #e5e5ea;background:#f2f2f7;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-      </div>
-    </div>`).join('');
-}
-
-// ===== RECEIPT =====
-function goScreen(s) {
-  if(s==='receipt'){ saveSaleToLog(); buildReceipt(); }
-  if(s==='saleslog') renderSalesLog();
-  if(s==='analyze')  initAnalyzeScreen();
-  if(s==='shelf')   { initShelfScreen(); setTimeout(()=>document.getElementById('shelf-bc-in').focus(),200); }
-  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
-  document.getElementById('screen-'+s).classList.add('active');
-  stopScan(); stopPriceScan(); stopRecvScan(); stopSalesScan(); stopShelfScan();
-  if(s==='stock')   setTimeout(()=>document.getElementById('bc-in').focus(),200);
-  if(s==='price')   setTimeout(()=>document.getElementById('price-bc').focus(),200);
-  if(s==='receive') setTimeout(()=>document.getElementById('recv-bc-in').focus(),200);
-  if(s==='sales')   setTimeout(()=>document.getElementById('sales-bc-in').focus(),200);
-  if(s==='list')    renderList();
-}
-
-function initShelfScreen() {
-  updateShelfCounts();
-  renderShelfList();
-  if(!Object.keys(salesDateData).length) {
-    showMsg('shelf-msg','⚠️ ยังไม่มีข้อมูลยอดขาย — อัพโหลด R06_101 ในหน้าอัพโหลดก่อนครับ', true);
-  }
-}
-
-function buildReceipt() {
-  const now=new Date();
-  const ds=now.toLocaleDateString('th-TH')+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  const normalTotal=cart.reduce((s,it)=>s+(it.price*it.qty),0);
-  const totalDiscount=appliedPromos.reduce((s,p)=>s+p.discount,0);
-  const grandTotal=normalTotal-totalDiscount;
-
-  const items=cart.map(it=>`
-    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px">
-      <div>
-        <div style="font-weight:500">${it.name}</div>
-        <div style="color:#8e8e93;font-size:12px">฿${it.price.toFixed(2)} × ${it.qty}</div>
-      </div>
-      <div style="font-weight:600;color:#1c1c1e">฿${(it.price*it.qty).toFixed(2)}</div>
-    </div>`).join('');
-
-  const promos=appliedPromos.length>0?`
-    <div style="margin:10px 0;padding:10px;background:#f0fdf4;border-radius:10px;border:0.5px solid #bbf7d0">
-      <div style="font-size:12px;font-weight:600;color:#15803d;margin-bottom:6px">โปรโมชั่น</div>
-      ${appliedPromos.map(p=>`
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0">
-          <span style="color:#166534">🏷️ ${p.name}</span>
-          <span style="color:#15803d;font-weight:600">-฿${p.discount.toFixed(2)}</span>
-        </div>`).join('')}
-    </div>`:'';
-
-  document.getElementById('receipt-content').innerHTML=`
-    <div style="text-align:center;padding:16px 0 10px">
-      <div style="font-size:18px;font-weight:700">ใบเสร็จรับเงิน</div>
-      <div style="font-size:13px;color:#8e8e93;margin-top:4px">${ds}</div>
-    </div>
-    <div style="border-top:2px dashed #e5e5ea;border-bottom:2px dashed #e5e5ea;padding:10px 0;margin:8px 0">
-      ${items}
-    </div>
-    ${promos}
-    <div style="padding:8px 0">
-      <div style="display:flex;justify-content:space-between;font-size:14px;color:#8e8e93;margin-bottom:4px">
-        <span>ราคาปกติ</span><span>฿${normalTotal.toFixed(2)}</span>
-      </div>
-      ${totalDiscount>0?`<div style="display:flex;justify-content:space-between;font-size:14px;color:#15803d;margin-bottom:4px">
-        <span>ส่วนลด</span><span>-฿${totalDiscount.toFixed(2)}</span>
-      </div>`:''}
-      <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid #e5e5ea">
-        <span>รวมสุทธิ</span>
-        <span style="color:#15803d">฿${grandTotal.toFixed(2)}</span>
-      </div>
-    </div>
-    <div style="text-align:center;font-size:12px;color:#c7c7cc;margin-top:16px">ขอบคุณที่ใช้บริการ</div>`;
-}
-
-function newSale() {
-  cart=[]; appliedPromos=[];
-  renderCart(); calcPromo();
-  goScreen('sales');
-}
-
-// ===== SHELF DATE RANGE =====
-function setShelfDateRange(days) {
-  const today = new Date();
-  const from  = new Date(today);
-  from.setDate(today.getDate() - days + 1);
-  document.getElementById('shelf-date-from').value = from.toISOString().slice(0,10);
-  document.getElementById('shelf-date-to').value   = today.toISOString().slice(0,10);
-  onShelfDateChange();
-}
-
-function onShelfDateChange() {
-  const from = document.getElementById('shelf-date-from').value;
-  const to   = document.getElementById('shelf-date-to').value;
-  if(!from || !to) return;
-  const days = Math.ceil((new Date(to)-new Date(from))/(1000*60*60*24))+1;
-  document.getElementById('shelf-range-label').textContent = `ช่วง ${days} วัน`;
-  // re-calc ทุก item พร้อมแปลงหน่วย
-  shelfItems.forEach(it => {
-    const baseRaw = calcSoldQtyInRange(it.bc, it.scannedBC);
-    it.soldQtyRange = baseRaw === null ? null
-      : it.scannedMult > 1 ? Math.floor(baseRaw / it.scannedMult) : baseRaw;
-    // อัพเดทสถานะตามช่วงวันที่ใหม่
-    const evalQty = it.soldQtyRange !== null ? it.soldQtyRange : it.soldQtyScanned;
-    it.status = !Object.keys(salesDateData).length ? 'unknown'
-              : evalQty === 0 ? 'zero'
-              : evalQty < 5 ? 'slow' : 'ok';
-  });
-  updateShelfCounts();
-  renderShelfList();
-  // lock cursor กลับช่องสแกน
-  setTimeout(()=>{ const el=document.getElementById('shelf-bc-in'); if(el) el.focus(); }, 100);
-}
-
-function calcSoldQtyInRange(baseBC, origBC) {
-  const fromStr = document.getElementById('shelf-date-from')?.value;
-  const toStr   = document.getElementById('shelf-date-to')?.value;
-  if(!fromStr || !toStr || !Object.keys(salesDateData).length) return null;
-
-  // ค้นหาด้วยทุก key ที่เป็นไปได้
-  const sd = salesDateData[baseBC]
-          || (origBC ? salesDateData[origBC] : null)
-          || salesDateData[resolveBC(baseBC)];
-  if(!sd) return 0;
-
-  // มีข้อมูลรายวัน → บวกเฉพาะวันในช่วง (แม่นยำ 100%)
-  if(sd.daily && Object.keys(sd.daily).length > 0) {
-    let total = 0;
-    Object.entries(sd.daily).forEach(([date, qty]) => {
-      if(date >= fromStr && date <= toStr) total += qty;
-    });
-    return Math.round(total);
-  }
-
-  // fallback: ประมาณจาก totalQty (กรณีโหลดจาก cache เก่า)
-  if(!sd.totalQty) return 0;
-  const sdFrom = new Date(sd.firstDate);
-  const sdTo   = new Date(sd.lastDate);
-  if(isNaN(sdFrom.getTime()) || isNaN(sdTo.getTime())) return 0;
-  const sdDays   = Math.max(1, Math.ceil((sdTo-sdFrom)/(1000*60*60*24))+1);
-  const dailyAvg = sd.totalQty / sdDays;
-  const from     = new Date(fromStr);
-  const to       = new Date(toStr);
-  const oFrom    = new Date(Math.max(from.getTime(), sdFrom.getTime()));
-  const oTo      = new Date(Math.min(to.getTime(),   sdTo.getTime()));
-  const oDays    = Math.max(0, Math.ceil((oTo-oFrom)/(1000*60*60*24))+1);
-  const result   = Math.round(dailyAvg * oDays);
-  return isNaN(result) ? 0 : result;
+    if(el){ el.style.display='block'; el.innerHTML='✓ โหลด <b>'+count+'</b> สินค้า พร้อมสแกนหน้าชั้น'; }
+    showMsg('upload-msg','✓ โหลด R06_104 เรียบร้อย! '+count+' สินค้า',false);
+  } catch(e) { showMsg('upload-msg','❌ อ่านไฟล์ไม่ได้: '+e.message, true); }
 }
 
 // ===== SHELF SCAN =====
-let shelfItems = []; // [{bc, name, unit, soldQty, soldAmt, group, status, time}]
-let shelfFilter_current = 'all';
-let shelfCamReader = null, shelfScanning = false;
-const SHELF_THRESHOLD_DEFAULT = 5;
+let shelfItems = [];
+let shelfScanning = false;
+let shelfCamReader = null;
 
-document.getElementById('shelf-scan-btn').addEventListener('click', startShelfScan);
+function initShelfScreen() {
+  // โหลด salesData104 จาก cache ถ้ายังว่าง
+  if(!Object.keys(salesData104).length) {
+    try {
+      const s = localStorage.getItem(SALES_FILE104_KEY);
+      if(s) { salesData104 = JSON.parse(s); }
+    } catch(e){}
+  }
+  renderShelfList();
+  document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
+}
 
-function startShelfScan() {
-  if(shelfScanning){ stopShelfScan(); return; }
+document.getElementById('shelf-scan-btn').addEventListener('click', toggleShelfScan);
+
+function toggleShelfScan() {
+  if(shelfScanning) { stopShelfScan(); return; }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(stream=>{
+    .then(stream => {
       stream.getTracks().forEach(t=>t.stop());
       document.getElementById('video-wrap').style.display='block';
       document.getElementById('shelf-scan-btn').textContent='⏹ ปิดกล้อง';
       shelfCamReader = new ZXing.BrowserMultiFormatReader();
       shelfScanning = true;
-      shelfCamReader.listVideoInputDevices().then(devices=>{
-        const back=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
-        const id=back?back.deviceId:(devices[0]?.deviceId||null);
+      shelfCamReader.listVideoInputDevices().then(devices => {
+        const back = devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('environment'));
+        const id = back ? back.deviceId : (devices[0]?.deviceId||null);
         let lastBC='', lastTime=0;
-        shelfCamReader.decodeFromVideoDevice(id,'video',result=>{
-          if(result){
-            const bc=result.getText();
-            const now=Date.now();
-            if(bc===lastBC && now-lastTime<2000) return; // ป้องกันสแกนซ้ำ
+        shelfCamReader.decodeFromVideoDevice(id,'video', result => {
+          if(result) {
+            const bc = result.getText();
+            const now = Date.now();
+            if(bc===lastBC && now-lastTime < 2000) return;
             lastBC=bc; lastTime=now;
             addShelfItem(bc);
-            // กล้องยังเปิดรอสแกนต่อ ไม่ต้องปิด
           }
         });
       });
@@ -1788,34 +1081,31 @@ function startShelfScan() {
 }
 
 function stopShelfScan() {
-  shelfScanning=false;
-  if(shelfCamReader){shelfCamReader.reset();shelfCamReader=null;}
+  shelfScanning = false;
+  if(shelfCamReader){ shelfCamReader.reset(); shelfCamReader=null; }
   document.getElementById('video-wrap').style.display='none';
-  document.getElementById('shelf-scan-btn').textContent='📷 เปิดกล้องสแกน (ต่อเนื่อง)';
+  document.getElementById('shelf-scan-btn').textContent='📷 เปิดกล้องสแกน';
 }
 
-// พิมพ์ barcode แล้วกด Enter
 document.getElementById('shelf-bc-in').addEventListener('keydown', e=>{
   if(e.key==='Enter'){
-    const bc=document.getElementById('shelf-bc-in').value.trim();
+    const bc = document.getElementById('shelf-bc-in').value.trim();
     if(bc){ addShelfItem(bc); document.getElementById('shelf-bc-in').value=''; }
     document.getElementById('shelf-bc-in').focus();
   }
 });
 
-// scanner ยิงเร็ว
-let shelfBcLastKey=0;
-let shelfBcTimer=null;
+let shelfBcLastKey=0, shelfBcTimer=null;
 document.getElementById('shelf-bc-in').addEventListener('keyup', e=>{
   if(e.key==='Enter') return;
-  const now=Date.now();
-  const gap=now-shelfBcLastKey;
+  const now=Date.now(), gap=now-shelfBcLastKey;
   shelfBcLastKey=now;
   if(gap<80){
     clearTimeout(shelfBcTimer);
     shelfBcTimer=setTimeout(()=>{
       const bc=document.getElementById('shelf-bc-in').value.trim();
       if(bc){ addShelfItem(bc); document.getElementById('shelf-bc-in').value=''; }
+      document.getElementById('shelf-bc-in').focus();
     },100);
   }
 });
@@ -1824,169 +1114,108 @@ function addShelfItem(bc) {
   bc = bc.trim();
   if(!bc) return;
 
-  // หา barcode หน่วยย่อย
-  const baseBC      = resolveBC(bc);
+  // หา baseBC และข้อมูลสินค้า
+  const baseBC = resolveBC(bc);
+  const p = products[baseBC] || products[bc];
   const scannedMult = masterMap[bc]?.multiple || products[bc]?.multiple || 1;
   const scannedUnit = masterMap[bc]?.unit || products[bc]?.unit || '';
-  const p           = products[baseBC] || products[bc];
+  const baseUnit    = products[baseBC]?.unit || '';
   const displayName = p?.name || masterMap[bc]?.name || '';
-  const baseUnit    = p?.unit || '';
 
-  if(!displayName){
-    showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc, true); return;
-  }
-
-  // ตรวจสอบยิงซ้ำ (key = bc ที่ยิง ไม่ใช่ baseBC เพื่อแยกแพค/ขวด)
-  const existing = shelfItems.find(it=>it.scannedBC===bc);
-  if(existing){
-    existing.count = (existing.count||1) + 1;
-    showMsg('shelf-msg','↻ '+displayName+' / '+scannedUnit+' (ยิงแล้ว '+existing.count+' ครั้ง)',false);
-    renderShelfList();
+  if(!displayName) {
+    showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc, true);
+    setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 100);
     return;
   }
 
-  // ดึงยอดขาย — ค้นหาด้วย baseBC ก่อน ถ้าไม่เจอลอง bc เดิม (กรณีอัพโหลดก่อน R05)
-  const sd = salesDateData[baseBC] || salesDateData[bc];
-  const soldQtyBase = sd?.totalQty || 0;
-  const soldAmt     = sd?.totalAmt  || 0;
-  const group       = '';
+  // ค้นหายอดขายจาก salesData104 (ข้อมูลหน่วยย่อย)
+  const sd = salesData104[baseBC] || salesData104[bc];
+  const totalBaseQty = sd ? sd.baseQty : null; // null = ไม่มีข้อมูล
+  const totalAmt     = sd ? sd.totalAmt : 0;
 
-  // แปลงยอดขายเป็นหน่วยที่สแกน (ป้องกัน NaN)
-  const soldQtyScanned = scannedMult > 1
-    ? Math.floor((soldQtyBase || 0) / scannedMult)
-    : (soldQtyBase || 0);
+  // แปลงเป็นหน่วยที่สแกน
+  const totalScannedQty = (totalBaseQty !== null && scannedMult > 1)
+    ? Math.floor(totalBaseQty / scannedMult) : totalBaseQty;
 
-  // คำนวณยอดขายในช่วงวันที่ (หน่วยย่อย แล้วแปลง)
-  const soldRangeBase = calcSoldQtyInRange(baseBC, bc);
-  const soldQtyRange  = soldRangeBase === null ? null
-    : scannedMult > 1 ? Math.floor(soldRangeBase / scannedMult) : soldRangeBase;
-
-  // ดึงวันที่
-  const po          = poData[baseBC];
-  const lastRecvDate = po?.lastDate || null;
-  const lastSaleDate = sd?.lastDate || null;
-  const today        = new Date();
-  let daysInStock    = null;
-  if(lastRecvDate){
-    daysInStock = Math.floor((today - new Date(lastRecvDate))/(1000*60*60*24));
+  // ตรวจยิงซ้ำ (แต่ละ barcode แยกกัน)
+  const existing = shelfItems.find(it => it.scannedBC === bc);
+  if(existing){
+    existing.scanCount = (existing.scanCount||1) + 1;
+    showMsg('shelf-msg','↻ '+displayName+' (ยิงซ้ำ '+existing.scanCount+' ครั้ง)', false);
+    renderShelfList();
+    setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 50);
+    return;
   }
 
-  // สถานะ — ใช้ยอดขายในช่วงวันที่ถ้ามี
-  const fromStr  = document.getElementById('shelf-date-from')?.value;
-  const toStr    = document.getElementById('shelf-date-to')?.value;
-  const hasRange = fromStr && toStr;
-  const threshold = 5;
-  const evalQty  = hasRange && soldQtyRange !== null ? soldQtyRange : soldQtyScanned;
-  const status   = !Object.keys(salesDateData).length ? 'unknown'
-                 : evalQty === 0 ? 'zero'
-                 : evalQty < threshold ? 'slow' : 'ok';
-
-  const dispQty    = hasRange && soldQtyRange!==null ? soldQtyRange : soldQtyScanned;
-  const rangeNote  = hasRange ? ` (${fromStr.slice(5).replace('-','/')}–${toStr.slice(5).replace('-','/')})` : '';
-  const unitLabel  = scannedUnit || baseUnit;
-
   shelfItems.unshift({
-    bc: baseBC, scannedBC: bc,
+    scannedBC: bc, baseBC,
     name: displayName,
-    baseUnit, scannedUnit, scannedMult,
-    soldQtyBase, soldQtyScanned, soldQtyRange, soldAmt, group,
-    status, count: 1,
-    lastRecvDate, lastSaleDate, daysInStock
+    scannedUnit, scannedMult,
+    baseUnit,
+    totalBaseQty,    // หน่วยย่อย
+    totalScannedQty, // หน่วยที่สแกน
+    totalAmt,
+    scanCount: 1
   });
 
   // แสดงผลทันที
-  if(status==='zero')    showMsg('shelf-msg','❌ '+displayName+' ('+unitLabel+') — ขายได้ 0 '+unitLabel+rangeNote, true);
-  else if(status==='slow') showMsg('shelf-msg','⚠️ '+displayName+' ('+unitLabel+') — ขายช้า '+dispQty+' '+unitLabel+rangeNote, false);
-  else if(status==='unknown') showMsg('shelf-msg','📦 '+displayName+' — ไม่มีข้อมูลยอดขาย', false);
-  else showMsg('shelf-msg','✅ '+displayName+' ('+unitLabel+') — ขายได้ '+dispQty+' '+unitLabel+rangeNote, false);
+  if(totalBaseQty === null) {
+    showMsg('shelf-msg','❓ '+displayName+' — ไม่พบในไฟล์ยอดขาย', false);
+  } else if(totalBaseQty === 0) {
+    showMsg('shelf-msg','❌ '+displayName+' — ขายได้ 0 ชิ้น!', true);
+  } else {
+    const msg = scannedMult > 1
+      ? '✅ '+displayName+' — '+totalScannedQty+' '+scannedUnit+' ('+totalBaseQty+' '+baseUnit+')'
+      : '✅ '+displayName+' — '+totalBaseQty+' '+baseUnit;
+    showMsg('shelf-msg', msg, false);
+  }
 
-  updateShelfCounts();
+  document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
   renderShelfList();
-  // lock cursor กลับช่องสแกนทันที
-  setTimeout(()=>{ const el=document.getElementById('shelf-bc-in'); if(el) el.focus(); }, 50);
-}
-
-function fmtThDate(dateStr) {
-  if(!dateStr) return '—';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
-}
-
-function updateShelfCounts() {
-  const all  = shelfItems.length;
-  const zero = shelfItems.filter(it=>it.status==='zero').length;
-  const slow = shelfItems.filter(it=>it.status==='slow').length;
-  document.getElementById('shelf-n-all').textContent  = all;
-  document.getElementById('shelf-n-zero').textContent = zero;
-  document.getElementById('shelf-n-slow').textContent = slow;
-  document.getElementById('shelf-count-hd').textContent = all+' รายการ';
-}
-
-function shelfFilter(type) {
-  shelfFilter_current = type;
-  ['all','zero','slow'].forEach(t=>{
-    const btn = document.getElementById('shelf-tab-'+t);
-    if(t===type){
-      btn.style.background='#0369a1'; btn.style.color='#fff'; btn.style.borderColor='#0369a1';
-    } else {
-      btn.style.background='#fff'; btn.style.color='#8e8e93'; btn.style.borderColor='#e5e5ea';
-    }
-  });
-  renderShelfList();
+  setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 50);
 }
 
 function renderShelfList() {
   const list = document.getElementById('shelf-list');
-  const items = shelfFilter_current==='all' ? shelfItems
-              : shelfItems.filter(it=>it.status===shelfFilter_current);
-  if(!items.length){ list.innerHTML='<div class="empty">ยังไม่มีรายการ</div>'; return; }
+  if(!shelfItems.length){ list.innerHTML='<div class="empty">เริ่มสแกนได้เลย</div>'; return; }
 
-  const fromStr  = document.getElementById('shelf-date-from')?.value;
-  const toStr    = document.getElementById('shelf-date-to')?.value;
-  const hasRange = fromStr && toStr;
+  list.innerHTML = shelfItems.map(it => {
+    const hasData = it.totalBaseQty !== null;
+    const isZero  = hasData && it.totalBaseQty === 0;
+    const [bg,color] = !hasData ? ['#f0f9ff','#0c4a6e']
+                     : isZero   ? ['#fef2f2','#991b1b']
+                                : ['#f0fdf4','#166534'];
 
-  list.innerHTML = items.map(it=>{
-    const [bg, color, statusLabel] =
-      it.status==='zero'    ? ['#fef2f2','#991b1b','❌ ขายได้ 0'] :
-      it.status==='slow'    ? ['#fffbeb','#92400e','⚠️ ขายช้า'] :
-      it.status==='unknown' ? ['#f0f9ff','#0c4a6e','❓ ไม่มีข้อมูล'] :
-                              ['#f0fdf4','#166534','✅ ขายได้'];
-
-    const unitLabel  = it.scannedUnit || it.baseUnit || 'ชิ้น';
-    const dispQty    = hasRange && it.soldQtyRange!=null ? it.soldQtyRange : it.soldQtyScanned;
-    const badge      = it.status==='unknown' ? statusLabel : `${statusLabel} ${dispQty} ${unitLabel}`;
-    const unitNote   = it.scannedMult > 1
-      ? `<span style="font-size:10px;color:#6d28d9"> · ${it.scannedUnit} ×${it.scannedMult} ${it.baseUnit}</span>` : '';
-
-    let daysColor='#8e8e93', daysText='—';
-    if(it.daysInStock!=null){
-      daysText  = it.daysInStock+' วัน';
-      daysColor = it.daysInStock>60?'#991b1b':it.daysInStock>30?'#9a3412':'#15803d';
+    // แสดงยอดขาย
+    let qtyLine = '';
+    if(!hasData) {
+      qtyLine = `<span style="color:#0c4a6e;font-size:12px">❓ ไม่มีข้อมูลยอดขาย</span>`;
+    } else if(isZero) {
+      qtyLine = `<span style="color:#991b1b;font-weight:700;font-size:14px">❌ 0 ชิ้น</span>`;
+    } else {
+      // แสดงทั้งหน่วยย่อยและหน่วยใหญ่ (ถ้ามี)
+      const baseStr = `<span style="font-size:16px;font-weight:700;color:#166534">${it.totalBaseQty} ${it.baseUnit}</span>`;
+      const packStr = (it.scannedMult > 1 && it.totalScannedQty !== null)
+        ? `<span style="font-size:13px;color:#15803d;margin-left:6px">(${it.totalScannedQty} ${it.scannedUnit})</span>`
+        : '';
+      qtyLine = baseStr + packStr;
     }
 
+    // barcode ที่สแกนมา
+    const bcNote = it.scannedMult > 1
+      ? `${it.scannedBC} <span style="color:#6d28d9;font-size:10px">· ${it.scannedUnit} ×${it.scannedMult}</span>`
+      : it.scannedBC;
+
     return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
           <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
-          <div class="item-bc">${it.scannedBC}${unitNote}</div>
+          <div class="item-bc" style="margin-top:2px">${bcNote}</div>
+          ${it.totalAmt>0?`<div style="font-size:11px;color:#8e8e93;margin-top:1px">฿${it.totalAmt.toFixed(0)}</div>`:''}
         </div>
-        <div style="flex-shrink:0;margin-left:8px">
-          <div style="background:${bg};color:${color};border-radius:7px;padding:3px 9px;font-size:12px;font-weight:600">${badge}</div>
-          ${it.count>1?`<div style="font-size:10px;color:#c7c7cc;text-align:center;margin-top:2px">ยิง ${it.count} ครั้ง</div>`:''}
-        </div>
-      </div>
-      <div style="display:flex;gap:5px;margin-top:7px">
-        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 6px;text-align:center">
-          <div style="font-size:9px;color:#8e8e93">📥 รับเข้าล่าสุด</div>
-          <div style="font-size:11px;font-weight:600;color:#1e40af">${fmtThDate(it.lastRecvDate)}</div>
-        </div>
-        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 6px;text-align:center">
-          <div style="font-size:9px;color:#8e8e93">📤 ขายล่าสุด</div>
-          <div style="font-size:11px;font-weight:600;color:#15803d">${fmtThDate(it.lastSaleDate)}</div>
-        </div>
-        <div style="flex:1;background:#f8f8f8;border-radius:7px;padding:5px 6px;text-align:center">
-          <div style="font-size:9px;color:#8e8e93">📦 ในสต๊อค</div>
-          <div style="font-size:11px;font-weight:600;color:${daysColor}">${daysText}</div>
+        <div style="flex-shrink:0;text-align:right">
+          ${qtyLine}
+          ${it.scanCount>1?`<div style="font-size:10px;color:#c7c7cc">ยิง ${it.scanCount} ครั้ง</div>`:''}
         </div>
       </div>
     </div>`;
@@ -1996,50 +1225,47 @@ function renderShelfList() {
 function clearShelf() {
   if(!shelfItems.length) return;
   if(confirm('ล้างรายการสแกนทั้งหมด?')){
-    shelfItems=[]; shelfFilter_current='all';
-    updateShelfCounts(); renderShelfList();
-    shelfFilter('all');
+    shelfItems=[];
+    document.getElementById('shelf-count-hd').textContent='0 รายการ';
+    renderShelfList();
   }
 }
 
 function exportShelfExcel() {
-  if(!shelfItems.length){showMsg('shelf-msg','ไม่มีรายการ',true);return;}
+  if(!shelfItems.length){ showMsg('shelf-msg','ไม่มีรายการ',true); return; }
   const now=new Date();
   const rows=[
     ['รายงานสแกนหน้าชั้น — '+fmtUploadDate(now)],
     [],
-    ['Barcode','ชื่อสินค้า','หน่วย','จำนวนขาย','ยอดขาย (฿)','หมวดหมู่','สถานะ']
+    ['Barcode','ชื่อสินค้า','ยอดขาย (หน่วยย่อย)','หน่วยย่อย','ยอดขาย (หน่วยใหญ่)','หน่วยใหญ่','ยอดเงิน (฿)']
   ];
   shelfItems.forEach(it=>{
-    const st = it.status==='zero'?'ขายได้ 0 ชิ้น'
-             : it.status==='slow'?`ขายช้า ${it.soldQty} ชิ้น`
-             : it.status==='unknown'?'ไม่มีข้อมูลยอดขาย'
-             : `ขายได้ ${it.soldQty} ชิ้น`;
-    rows.push([it.bc, it.name, it.unit, it.soldQty, parseFloat(it.soldAmt.toFixed(2)), it.group, st]);
+    rows.push([
+      it.scannedBC, it.name,
+      it.totalBaseQty ?? '—', it.baseUnit,
+      (it.scannedMult>1 && it.totalScannedQty!=null) ? it.totalScannedQty : '—',
+      it.scannedMult>1 ? it.scannedUnit : '—',
+      it.totalAmt>0 ? it.totalAmt.toFixed(0) : 0
+    ]);
   });
-  rows.push([]); rows.push(['รวม',shelfItems.length,'รายการ']);
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:16},{wch:40},{wch:8},{wch:14},{wch:14},{wch:20},{wch:22}];
+  ws['!cols']=[{wch:16},{wch:40},{wch:16},{wch:8},{wch:16},{wch:8},{wch:12}];
   XLSX.utils.book_append_sheet(wb,ws,'สแกนหน้าชั้น');
   XLSX.writeFile(wb,'สแกนหน้าชั้น_'+fmtFileName(now)+'.xlsx');
   showMsg('shelf-msg','✓ ส่งออก Excel แล้ว',false);
 }
 
 function exportShelfTxt() {
-  if(!shelfItems.length){showMsg('shelf-msg','ไม่มีรายการ',true);return;}
+  if(!shelfItems.length){ showMsg('shelf-msg','ไม่มีรายการ',true); return; }
   const now=new Date();
   let txt=`รายงานสแกนหน้าชั้น\n${fmtUploadDate(now)}\n${'='.repeat(40)}\n\n`;
   shelfItems.forEach((it,i)=>{
-    const st=it.status==='zero'?'❌ ขายได้ 0 ชิ้น'
-            :it.status==='slow'?`⚠️ ขายช้า ${it.soldQty} ชิ้น`
-            :it.status==='unknown'?'❓ ไม่มีข้อมูล'
-            :`✅ ขายได้ ${it.soldQty} ชิ้น`;
-    txt+=`${i+1}. ${it.name}\n   ${it.bc} | ${st}\n`;
+    const qty = it.totalBaseQty!==null ? it.totalBaseQty+' '+it.baseUnit : '—';
+    const pack= (it.scannedMult>1&&it.totalScannedQty!=null) ? ' ('+it.totalScannedQty+' '+it.scannedUnit+')' : '';
+    txt+=`${i+1}. ${it.name}\n   ${it.scannedBC} | ${qty}${pack}\n`;
   });
   txt+=`\nรวม: ${shelfItems.length} รายการ\n`;
-  txt+=`❌ ขายไม่ได้: ${shelfItems.filter(it=>it.status==='zero').length} รายการ\n`;
-  txt+=`⚠️ ขายช้า: ${shelfItems.filter(it=>it.status==='slow').length} รายการ\n`;
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
   a.download='สแกนหน้าชั้น_'+fmtFileName(now)+'.txt';
