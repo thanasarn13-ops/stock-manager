@@ -922,21 +922,33 @@ function finishLoad(isPOS) {
   const dateStr = fmtUploadDate(now);
   localStorage.setItem(PROD_DATE_KEY, now.toISOString());
 
-  // สร้าง masterMap จากข้อมูลสินค้าเดียวกัน (R05_146)
-  // products เก็บด้วย bc→{name,unit,multiple,baseUnit,sellPrice,...}
-  // masterMap ต้องการ bc→{baseBC, name, unit, multiple}
+  // สร้าง masterMap โดยตรงจาก products (CF_BARCODE → CF_ITEMID)
+  // CF_ITEMID ใน R05 = barcode หน่วยย่อยสุดเสมอ (ตรวจสอบแล้ว)
   masterMap = {};
   Object.entries(products).forEach(([bc, p]) => {
-    masterMap[bc] = {
-      baseBC: p.multiple > 1 ? (p.baseBC || bc) : bc,
-      name: p.name,
-      unit: p.unit,
-      multiple: p.multiple || 1
-    };
+    const baseBC = p.baseBC && p.baseBC !== bc ? p.baseBC
+                 : p.multiple > 1 ? p.baseBC || bc   // ถ้ามี baseBC ใช้, ถ้าไม่มีค่อยใช้ bc
+                 : bc;
+    masterMap[bc] = { baseBC, name: p.name, unit: p.unit, multiple: p.multiple || 1 };
   });
+
+  // ตรวจสอบและแก้ baseBC ที่อาจผิด:
+  // barcode ที่ multiple=1 → baseBC = ตัวเอง
+  // barcode ที่ multiple>1 → baseBC ต้องเป็น barcode ที่ multiple=1 ชื่อเดียวกัน
+  const nameToBaseBC = {};
+  Object.entries(products).forEach(([bc, p]) => {
+    if(p.multiple === 1) nameToBaseBC[p.name] = bc;
+  });
+  Object.keys(masterMap).forEach(bc => {
+    const p = products[bc];
+    if(p && p.multiple > 1 && nameToBaseBC[p.name]) {
+      masterMap[bc].baseBC = nameToBaseBC[p.name];
+    }
+  });
+
   localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
 
-  const multiCount = Object.values(masterMap).filter(m => m.multiple > 1).length;
+  const multiCount = Object.values(masterMap).filter(m => m.multiple > 1 && m.baseBC !== bc).length;
 
   // อัพเดทหน้าหลัก
   setDbStatus(true, count+' สินค้า (R05)');
