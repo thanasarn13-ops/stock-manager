@@ -1040,8 +1040,26 @@ let shelfItems = [];
 let shelfScanning = false;
 let shelfCamReader = null;
 
+// ===== GO SCREEN =====
+function goScreen(s) {
+  if(s==='receipt'){ saveSaleToLog(); buildReceipt(); }
+  if(s==='saleslog') renderSalesLog();
+  if(s==='shelf')    initShelfScreen();
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.getElementById('screen-'+s).classList.add('active');
+  stopShelfScan();
+  if(typeof stopPriceScan==='function') stopPriceScan();
+  if(typeof stopRecvScan==='function')  stopRecvScan();
+  if(typeof stopSalesScan==='function') stopSalesScan();
+  if(s==='stock')   setTimeout(()=>document.getElementById('bc-in').focus(),200);
+  if(s==='price')   setTimeout(()=>document.getElementById('price-bc').focus(),200);
+  if(s==='receive') setTimeout(()=>document.getElementById('recv-bc-in').focus(),200);
+  if(s==='sales')   setTimeout(()=>document.getElementById('sales-bc-in').focus(),200);
+  if(s==='shelf')   setTimeout(()=>document.getElementById('shelf-bc-in').focus(),200);
+  if(s==='list')    renderList();
+}
+
 function initShelfScreen() {
-  // โหลด salesData104 จาก cache ถ้ายังว่าง
   if(!Object.keys(salesData104).length) {
     try {
       const s = localStorage.getItem(SALES_FILE104_KEY);
