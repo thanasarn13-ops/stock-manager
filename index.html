@@ -1017,17 +1017,13 @@ function parseSales104XLSX(buf) {
       if(!bc) return;
       const qty = parseFloat(row[qtyIdx]||0);
       const amt = parseFloat(row[amtIdx]||0);
-      // เก็บด้วย bc เดิม และ baseBC (resolveBC)
-      const base = resolveBC(bc);
-      const keys = base !== bc ? [base, bc] : [bc];
-      keys.forEach(key => {
-        if(!salesData104[key]) salesData104[key] = {
-          name: String(row[nameIdx]||''), unit: String(row[unitIdx]||''),
-          baseQty: 0, totalAmt: 0
-        };
-        salesData104[key].baseQty  += qty;
-        salesData104[key].totalAmt += amt;
-      });
+      // เก็บด้วย bc เดิมก่อน (ไม่ resolveBC ตอนนี้ เพราะ masterMap อาจยังไม่โหลด)
+      if(!salesData104[bc]) salesData104[bc] = {
+        name: String(row[nameIdx]||''), unit: String(row[unitIdx]||''),
+        baseQty: 0, totalAmt: 0
+      };
+      salesData104[bc].baseQty  += qty;
+      salesData104[bc].totalAmt += amt;
     });
 
     const count = Object.keys(salesData104).length;
@@ -1075,8 +1071,20 @@ function initShelfScreen() {
   if(!Object.keys(salesData104).length) {
     try {
       const s = localStorage.getItem(SALES_FILE104_KEY);
-      if(s) { salesData104 = JSON.parse(s); }
+      if(s) salesData104 = JSON.parse(s);
     } catch(e){}
+  }
+  // re-index ด้วย baseBC หลัง masterMap โหลดแล้ว
+  if(Object.keys(masterMap).length && Object.keys(salesData104).length) {
+    const newData = {};
+    Object.entries(salesData104).forEach(([bc, val]) => {
+      const base = resolveBC(bc);
+      if(!newData[base]) newData[base]={name:val.name,unit:val.unit,baseQty:0,totalAmt:0};
+      newData[base].baseQty  += val.baseQty;
+      newData[base].totalAmt += val.totalAmt;
+      if(base !== bc) newData[bc] = newData[base];
+    });
+    salesData104 = newData;
   }
   renderShelfList();
   document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
@@ -1158,9 +1166,9 @@ function addShelfItem(bc) {
     return;
   }
 
-  // ค้นหายอดขายจาก salesData104 (ข้อมูลหน่วยย่อย)
+  // ค้นหายอดขาย — ลอง baseBC ก่อน ถ้าไม่เจอลอง bc เดิม
   const sd = salesData104[baseBC] || salesData104[bc];
-  const totalBaseQty = sd ? sd.baseQty : null; // null = ไม่มีข้อมูล
+  const totalBaseQty = sd ? sd.baseQty  : null;
   const totalAmt     = sd ? sd.totalAmt : 0;
 
   // แปลงเป็นหน่วยที่สแกน
