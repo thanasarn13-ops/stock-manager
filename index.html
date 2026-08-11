@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v1.8</div>
+        <div>v2.0</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -217,6 +217,9 @@ input:focus{border-color:#007aff;background:#fff}
           <div id="promo-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
         </div>
       </div>
+      <!-- Storage size -->
+      <div style="height:0.5px;background:#e5e5ea"></div>
+      <div id="storage-status" style="font-size:11px;color:#8e8e93;text-align:center">💾 กำลังตรวจสอบพื้นที่...</div>
     </div>
 
     <div class="mode-btn mode-stock" onclick="goScreen('stock')">
@@ -1017,6 +1020,18 @@ function buildProds(rows, c, branch) {
   localStorage.setItem(isB1?'sm_prod_b1_v1':PROD_KEY, JSON.stringify(dest));
 }
 
+function buildMasterMap(src) {
+  masterMap = {};
+  const nameToBaseBC = {};
+  Object.entries(src).forEach(([bc,p])=>{ if(p.multiple===1) nameToBaseBC[p.name]=bc; });
+  Object.entries(src).forEach(([bc,p])=>{
+    const baseBC = nameToBaseBC[p.name] || bc;
+    masterMap[bc]={baseBC,name:p.name,unit:p.unit,multiple:p.multiple||1};
+  });
+  localStorage.setItem(MASTER_KEY,JSON.stringify(masterMap));
+  return masterMap;
+}
+
 function finishLoad(isPOS, branch) {
   const isB1 = branch === 'b1';
   const dest = isB1 ? products_b1 : products;
@@ -1027,15 +1042,8 @@ function finishLoad(isPOS, branch) {
 
   if(!isB1) {
     localStorage.setItem(PROD_DATE_KEY, now.toISOString());
-    // สร้าง masterMap จาก HQ
-    masterMap = {};
-    const nameToBaseBC = {};
-    Object.entries(products).forEach(([bc,p])=>{ if(p.multiple===1) nameToBaseBC[p.name]=bc; });
-    Object.entries(products).forEach(([bc,p])=>{
-      const baseBC = nameToBaseBC[p.name] || bc;
-      masterMap[bc]={baseBC,name:p.name,unit:p.unit,multiple:p.multiple||1};
-    });
-    localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));
+    buildMasterMap(products);
+    if(Object.keys(products_b1).length===0) Object.assign(products_b1, products);
     const multiCount = Object.values(masterMap).filter(m=>m.multiple>1).length;
     setDbStatus(true, count+' สินค้า (สนญ.)');
     setDbDate(dateStr);
@@ -1044,6 +1052,8 @@ function finishLoad(isPOS, branch) {
     if(el){el.style.display='block';el.innerHTML='✓ สนญ. <b>'+count+'</b> สินค้า';}
   } else {
     // สาขา 1
+    if(Object.keys(masterMap).length===0) buildMasterMap(products_b1);
+    if(Object.keys(products).length===0) Object.assign(products, products_b1);
     const dot=document.getElementById('upload-prod2-dot');
     const st=document.getElementById('upload-prod2-status');
     const dt=document.getElementById('upload-prod2-date');
@@ -1052,8 +1062,10 @@ function finishLoad(isPOS, branch) {
     if(dt) dt.textContent='อัพโหลดเมื่อ: '+dateStr;
     const el=document.getElementById('prod2-preview');
     if(el){el.style.display='block';el.innerHTML='✓ สาขา 1 <b>'+count+'</b> สินค้า';}
+    setDbStatus(true, count+' สินค้า (สาขา 1)');
   }
   showMsg('upload-msg','✓ โหลด '+label+' เรียบร้อย! '+count+' สินค้า',false);
+  setTimeout(checkStorageSize, 300);
 }
 
 function updateUploadProdStatus(ok, txt, dateStr) {
@@ -1191,6 +1203,7 @@ function parseSales104XLSX(buf, branch) {
     if(dt)dt.textContent='อัพโหลดเมื่อ: '+ds;
     if(el){el.style.display='block';el.innerHTML='✓ '+label+' <b>'+count+'</b> สินค้า';}
     showMsg('upload-msg','✓ โหลด '+label+' '+count+' สินค้าเรียบร้อย!',false);
+    setTimeout(checkStorageSize, 300);
   }catch(e){showMsg('upload-msg','❌ อ่านไฟล์ไม่ได้: '+e.message,true);}
 }
 
@@ -1305,13 +1318,17 @@ function addShelfItem(bc) {
   bc = bc.trim();
   if(!bc) return;
 
-  // หา baseBC และข้อมูลสินค้า
-  const baseBC = resolveBC(bc);
-  const p = products[baseBC] || products[bc];
-  const scannedMult = masterMap[bc]?.multiple || products[bc]?.multiple || 1;
-  const scannedUnit = masterMap[bc]?.unit || products[bc]?.unit || '';
-  const baseUnit    = products[baseBC]?.unit || '';
-  const displayName = p?.name || masterMap[bc]?.name || '';
+  // หา baseBC จาก masterMap ก่อน
+  const masterEntry = masterMap[bc];
+  const baseBC = masterEntry ? masterEntry.baseBC : bc;
+
+  // ค้นหาสินค้า — ลองทุก key ที่เป็นไปได้
+  const p = products[baseBC] || products[bc]
+         || products_b1[baseBC] || products_b1[bc];
+  const scannedMult = masterEntry?.multiple || products[bc]?.multiple || products_b1[bc]?.multiple || 1;
+  const scannedUnit = masterEntry?.unit || products[bc]?.unit || products_b1[bc]?.unit || '';
+  const baseUnit    = products[baseBC]?.unit || products_b1[baseBC]?.unit || scannedUnit;
+  const displayName = p?.name || masterEntry?.name || '';
 
   if(!displayName) {
     showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc, true);
@@ -2611,6 +2628,39 @@ function initAnalyzeScreen() {
   } catch(e){}
 }
 
+// ===== LOCALSTORAGE SIZE CHECK =====
+function checkStorageSize() {
+  try {
+    let total = 0;
+    const items = [];
+    for(let key in localStorage) {
+      if(!localStorage.hasOwnProperty(key)) continue;
+      const size = (localStorage[key].length * 2) / 1024; // KB
+      total += size;
+      items.push({key, size});
+    }
+    items.sort((a,b)=>b.size-a.size);
+
+    const totalMB = total / 1024;
+    const limitMB = 5; // ประมาณ limit ของ browser
+    const pct = Math.round(totalMB / limitMB * 100);
+
+    // อัพเดท status bar ถ้ามี
+    const el = document.getElementById('storage-status');
+    if(el) {
+      const color = pct > 80 ? '#991b1b' : pct > 60 ? '#9a3412' : '#15803d';
+      el.innerHTML = `<span style="color:${color}">💾 ${totalMB.toFixed(1)} MB / ~${limitMB} MB (${pct}%)</span>`;
+    }
+
+    // แจ้งเตือนถ้าใกล้เต็ม
+    if(pct > 80) {
+      console.warn('localStorage ใกล้เต็ม:', totalMB.toFixed(2)+'MB');
+    }
+
+    return {totalMB, pct, items};
+  } catch(e) { return {totalMB:0, pct:0, items:[]}; }
+}
+
 function tryLoadSaved() {
   try{
     // ข้อมูลสินค้า
@@ -2659,6 +2709,8 @@ function tryLoadSaved() {
     if(ss){stock=JSON.parse(ss);updateCount();renderStockInline();}
     // ประวัติการขาย
     loadSalesLog();
+    // เช็คขนาด storage
+    setTimeout(checkStorageSize, 500);
   }catch(e){}
 }
 
