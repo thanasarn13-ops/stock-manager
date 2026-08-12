@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.7</div>
+        <div>v2.8</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -1056,7 +1056,8 @@ function buildMasterMap(src) {
 function resolveBC(bc) {
   if(!bc) return bc;
   const m = masterMap[bc];
-  return m ? m.baseBC : bc;
+  // slim format: {b, m} / standard format: {baseBC, multiple}
+  return m ? (m.b || m.baseBC || bc) : bc;
 }
 
 function finishLoad(isPOS, branch) {
@@ -1272,28 +1273,31 @@ function goScreen(s) {
 }
 
 function initShelfScreen() {
+  // โหลดจาก localStorage ถ้ายังว่าง
   if(!Object.keys(salesData104).length) {
     try{ const s=localStorage.getItem(SALES_FILE104_KEY); if(s) salesData104=JSON.parse(s); }catch(e){}
   }
   if(!Object.keys(salesData104b).length) {
     try{ const s=localStorage.getItem(SALES_FILE104B_KEY); if(s) salesData104b=JSON.parse(s); }catch(e){}
   }
-  // re-index ด้วย baseBC หลัง masterMap โหลดแล้ว
+  // re-index ด้วย baseBC (slim format [qty, amt])
   const reIndex = (data) => {
     if(!Object.keys(masterMap).length || !Object.keys(data).length) return data;
     const newData={};
     Object.entries(data).forEach(([bc,val])=>{
-      const base=resolveBC(bc);
-      if(!newData[base]) newData[base]={name:val.name,unit:val.unit,baseQty:0,totalAmt:0};
-      newData[base][0]+=val[0]; newData[base][1]+=val[1];
-      if(base!==bc) newData[bc]=newData[base];
+      if(!Array.isArray(val)) return; // ข้าม format เก่า
+      const base = resolveBC(bc);
+      if(!newData[base]) newData[base]=[0,0];
+      newData[base][0] += val[0];
+      newData[base][1] += val[1];
+      if(base !== bc) newData[bc] = newData[base]; // alias
     });
     return newData;
   };
   salesData104  = reIndex(salesData104);
   salesData104b = reIndex(salesData104b);
   renderShelfList();
-  document.getElementById('shelf-count-hd').textContent=shelfItems.length+' รายการ';
+  document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
 }
 
 document.getElementById('shelf-scan-btn').addEventListener('click', toggleShelfScan);
@@ -1358,23 +1362,26 @@ function addShelfItem(bc) {
   bc = bc.trim();
   if(!bc) return;
 
-  // หา baseBC จาก masterMap ก่อน
+  // masterMap slim: {b: baseBC, m: multiple} เฉพาะหน่วยใหญ่
   const masterEntry = masterMap[bc];
-  const baseBC = masterEntry ? masterEntry.baseBC : bc;
+  const baseBC = masterEntry ? masterEntry.b : bc;
+  const scannedMultFromMaster = masterEntry ? masterEntry.m : 1;
 
-  // ค้นหาสินค้า — ลองทุก key ที่เป็นไปได้ (รองรับ compact keys)
+  // ค้นหาสินค้าจาก products (compact {n,u,m,b,p})
   const pRaw = products[baseBC] || products[bc] || products_b1[baseBC] || products_b1[bc];
   const p = normProd(pRaw);
-  const scannedMult = masterEntry?.multiple || p?.multiple || 1;
-  const scannedUnit = masterEntry?.unit || p?.unit || '';
-  const baseUnit    = normProd(products[baseBC])?.unit || normProd(products_b1[baseBC])?.unit || scannedUnit;
-  const displayName = p?.name || masterEntry?.name || '';
 
-  if(!displayName) {
-    showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc, true);
+  // ถ้าไม่พบใน products เลย
+  if(!p) {
+    showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc+' (โปรดอัพโหลด R05 ก่อน)', true);
     setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 100);
     return;
   }
+
+  const scannedMult = scannedMultFromMaster > 1 ? scannedMultFromMaster : (p.multiple || 1);
+  const scannedUnit = masterEntry ? p.unit : p.unit; // unit มาจาก baseBC เสมอ
+  const baseUnit    = p.unit || '';
+  const displayName = p.name || '';
 
   // ค้นหายอดขาย — ทั้ง 2 สาขา (slim format [qty, amt])
   const sdHQ = salesData104[baseBC]  || salesData104[bc];
