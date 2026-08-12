@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.2</div>
+        <div>v2.3</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -412,6 +412,15 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div style="padding:0 16px;font-size:12px;color:#8e8e93;line-height:1.7">
       &#9432; ข้อมูลบันทึกในเบราว์เซอร์ — ไม่ต้องอัปโหลดซ้ำจนกว่าจะมีข้อมูลใหม่
+    </div>
+    <!-- Storage status + ปุ่มล้าง -->
+    <div class="card" style="margin-top:8px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">💾 พื้นที่จัดเก็บ</div>
+      <div id="storage-detail" style="font-size:12px;color:#8e8e93;margin-bottom:10px">กำลังคำนวณ...</div>
+      <button onclick="clearAllCache()" style="width:100%;padding:10px;border-radius:10px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:13px;font-weight:600;cursor:pointer">
+        🗑️ ล้าง Cache ทั้งหมด (แนะนำก่อนอัพโหลดใหม่)
+      </button>
+      <div style="font-size:11px;color:#c7c7cc;margin-top:6px;text-align:center">หลังล้างแล้วต้องอัพโหลดไฟล์ใหม่ทุกไฟล์</div>
     </div>
   </div>
   <div class="msg" id="upload-msg"></div>
@@ -1223,6 +1232,7 @@ function goScreen(s) {
   if(s==='receipt'){ saveSaleToLog(); buildReceipt(); }
   if(s==='saleslog') renderSalesLog();
   if(s==='shelf')    initShelfScreen();
+  if(s==='upload')   setTimeout(checkStorageSize, 100);
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.getElementById('screen-'+s).classList.add('active');
   stopShelfScan();
@@ -2638,34 +2648,83 @@ function initAnalyzeScreen() {
 // ===== LOCALSTORAGE SIZE CHECK =====
 function checkStorageSize() {
   try {
+    const keys = {
+      'สินค้า สนญ.':   ['sm_prod_v5'],
+      'สินค้า สาขา1':  ['sm_prod_b1_v1'],
+      'Barcode map':   ['sm_master_v1'],
+      'โปรโมชั่น สนญ.':['sm_promotions_v1'],
+      'โปรโมชั่น สาขา1':['sm_promotions_b1_v1'],
+      'ยอดขาย สนญ.':  ['sm_sales104_v1'],
+      'ยอดขาย สาขา1': ['sm_sales104b_v1'],
+      'อื่นๆ': []
+    };
     let total = 0;
-    const items = [];
-    for(let key in localStorage) {
-      if(!localStorage.hasOwnProperty(key)) continue;
-      const size = (localStorage[key].length * 2) / 1024; // KB
-      total += size;
-      items.push({key, size});
+    const detail = {};
+    // วัดขนาดแต่ละ key
+    for(let k in localStorage){
+      if(!localStorage.hasOwnProperty(k)) continue;
+      const sz = (localStorage[k].length * 2) / 1024;
+      total += sz;
+      let found = false;
+      for(const [label, ks] of Object.entries(keys)){
+        if(ks.includes(k)){ detail[label] = (detail[label]||0)+sz; found=true; break; }
+      }
+      if(!found) detail['อื่นๆ'] = (detail['อื่นๆ']||0)+sz;
     }
-    items.sort((a,b)=>b.size-a.size);
+    const totalMB = total/1024;
+    const limitMB = 5;
+    const pct = Math.min(100, Math.round(totalMB/limitMB*100));
+    const color = pct>80?'#991b1b':pct>60?'#9a3412':'#15803d';
+    const barColor = pct>80?'#ef4444':pct>60?'#f97316':'#22c55e';
 
-    const totalMB = total / 1024;
-    const limitMB = 5; // ประมาณ limit ของ browser
-    const pct = Math.round(totalMB / limitMB * 100);
-
-    // อัพเดท status bar ถ้ามี
+    // หน้าหลัก
     const el = document.getElementById('storage-status');
-    if(el) {
-      const color = pct > 80 ? '#991b1b' : pct > 60 ? '#9a3412' : '#15803d';
-      el.innerHTML = `<span style="color:${color}">💾 ${totalMB.toFixed(1)} MB / ~${limitMB} MB (${pct}%)</span>`;
+    if(el){
+      el.innerHTML = `<span style="color:${color}">💾 ${totalMB.toFixed(1)} MB / ~${limitMB} MB</span>
+        <div style="height:4px;background:#e5e5ea;border-radius:2px;margin-top:3px">
+          <div style="height:4px;background:${barColor};border-radius:2px;width:${pct}%"></div>
+        </div>`;
     }
 
-    // แจ้งเตือนถ้าใกล้เต็ม
-    if(pct > 80) {
-      console.warn('localStorage ใกล้เต็ม:', totalMB.toFixed(2)+'MB');
+    // หน้าอัพโหลด — รายละเอียด
+    const det = document.getElementById('storage-detail');
+    if(det){
+      let rows = Object.entries(detail)
+        .filter(([,v])=>v>0)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`<div style="display:flex;justify-content:space-between"><span>${k}</span><span style="color:${color}">${(v/1024).toFixed(2)} MB</span></div>`)
+        .join('');
+      rows += `<div style="display:flex;justify-content:space-between;font-weight:600;border-top:0.5px solid #e5e5ea;margin-top:4px;padding-top:4px"><span>รวม</span><span style="color:${color}">${totalMB.toFixed(2)} MB / ${limitMB} MB (${pct}%)</span></div>`;
+      det.innerHTML = rows;
     }
 
-    return {totalMB, pct, items};
-  } catch(e) { return {totalMB:0, pct:0, items:[]}; }
+    if(pct>80) showMsg('upload-msg','⚠️ พื้นที่เกือบเต็ม! กรุณากด "ล้าง Cache" แล้วอัพโหลดใหม่',true);
+    return {totalMB, pct};
+  } catch(e){ return {totalMB:0, pct:0}; }
+}
+
+function clearAllCache() {
+  if(!confirm('ล้าง Cache ทั้งหมด?\nต้องอัพโหลดไฟล์ใหม่ทุกไฟล์หลังจากนี้')) return;
+  // เก็บ salesLog และ stock ไว้
+  const keep = {};
+  ['sm_sales_v1','sm_stock_v5','sm_time_v5'].forEach(k=>{
+    const v = localStorage.getItem(k);
+    if(v) keep[k] = v;
+  });
+  localStorage.clear();
+  // คืน salesLog และ stock
+  Object.entries(keep).forEach(([k,v])=>localStorage.setItem(k,v));
+  // reset ตัวแปร
+  products={}; products_b1={}; masterMap={};
+  promotions_b1={}; salesData104={}; salesData104b={};
+  // reset UI dots
+  ['upload-prod-dot','upload-prod2-dot','upload-promo-dot','upload-promo2-dot',
+   'upload-salesdate-dot','upload-sales2-dot','upload-po-dot','upload-master-dot'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.className='db-dot';
+  });
+  setDbStatus(false,'ยังไม่ได้โหลดข้อมูลสินค้า');
+  checkStorageSize();
+  showMsg('upload-msg','✅ ล้าง Cache แล้ว — กรุณาอัพโหลดไฟล์ใหม่ทุกไฟล์',false);
 }
 
 function tryLoadSaved() {
