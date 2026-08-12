@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.0</div>
+        <div>v2.2</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -864,7 +864,7 @@ function resolveBC(bc) {
 function resolveName(bc) {
   const baseBC = resolveBC(bc);
   const p = products[baseBC] || products[bc];
-  return p ? p.name : (masterMap[bc]?.name || '');
+  return p ? (p.n||p.name) : (masterMap[bc]?.name || '');
 }
 
 // โปรโมชั่นฝังตรงในโค้ด (อัพเดทจากไฟล์ XLSX อัตโนมัติเมื่ออัพโหลด)
@@ -967,8 +967,8 @@ function buildProds(rows, c) {
     if(bc) products[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice,baseBC};
   });
   const nameToBase={};
-  Object.values(products).forEach(p=>{if(p.multiple===1)nameToBase[p.name]=p.unit;});
-  Object.values(products).forEach(p=>{if(nameToBase[p.name])p.baseUnit=nameToBase[p.name];});
+  Object.values(products).forEach(p=>{if((p.m||p.multiple||1)===1)nameToBase[p.n||p.name]=p.u||p.unit;});
+  Object.values(products).forEach(p=>{if(nameToBase[p.n||p.name])p.bu=nameToBase[p.n||p.name];});
   localStorage.setItem(PROD_KEY,JSON.stringify(products));
 }
 
@@ -991,10 +991,8 @@ function parseXLSX(buf, branch) {
 }
 
 function buildProds(rows, c, branch) {
-  const target = (branch==='b1') ? {} : {};
   const isB1 = branch === 'b1';
   const dest = isB1 ? products_b1 : products;
-  // reset เฉพาะสาขาที่กำลัง load
   if(isB1) { Object.keys(products_b1).forEach(k=>delete products_b1[k]); }
   else      { Object.keys(products).forEach(k=>delete products[k]); }
 
@@ -1008,25 +1006,33 @@ function buildProds(rows, c, branch) {
     const botPrice=c.botIdx>=0?parseFloat(r[c.botIdx])||0:0;
     const topPrice=c.topIdx>=0?parseFloat(r[c.topIdx])||0:0;
     const baseBC=c.itemIdIdx>=0?String(r[c.itemIdIdx]||'').trim():bc;
-    if(bc) dest[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice,baseBC};
+    // compact keys ประหยัด ~45% ใน localStorage
+    if(bc) dest[bc]={n:name,u:unit,m:multiple,bu:unit,p:sellPrice,fp:fmlPrice,bp:botPrice,tp:topPrice,b:baseBC};
   });
-  // ถ้าโหลด HQ → copy ไป products_b1 ถ้ายังไม่มีข้อมูลสาขา
-  if(!isB1 && Object.keys(products_b1).length===0) {
-    Object.assign(products_b1, dest);
-  }
+  if(!isB1 && Object.keys(products_b1).length===0) Object.assign(products_b1, dest);
   const nameToBase={};
-  Object.values(dest).forEach(p=>{if(p.multiple===1)nameToBase[p.name]=p.unit;});
-  Object.values(dest).forEach(p=>{if(nameToBase[p.name])p.baseUnit=nameToBase[p.name];});
+  Object.values(dest).forEach(p=>{if(p.m===1)nameToBase[p.n]=p.u;});
+  Object.values(dest).forEach(p=>{if(nameToBase[p.n])p.bu=nameToBase[p.n];});
   localStorage.setItem(isB1?'sm_prod_b1_v1':PROD_KEY, JSON.stringify(dest));
+}
+
+// getter ที่แปลง compact → standard สำหรับโค้ดที่ใช้ .name .unit etc.
+function normProd(p) {
+  if(!p) return null;
+  if(p.name !== undefined) return p; // already standard
+  return {name:p.n,unit:p.u,multiple:p.m||1,baseUnit:p.bu||p.u,
+          sellPrice:p.p||0,fmlPrice:p.fp||0,botPrice:p.bp||0,topPrice:p.tp||0,baseBC:p.b||''};
 }
 
 function buildMasterMap(src) {
   masterMap = {};
   const nameToBaseBC = {};
-  Object.entries(src).forEach(([bc,p])=>{ if(p.multiple===1) nameToBaseBC[p.name]=bc; });
+  // รองรับทั้ง compact {n,u,m} และ standard {name,unit,multiple}
+  Object.entries(src).forEach(([bc,p])=>{ const m=p.m||p.multiple||1; const n=p.n||p.name||''; if(m===1) nameToBaseBC[n]=bc; });
   Object.entries(src).forEach(([bc,p])=>{
-    const baseBC = nameToBaseBC[p.name] || bc;
-    masterMap[bc]={baseBC,name:p.name,unit:p.unit,multiple:p.multiple||1};
+    const n=p.n||p.name||'', u=p.u||p.unit||'', m=p.m||p.multiple||1, b=p.b||p.baseBC||bc;
+    const baseBC = nameToBaseBC[n] || b || bc;
+    masterMap[bc]={baseBC,name:n,unit:u,multiple:m};
   });
   localStorage.setItem(MASTER_KEY,JSON.stringify(masterMap));
   return masterMap;
@@ -1044,7 +1050,7 @@ function finishLoad(isPOS, branch) {
     localStorage.setItem(PROD_DATE_KEY, now.toISOString());
     buildMasterMap(products);
     if(Object.keys(products_b1).length===0) Object.assign(products_b1, products);
-    const multiCount = Object.values(masterMap).filter(m=>m.multiple>1).length;
+    const multiCount = Object.values(masterMap).filter(x=>x.multiple>1).length;
     setDbStatus(true, count+' สินค้า (สนญ.)');
     setDbDate(dateStr);
     updateUploadProdStatus(true, count+' สินค้า · '+multiCount+' barcode หน่วยใหญ่', dateStr);
@@ -1322,12 +1328,12 @@ function addShelfItem(bc) {
   const masterEntry = masterMap[bc];
   const baseBC = masterEntry ? masterEntry.baseBC : bc;
 
-  // ค้นหาสินค้า — ลองทุก key ที่เป็นไปได้
-  const p = products[baseBC] || products[bc]
-         || products_b1[baseBC] || products_b1[bc];
-  const scannedMult = masterEntry?.multiple || products[bc]?.multiple || products_b1[bc]?.multiple || 1;
-  const scannedUnit = masterEntry?.unit || products[bc]?.unit || products_b1[bc]?.unit || '';
-  const baseUnit    = products[baseBC]?.unit || products_b1[baseBC]?.unit || scannedUnit;
+  // ค้นหาสินค้า — ลองทุก key ที่เป็นไปได้ (รองรับ compact keys)
+  const pRaw = products[baseBC] || products[bc] || products_b1[baseBC] || products_b1[bc];
+  const p = normProd(pRaw);
+  const scannedMult = masterEntry?.multiple || p?.multiple || 1;
+  const scannedUnit = masterEntry?.unit || p?.unit || '';
+  const baseUnit    = normProd(products[baseBC])?.unit || normProd(products_b1[baseBC])?.unit || scannedUnit;
   const displayName = p?.name || masterEntry?.name || '';
 
   if(!displayName) {
@@ -1351,9 +1357,9 @@ function addShelfItem(bc) {
 
   // หาทุกหน่วยของสินค้านี้จาก products (เรียงจากย่อย→ใหญ่)
   const allUnits = Object.entries(products)
-    .filter(([,v]) => v.name === displayName)
-    .sort((a,b) => (a[1].multiple||1) - (b[1].multiple||1))
-    .map(([ubc, uv]) => ({bc:ubc, unit:uv.unit, multiple:uv.multiple||1}));
+    .filter(([,v]) => (v.n||v.name) === displayName)
+    .sort((a,b) => (a[1].m||a[1].multiple||1) - (b[1].m||b[1].multiple||1))
+    .map(([ubc, uv]) => ({bc:ubc, unit:uv.u||uv.unit, multiple:uv.m||uv.multiple||1}));
 
   // ตรวจยิงซ้ำ
   const existing = shelfItems.find(it => it.scannedBC === bc);
@@ -1775,8 +1781,9 @@ document.getElementById('sales-bc-in').addEventListener('keyup',e=>{
 
 function addToCart(bc) {
   const bp = getBranchProducts();
-  const p = bp[bc] || bp[resolveBC(bc)];
-  if(!p) return;
+  const pRaw = bp[bc] || bp[resolveBC(bc)];
+  if(!pRaw) return;
+  const p=normProd(pRaw);
   const existing=cart.find(it=>it.bc===bc);
   if(existing) existing.qty++;
   else cart.push({bc,name:p.name,unit:p.unit||'',price:p.sellPrice||0,qty:1});
@@ -2009,10 +2016,10 @@ document.getElementById('recv-bc-in').addEventListener('keydown',e=>{if(e.key===
 function recvAutofill(bc) {
   const badge=document.getElementById('recv-af-badge'),p=products[bc];
   if(p){
-    document.getElementById('recv-name-in').value=p.name;
+    document.getElementById('recv-name-in').value=p.n||p.name;
     document.getElementById('recv-qty-in').value=1;
     badge.style.display='inline';
-    badge.textContent=p.multiple>1?'auto-filled · 1 '+p.unit+' = '+p.multiple+' '+p.baseUnit:'auto-filled';
+    badge.textContent=(p.m||p.multiple||1)>1?'auto-filled · 1 '+(p.u||p.unit)+' = '+(p.m||p.multiple)+' '+(p.bu||p.baseUnit||p.u||p.unit):'auto-filled';
   } else {
     badge.style.display='none';
     document.getElementById('recv-name-in').value='';
@@ -2027,21 +2034,21 @@ function addRecv() {
   if(qty<=0){showMsg('recv-msg','จำนวนต้องมากกว่า 0',true);return;}
   const p=products[bc];
   if(recvItems[bc]) recvItems[bc].qty+=qty;
-  else recvItems[bc]={bc, name:p.name, unit:p.unit, qty};
+  else recvItems[bc]={bc, name:p.n||p.name, unit:p.u||p.unit, qty};
   ['recv-bc-in','recv-name-in'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('recv-qty-in').value='1';
   document.getElementById('recv-af-badge').style.display='none';
   document.getElementById('recv-bc-in').focus();
-  showMsg('recv-msg','✓ เพิ่ม '+qty+' '+p.unit+' แล้ว',false);
+  showMsg('recv-msg','✓ เพิ่ม '+qty+' '+(p.u||p.unit)+' แล้ว',false);
   renderRecvList();
 }
 
 function loadRecvAccumProduct(bc) {
   recvAccumBC=bc;
   const p=products[bc];
-  document.getElementById('recv-accum-name').textContent=p?p.name:bc;
-  document.getElementById('recv-accum-unit').textContent=p?p.unit:'';
-  document.getElementById('recv-accum-unit2').textContent=p?p.unit:'';
+  document.getElementById('recv-accum-name').textContent=p?(p.n||p.name):bc;
+  document.getElementById('recv-accum-unit').textContent=p?(p.u||p.unit):'';
+  document.getElementById('recv-accum-unit2').textContent=p?(p.u||p.unit):'';
   document.getElementById('recv-accum-bc').textContent=bc;
   document.getElementById('recv-accum-bc-in').value=bc;
 }
@@ -2067,8 +2074,8 @@ function saveRecvAccum(){
   if(recvAccumQty<=0){showMsg('recv-accum-msg','จำนวนต้องมากกว่า 0',true);return;}
   const p=products[recvAccumBC];
   if(recvItems[recvAccumBC]) recvItems[recvAccumBC].qty+=recvAccumQty;
-  else recvItems[recvAccumBC]={bc:recvAccumBC,name:p?p.name:recvAccumBC,unit:p?p.unit:'',qty:recvAccumQty};
-  showMsg('recv-accum-msg','✓ บันทึก '+recvAccumQty+' '+(p?p.unit:'')+' แล้ว',false);
+  else recvItems[recvAccumBC]={bc:recvAccumBC,name:p?(p.n||p.name):recvAccumBC,unit:p?(p.u||p.unit):'',qty:recvAccumQty};
+  showMsg('recv-accum-msg','✓ บันทึก '+recvAccumQty+' '+(p?(p.u||p.unit):'')+' แล้ว',false);
   resetRecvAccum();
   renderRecvList();
 }
@@ -2154,9 +2161,9 @@ function setCountMode(mode) {
 function loadAccumProduct(bc) {
   accumBC = bc;
   const p = products[bc];
-  document.getElementById('accum-name').textContent = p ? p.name : bc;
-  document.getElementById('accum-unit').textContent = p ? p.unit : '';
-  document.getElementById('accum-unit2').textContent = p ? p.unit : '';
+  document.getElementById('accum-name').textContent = p ? (p.n||p.name) : bc;
+  document.getElementById('accum-unit').textContent = p ? (p.u||p.unit) : '';
+  document.getElementById('accum-unit2').textContent = p ? (p.u||p.unit) : '';
   document.getElementById('accum-bc').textContent = bc;
   document.getElementById('accum-bc-in').value = bc;
 }
@@ -2251,11 +2258,11 @@ document.getElementById('bc-in').addEventListener('input', function() {
 function autofill(bc) {
   const badge=document.getElementById('af-badge'), p=products[bc];
   if(p){
-    document.getElementById('name-in').value=p.name;
-    document.getElementById('unit-in').value=p.unit||'';
+    document.getElementById('name-in').value=p.n||p.name;
+    document.getElementById('unit-in').value=p.u||p.unit||'';
     document.getElementById('qty-in').value=1;
     badge.style.display='inline';
-    badge.textContent=p.multiple>1?'auto-filled · 1 '+p.unit+' = '+p.multiple+' '+p.baseUnit:'auto-filled';
+    badge.textContent=(p.m||p.multiple||1)>1?'auto-filled · 1 '+(p.u||p.unit)+' = '+(p.m||p.multiple)+' '+(p.bu||p.baseUnit||p.u||p.unit):'auto-filled';
   } else {
     badge.style.display='none';
     document.getElementById('name-in').value='';
@@ -2281,9 +2288,9 @@ function addStock() {
   }
 
   const p = products[bc];
-  const name = p.name;
-  const unit = document.getElementById('unit-in').value.trim()||(p.unit||'');
-  const multiple = p.multiple || 1;
+  const name = p.n||p.name;
+  const unit = document.getElementById('unit-in').value.trim()||(p.u||p.unit||'');
+  const multiple = p.m||p.multiple || 1;
 
   // หา baseUnit = unit ของสินค้าชื่อเดียวกันที่มี multiple=1
   let baseUnit = p?.baseUnit || unit;
@@ -2371,15 +2378,15 @@ function checkPrice(bc) {
   document.getElementById('price-result').style.display='none';
   document.getElementById('price-not-found').style.display='none';
   if(!bc)return;
-  const p=products[bc];
+  const p=normProd(products[bc]);
   if(p){
     document.getElementById('price-result').style.display='block';
-    document.getElementById('pr-name').textContent=p.name||'—';
+    document.getElementById('pr-name').textContent=p.n||p.name||'—';
     document.getElementById('pr-bc').textContent=bc;
 
     // หาสินค้าทุก barcode ที่ชื่อเดียวกัน เรียงจากหน่วยย่อย→ใหญ่
     const allUnits = Object.entries(products)
-      .filter(([,v]) => v.name === p.name)
+      .filter(([,v]) => (v.n||v.name) === (p.n||p.name))
       .sort((a,b) => (a[1].multiple||1) - (b[1].multiple||1));
 
     // แสดงราคาของ barcode ที่สแกน
@@ -2393,8 +2400,8 @@ function checkPrice(bc) {
       return `<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:8px;${active}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div>
-            <span style="font-size:14px;font-weight:600;color:#1c1c1e">${uv.unit}</span>
-            ${uv.multiple>1?`<span style="font-size:11px;color:#8e8e93;margin-left:6px">= ${uv.multiple} ${allUnits[0][1].unit}</span>`:''}
+            <span style="font-size:14px;font-weight:600;color:#1c1c1e">${uv.u||uv.unit}</span>
+            ${(uv.m||uv.multiple||1)>1?`<span style="font-size:11px;color:#8e8e93;margin-left:6px">= ${uv.m||uv.multiple} ${allUnits[0][1].u||allUnits[0][1].unit}</span>`:''}
           </div>
           <span style="font-family:monospace;font-size:11px;color:#c7c7cc">${ubc}</span>
         </div>
@@ -2421,10 +2428,10 @@ function checkPrice(bc) {
 }
 
 function showPriceCards(p) {
-  document.getElementById('pr-sell').textContent = p.sellPrice>0 ? p.sellPrice.toFixed(2)+' ฿' : '—';
-  document.getElementById('pr-fml').textContent  = p.fmlPrice>0  ? p.fmlPrice.toFixed(2)+' ฿'  : '—';
-  document.getElementById('pr-bot').textContent  = p.botPrice>0  ? p.botPrice.toFixed(2)+' ฿'  : '—';
-  document.getElementById('pr-top').textContent  = p.topPrice>0  ? p.topPrice.toFixed(2)+' ฿'  : '—';
+  document.getElementById('pr-sell').textContent = (p.p||p.sellPrice||0)>0 ? (p.p||p.sellPrice).toFixed(2)+' ฿' : '—';
+  document.getElementById('pr-fml').textContent  = (p.fp||p.fmlPrice||0)>0  ? (p.fp||p.fmlPrice).toFixed(2)+' ฿'  : '—';
+  document.getElementById('pr-bot').textContent  = (p.bp||p.botPrice||0)>0  ? (p.bp||p.botPrice).toFixed(2)+' ฿'  : '—';
+  document.getElementById('pr-top').textContent  = (p.tp||p.topPrice||0)>0  ? (p.tp||p.topPrice).toFixed(2)+' ฿'  : '—';
 }
 
 // ===== RENDER LIST =====
