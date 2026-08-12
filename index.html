@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.3</div>
+        <div>v2.4</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -1200,6 +1200,19 @@ function parseSales104XLSX(buf, branch) {
       if(!newData[bc]) newData[bc]={name:String(row[nameIdx]||''),unit:String(row[unitIdx]||''),baseQty:0,totalAmt:0};
       newData[bc].baseQty+=qty; newData[bc].totalAmt+=amt;
     });
+
+    // ถ้า masterMap โหลดแล้ว → เพิ่ม key baseBC ด้วย
+    if(Object.keys(masterMap).length>0) {
+      Object.entries(newData).forEach(([bc,val])=>{
+        const base=resolveBC(bc);
+        if(base!==bc && !newData[base]) newData[base]={...val};
+        else if(base!==bc){
+          newData[base].baseQty+=val.baseQty;
+          newData[base].totalAmt+=val.totalAmt;
+        }
+      });
+    }
+
     const count=Object.keys(newData).length;
     const now=new Date(); const ds=fmtUploadDate(now);
     const isHQ=branch==='hq';
@@ -2705,26 +2718,35 @@ function checkStorageSize() {
 
 function clearAllCache() {
   if(!confirm('ล้าง Cache ทั้งหมด?\nต้องอัพโหลดไฟล์ใหม่ทุกไฟล์หลังจากนี้')) return;
-  // เก็บ salesLog และ stock ไว้
+  // เก็บ salesLog และ stock ไว้ไม่ล้าง
   const keep = {};
   ['sm_sales_v1','sm_stock_v5','sm_time_v5'].forEach(k=>{
-    const v = localStorage.getItem(k);
-    if(v) keep[k] = v;
+    const v = localStorage.getItem(k); if(v) keep[k]=v;
   });
   localStorage.clear();
-  // คืน salesLog และ stock
   Object.entries(keep).forEach(([k,v])=>localStorage.setItem(k,v));
-  // reset ตัวแปร
+
+  // reset ตัวแปรทั้งหมด
   products={}; products_b1={}; masterMap={};
   promotions_b1={}; salesData104={}; salesData104b={};
+  Object.keys(promotions).forEach(k=>delete promotions[k]);
+
   // reset UI dots
   ['upload-prod-dot','upload-prod2-dot','upload-promo-dot','upload-promo2-dot',
-   'upload-salesdate-dot','upload-sales2-dot','upload-po-dot','upload-master-dot'].forEach(id=>{
+   'upload-salesdate-dot','upload-sales2-dot'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.className='db-dot';
+  });
+  ['upload-prod-status','upload-prod2-status','upload-promo-status','upload-promo2-status',
+   'upload-salesdate-status','upload-sales2-status'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=id.includes('promo2')||id.includes('prod2')||id.includes('sales2')?'ยังไม่ได้โหลด (ไม่บังคับ)':'ยังไม่ได้โหลด';
+  });
+  ['prod-preview','prod2-preview','promo-preview','promo2-preview','salesdate-preview','sales2-preview'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
   });
   setDbStatus(false,'ยังไม่ได้โหลดข้อมูลสินค้า');
   checkStorageSize();
-  showMsg('upload-msg','✅ ล้าง Cache แล้ว — กรุณาอัพโหลดไฟล์ใหม่ทุกไฟล์',false);
+  showMsg('upload-msg','✅ ล้าง Cache แล้ว — กรุณาอัพโหลดไฟล์ใหม่ทุกไฟล์:\n1. R05 สินค้า\n2. R17 โปรโมชั่น\n3. R06 ยอดขาย',false);
 }
 
 function tryLoadSaved() {
