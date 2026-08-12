@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.5</div>
+        <div>v2.6</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -1201,26 +1201,25 @@ function parseSales104XLSX(buf, branch) {
     const ws=wb.Sheets[wb.SheetNames[0]];
     const data=XLSX.utils.sheet_to_json(ws,{header:1});
     const h=data[0].map(x=>String(x||'').toUpperCase());
-    const bcIdx=h.indexOf('ITEMID'), nameIdx=h.indexOf('ITEMNAME');
-    const unitIdx=h.indexOf('CF_UNITNAME'), qtyIdx=h.indexOf('BASEQUANTITY'), amtIdx=h.indexOf('AMOUNT');
+    const bcIdx=h.indexOf('ITEMID'), qtyIdx=h.indexOf('BASEQUANTITY'), amtIdx=h.indexOf('AMOUNT');
     if(bcIdx===-1){showMsg('upload-msg','❌ ไม่พบคอลัมน์ ITEMID',true);return;}
+    // slim format: {bc:[qty,amt]} ประหยัด 70% vs full object
     const newData={};
     data.slice(1).forEach(row=>{
       const bc=String(row[bcIdx]||'').trim();
       if(!bc) return;
       const qty=parseFloat(row[qtyIdx]||0), amt=parseFloat(row[amtIdx]||0);
-      if(!newData[bc]) newData[bc]={name:String(row[nameIdx]||''),unit:String(row[unitIdx]||''),baseQty:0,totalAmt:0};
-      newData[bc].baseQty+=qty; newData[bc].totalAmt+=amt;
+      if(!newData[bc]) newData[bc]=[0,0];
+      newData[bc][0]+=qty; newData[bc][1]+=amt;
     });
 
     // ถ้า masterMap โหลดแล้ว → เพิ่ม key baseBC ด้วย
-    if(Object.keys(masterMap).length>0) {
+    if(Object.keys(masterMap).length>0){
       Object.entries(newData).forEach(([bc,val])=>{
         const base=resolveBC(bc);
-        if(base!==bc && !newData[base]) newData[base]={...val};
-        else if(base!==bc){
-          newData[base].baseQty+=val.baseQty;
-          newData[base].totalAmt+=val.totalAmt;
+        if(base!==bc){
+          if(!newData[base]) newData[base]=[0,0];
+          newData[base][0]+=val[0]; newData[base][1]+=val[1];
         }
       });
     }
@@ -1286,7 +1285,7 @@ function initShelfScreen() {
     Object.entries(data).forEach(([bc,val])=>{
       const base=resolveBC(bc);
       if(!newData[base]) newData[base]={name:val.name,unit:val.unit,baseQty:0,totalAmt:0};
-      newData[base].baseQty+=val.baseQty; newData[base].totalAmt+=val.totalAmt;
+      newData[base][0]+=val[0]; newData[base][1]+=val[1];
       if(base!==bc) newData[bc]=newData[base];
     });
     return newData;
@@ -1380,10 +1379,10 @@ function addShelfItem(bc) {
   // ค้นหายอดขาย — ทั้ง 2 สาขา
   const sdHQ = salesData104[baseBC]  || salesData104[bc];
   const sdB1 = salesData104b[baseBC] || salesData104b[bc];
-  const qtyHQ = sdHQ ? sdHQ.baseQty  : null;
-  const qtyB1 = sdB1 ? sdB1.baseQty  : null;
+  const qtyHQ = sdHQ ? sdHQ[0] : null;
+  const qtyB1 = sdB1 ? sdB1[0] : null;
   const totalBaseQty = (qtyHQ||0) + (qtyB1||0);
-  const totalAmt     = (sdHQ?.totalAmt||0) + (sdB1?.totalAmt||0);
+  const totalAmt     = (sdHQ?sdHQ[1]:0) + (sdB1?sdB1[1]:0);
   const hasAnyData   = qtyHQ!==null || qtyB1!==null;
 
   // แปลงเป็นหน่วยที่สแกน
@@ -1495,7 +1494,7 @@ function renderShelfList() {
         <div style="flex:1;min-width:0">
           <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
           <div class="item-bc" style="margin-top:2px">${bcNote}</div>
-          ${it.totalAmt>0?`<div style="font-size:11px;color:#8e8e93;margin-top:1px">฿${it.totalAmt.toFixed(0)}</div>`:''}
+          ${it.totalAmt>0?`<div style="font-size:11px;color:#8e8e93;margin-top:1px">฿${Math.round(it.totalAmt)}</div>`:''}
         </div>
         <div style="flex-shrink:0;text-align:right">
           ${qtyLine}
@@ -1529,7 +1528,7 @@ function exportShelfExcel() {
       it.totalBaseQty ?? '—', it.baseUnit,
       (it.scannedMult>1 && it.totalScannedQty!=null) ? it.totalScannedQty : '—',
       it.scannedMult>1 ? it.scannedUnit : '—',
-      it.totalAmt>0 ? it.totalAmt.toFixed(0) : 0
+      it.totalAmt>0 ? Math.round(it.totalAmt) : 0
     ]);
   });
   const wb=XLSX.utils.book_new();
