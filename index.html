@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.8</div>
+        <div>v3.2</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -904,10 +904,7 @@ function fmtFileName(d) {
   const min = String(d.getMinutes()).padStart(2,'0');
   return `${day}-${month}-${year}_${hour}${min}`;
 }
-function setDbStatus(ok, txt) {
-  document.getElementById('db-dot').className='db-dot'+(ok?' ok':'');
-  document.getElementById('db-status').textContent=txt;
-}
+
 function setDbDate(dateStr) {
   const el=document.getElementById('db-date');
   if(el) el.textContent=dateStr?'อัพโหลดเมื่อ: '+dateStr:'';
@@ -956,26 +953,7 @@ function detectCols(headers) {
   };
 }
 
-function buildProds(rows, c) {
-  products={};
-  rows.forEach(r=>{
-    const bc=String(r[c.bcIdx]||'').trim();
-    const name=String(r[c.nameIdx]||'').trim();
-    const unit=String(r[c.unitIdx]||'').trim();
-    const multiple=c.multiIdx>=0?parseInt(r[c.multiIdx])||1:1;
-    const sellPrice=c.sellIdx>=0?parseFloat(r[c.sellIdx])||0:0;
-    const fmlPrice=c.fmlIdx>=0?parseFloat(r[c.fmlIdx])||0:0;
-    const botPrice=c.botIdx>=0?parseFloat(r[c.botIdx])||0:0;
-    const topPrice=c.topIdx>=0?parseFloat(r[c.topIdx])||0:0;
-    // CF_ITEMID คือ barcode หน่วยย่อยสุด (baseBC)
-    const baseBC=c.itemIdIdx>=0?String(r[c.itemIdIdx]||'').trim():bc;
-    if(bc) products[bc]={name,unit,multiple,baseUnit:unit,sellPrice,fmlPrice,botPrice,topPrice,baseBC};
-  });
-  const nameToBase={};
-  Object.values(products).forEach(p=>{if((p.m||p.multiple||1)===1)nameToBase[p.n||p.name]=p.u||p.unit;});
-  Object.values(products).forEach(p=>{if(nameToBase[p.n||p.name])p.bu=nameToBase[p.n||p.name];});
-  localStorage.setItem(PROD_KEY,JSON.stringify(products));
-}
+
 
 function parseCSV(text, branch) {
   const rows=text.trim().split('\n');
@@ -1069,7 +1047,7 @@ function finishLoad(isPOS, branch) {
   const label = isB1 ? 'สาขา 1' : 'สำนักงานใหญ่';
 
   if(!isB1) {
-    localStorage.setItem(PROD_DATE_KEY, now.toISOString());
+    try{localStorage.setItem(PROD_DATE_KEY, now.toISOString());}catch(e){}
     buildMasterMap(products);
     if(Object.keys(products_b1).length===0) Object.assign(products_b1, products);
     const multiCount = Object.values(masterMap).filter(x=>x.multiple>1).length;
@@ -1156,8 +1134,8 @@ function parsePromoXLSX(buf, branch) {
     const now=new Date(); const ds=fmtUploadDate(now);
     if(isHQ){
       promotions=newPromos;
-      localStorage.setItem(PROMO_KEY,JSON.stringify(newPromos));
-      localStorage.setItem(PROMO_DATE_KEY,now.toISOString());
+      try{localStorage.setItem(PROMO_KEY,JSON.stringify(newPromos));}catch(e){}
+      try{localStorage.setItem(PROMO_DATE_KEY,now.toISOString());}catch(e){}
       setPromoStatus(true,count+' โปรโมชั่น (สนญ.)');
       setPromoDate(ds);
       updateUploadPromoStatus(true,count+' โปรโมชั่น (สนญ.)',ds);
@@ -1165,7 +1143,7 @@ function parsePromoXLSX(buf, branch) {
       if(el){el.style.display='block';el.innerHTML='✓ สนญ. <b>'+count+'</b> โปรโมชั่น';}
     } else {
       promotions_b1=newPromos;
-      localStorage.setItem(PROMO_B1_KEY,JSON.stringify(newPromos));
+      try{localStorage.setItem(PROMO_B1_KEY,JSON.stringify(newPromos));}catch(e){}
       const dot=document.getElementById('upload-promo2-dot');
       const st=document.getElementById('upload-promo2-status');
       const dt=document.getElementById('upload-promo2-date');
@@ -1280,22 +1258,6 @@ function initShelfScreen() {
   if(!Object.keys(salesData104b).length) {
     try{ const s=localStorage.getItem(SALES_FILE104B_KEY); if(s) salesData104b=JSON.parse(s); }catch(e){}
   }
-  // re-index ด้วย baseBC (slim format [qty, amt])
-  const reIndex = (data) => {
-    if(!Object.keys(masterMap).length || !Object.keys(data).length) return data;
-    const newData={};
-    Object.entries(data).forEach(([bc,val])=>{
-      if(!Array.isArray(val)) return; // ข้าม format เก่า
-      const base = resolveBC(bc);
-      if(!newData[base]) newData[base]=[0,0];
-      newData[base][0] += val[0];
-      newData[base][1] += val[1];
-      if(base !== bc) newData[bc] = newData[base]; // alias
-    });
-    return newData;
-  };
-  salesData104  = reIndex(salesData104);
-  salesData104b = reIndex(salesData104b);
   renderShelfList();
   document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
 }
@@ -1381,16 +1343,18 @@ function addShelfItem(bc) {
   const scannedMult = scannedMultFromMaster > 1 ? scannedMultFromMaster : (p.multiple || 1);
   const scannedUnit = masterEntry ? p.unit : p.unit; // unit มาจาก baseBC เสมอ
   const baseUnit    = p.unit || '';
-  const displayName = p.name || '';
+  const displayName = p.n||p.name || '';
 
   // ค้นหายอดขาย — ทั้ง 2 สาขา (slim format [qty, amt])
   const sdHQ = salesData104[baseBC]  || salesData104[bc];
   const sdB1 = salesData104b[baseBC] || salesData104b[bc];
   const qtyHQ = Array.isArray(sdHQ) ? sdHQ[0] : null;
   const qtyB1 = Array.isArray(sdB1) ? sdB1[0] : null;
+  const amtHQ = Array.isArray(sdHQ) ? sdHQ[1] : 0;
+  const amtB1 = Array.isArray(sdB1) ? sdB1[1] : 0;
   const hasAnyData = qtyHQ !== null || qtyB1 !== null;
   const totalBaseQty = hasAnyData ? ((qtyHQ||0) + (qtyB1||0)) : null;
-  const totalAmt = (Array.isArray(sdHQ)?sdHQ[1]:0) + (Array.isArray(sdB1)?sdB1[1]:0);
+  const totalAmt = amtHQ + amtB1;
 
   // แปลงยอดขายทุกหน่วย
   const toUnit = (qty, mult) => qty!==null ? Math.floor(qty/mult) : null;
@@ -1416,9 +1380,9 @@ function addShelfItem(bc) {
     name: displayName,
     scannedUnit, scannedMult, baseUnit,
     totalBaseQty: hasAnyData ? totalBaseQty : null,
-    qtyHQ, qtyB1,
+    qtyHQ, qtyB1, amtHQ, amtB1,
     totalAmt, scanCount: 1,
-    allUnits  // ทุกหน่วยของสินค้านี้
+    allUnits
   });
 
   // แสดงผลทันที
@@ -1442,76 +1406,44 @@ function renderShelfList() {
   const list = document.getElementById('shelf-list');
   if(!shelfItems.length){ list.innerHTML='<div class="empty">เริ่มสแกนได้เลย</div>'; return; }
 
-  list.innerHTML = shelfItems.map(it => {
-    const hasData = it.totalBaseQty !== null;
-    const isZero  = hasData && it.totalBaseQty === 0;
-    const [bg,color] = !hasData ? ['#f0f9ff','#0c4a6e']
-                     : isZero   ? ['#fef2f2','#991b1b']
-                                : ['#f0fdf4','#166534'];
-
-    // แสดงเป็นหน่วยย่อยเสมอ ไม่ว่าจะยิง barcode หน่วยไหน
-    const unitLabel = it.baseUnit || it.scannedUnit || 'ชิ้น';
-
-    let qtyLine = '';
-    if(!hasData){
-      qtyLine=`<span style="color:#0c4a6e;font-size:12px">❓ ไม่มีข้อมูลยอดขาย</span>`;
-    } else if(isZero){
-      qtyLine=`<span style="color:#991b1b;font-weight:700;font-size:14px">❌ 0 ${unitLabel}</span>`;
-    } else {
-      // แสดงทุกหน่วย (หน่วยย่อย→ใหญ่)
-      const units = it.allUnits && it.allUnits.length > 1 ? it.allUnits : null;
-      const hasHQ = it.qtyHQ !== null;
-      const hasB1 = it.qtyB1 !== null;
-      const hasBoth = hasHQ && hasB1;
-
-      if(units){
-        // หลายหน่วย — แสดงแต่ละหน่วย
-        const unitRows = units.map(u => {
-          const total = Math.floor(it.totalBaseQty / u.multiple);
-          const hq = hasHQ ? Math.floor(it.qtyHQ / u.multiple) : null;
-          const b1 = hasB1 ? Math.floor(it.qtyB1 / u.multiple) : null;
-          let branchStr = '';
-          if(hasBoth) branchStr = `<span style="font-size:10px;color:#8e8e93"> (🏢${hq} / 🏪${b1})</span>`;
-          else if(hasHQ) branchStr = `<span style="font-size:10px;color:#15803d"> (🏢สนญ.)</span>`;
-          else if(hasB1) branchStr = `<span style="font-size:10px;color:#1e40af"> (🏪สาขา1)</span>`;
-          return `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;align-items:center">
-            <span style="color:#8e8e93">${u.unit}</span>
-            <span><span style="font-weight:700;color:#166534">${total}</span> ${u.unit}${branchStr}</span>
-          </div>`;
-        }).join('');
-        qtyLine=`<div style="background:#f0fdf4;border-radius:8px;padding:6px 10px;min-width:140px">${unitRows}</div>`;
-      } else {
-        // หน่วยเดียว
-        let branchStr = '';
-        if(hasBoth) branchStr = `<div style="display:flex;gap:5px;margin-top:3px">
-          <div style="background:#f0fdf4;border-radius:5px;padding:2px 7px;font-size:11px;color:#15803d">🏢 ${it.qtyHQ} ${unitLabel}</div>
-          <div style="background:#eff6ff;border-radius:5px;padding:2px 7px;font-size:11px;color:#1e40af">🏪 ${it.qtyB1} ${unitLabel}</div>
-        </div>`;
-        else if(hasHQ) branchStr = `<div style="font-size:11px;color:#15803d;margin-top:2px">🏢 สนญ.</div>`;
-        else if(hasB1) branchStr = `<div style="font-size:11px;color:#1e40af;margin-top:2px">🏪 สาขา 1</div>`;
-        qtyLine=`<div style="text-align:right">
-          <div style="font-size:16px;font-weight:700;color:#166534">${it.totalBaseQty} ${unitLabel}</div>
-          ${branchStr}
-        </div>`;
-      }
-    }
-
-    const bcNote = it.scannedMult>1
-      ? `${it.scannedBC} <span style="color:#6d28d9;font-size:10px">· ${it.scannedUnit} ×${it.scannedMult}</span>`
+  list.innerHTML = shelfItems.map(it=>{
+    const hasData  = it.totalBaseQty !== null;
+    const isZero   = hasData && it.totalBaseQty === 0;
+    const unitLabel= it.baseUnit || it.scannedUnit || 'ชิ้น';
+    const rows     = (it.allUnits && it.allUnits.length>1) ? it.allUnits : [{unit:unitLabel, multiple:1}];
+    const hasHQ    = it.qtyHQ !== null;
+    const hasB1    = it.qtyB1 !== null;
+    const bcNote   = it.scannedMult>1
+      ? `${it.scannedBC} <span style="color:#7c3aed;font-size:10px">· ${it.scannedUnit} ×${it.scannedMult}</span>`
       : it.scannedBC;
 
-    return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div style="flex:1;min-width:0">
-          <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
-          <div class="item-bc" style="margin-top:2px">${bcNote}</div>
-          ${it.totalAmt>0?`<div style="font-size:11px;color:#8e8e93;margin-top:1px">฿${Math.round(it.totalAmt)}</div>`:''}
-        </div>
-        <div style="flex-shrink:0;text-align:right">
-          ${qtyLine}
-          ${it.scanCount>1?`<div style="font-size:10px;color:#c7c7cc">ยิง ${it.scanCount} ครั้ง</div>`:''}
-        </div>
-      </div>
+    let tableHTML = '';
+    if(!hasData){
+      tableHTML=`<div style="margin-top:6px;background:var(--bg-warning,#fefce8);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text-warning,#854d0e)">❓ ไม่มีข้อมูลยอดขาย</div>`;
+    } else if(isZero){
+      tableHTML=`<div style="margin-top:6px;background:var(--bg-danger,#fef2f2);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text-danger,#991b1b)">❌ ขายได้ 0 ${unitLabel}</div>`;
+    } else {
+      const rowsHTML = rows.map(u=>{
+        const hqQ = hasHQ ? Math.floor(it.qtyHQ/u.multiple) : null;
+        const b1Q = hasB1 ? Math.floor(it.qtyB1/u.multiple) : null;
+        const hqA = (hasHQ && it.amtHQ>0 && u.multiple===1) ? `<div style="font-size:10px;color:var(--text-muted)">฿${Math.round(it.amtHQ)}</div>` : '';
+        const b1A = (hasB1 && it.amtB1>0 && u.multiple===1) ? `<div style="font-size:10px;color:var(--text-muted)">฿${Math.round(it.amtB1)}</div>` : '';
+        return `<div style="display:grid;grid-template-columns:48px 1fr 1fr;padding:5px 8px;border-top:0.5px solid var(--border);align-items:center;font-size:12px">
+          <div style="color:var(--text-secondary)">${u.unit}</div>
+          <div style="text-align:center">${hqQ!==null?`<div style="font-weight:500;color:var(--text-success,#15803d)">${hqQ}</div>${hqA}`:`<div style="color:var(--text-muted)">—</div>`}</div>
+          <div style="text-align:center">${b1Q!==null?`<div style="font-weight:500;color:var(--text-accent,#1e40af)">${b1Q}</div>${b1A}`:`<div style="color:var(--text-muted)">—</div>`}</div>
+        </div>`;
+      }).join('');
+      tableHTML=`<div style="margin-top:8px;border:0.5px solid var(--border);border-radius:7px;overflow:hidden;font-size:11px">
+        <div style="display:grid;grid-template-columns:48px 1fr 1fr;background:var(--surface-1);padding:4px 8px;color:var(--text-muted);font-weight:500">
+          <div></div><div style="text-align:center">🏢 สนญ.</div><div style="text-align:center">🏪 สาขา1</div>
+        </div>${rowsHTML}</div>`;
+    }
+
+    return `<div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px">
+      <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px">${it.name}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${bcNote}${it.scanCount>1?' · ยิง '+it.scanCount+' ครั้ง':''}</div>
+      ${tableHTML}
     </div>`;
   }).join('');
 }
@@ -1707,29 +1639,9 @@ function exportSalesTxt() {
   showMsg('saleslog-msg','✓ ส่งออก .txt แล้ว',false);
 }
 
-function screenshotHint() {
-  alert('กดปุ่ม Power + Volume Down พร้อมกัน\nเพื่อถ่าย Screenshot บน Android');
-}
 
-function shareReceipt() {
-  if(navigator.share){
-    const now=new Date();
-    const ds=now.toLocaleDateString('th-TH')+' '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    const normalTotal=cart.reduce((s,it)=>s+(it.price*it.qty),0);
-    const totalDiscount=appliedPromos.reduce((s,p)=>s+p.discount,0);
-    const grandTotal=normalTotal-totalDiscount;
-    let text=`ใบเสร็จ ${ds}\n${'─'.repeat(30)}\n`;
-    cart.forEach(it=>{ text+=`${it.name}\n  ฿${it.price.toFixed(2)} × ${it.qty} = ฿${(it.price*it.qty).toFixed(2)}\n`; });
-    if(appliedPromos.length>0){
-      text+=`${'─'.repeat(30)}\nโปรโมชั่น\n`;
-      appliedPromos.forEach(p=>{ text+=`  ${p.name}: -฿${p.discount.toFixed(2)}\n`; });
-    }
-    text+=`${'─'.repeat(30)}\nรวมสุทธิ: ฿${grandTotal.toFixed(2)}`;
-    navigator.share({title:'ใบเสร็จ', text});
-  } else {
-    alert('ใช้ปุ่ม "ถ่ายรูป" เพื่อบันทึกใบเสร็จแทนครับ');
-  }
-}
+
+
 
 // ===== BRANCH SELECTION =====
 function setBranch(branch) {
@@ -2408,8 +2320,8 @@ function renderStockInline() {
 function autoSave() {
   try{
     const now=new Date();
-    localStorage.setItem(STOCK_KEY,JSON.stringify(stock));
-    localStorage.setItem(TIME_KEY,now.toISOString());
+    try{localStorage.setItem(STOCK_KEY,JSON.stringify(stock));}catch(e){}
+    try{localStorage.setItem(TIME_KEY,now.toISOString());}catch(e){}
     document.getElementById('save-time').textContent=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     const dot=document.getElementById('pulse-dot');
     dot.style.background='#007aff';
@@ -2746,7 +2658,7 @@ function clearAllCache() {
     const v = localStorage.getItem(k); if(v) keep[k]=v;
   });
   localStorage.clear();
-  Object.entries(keep).forEach(([k,v])=>localStorage.setItem(k,v));
+  Object.entries(keep).forEach(([k,v])=>{try{localStorage.setItem(k,v);}catch(e){}});
 
   // reset ตัวแปรทั้งหมด
   products={}; products_b1={}; masterMap={};
