@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.6</div>
+        <div>v2.7</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -1376,18 +1376,17 @@ function addShelfItem(bc) {
     return;
   }
 
-  // ค้นหายอดขาย — ทั้ง 2 สาขา
+  // ค้นหายอดขาย — ทั้ง 2 สาขา (slim format [qty, amt])
   const sdHQ = salesData104[baseBC]  || salesData104[bc];
   const sdB1 = salesData104b[baseBC] || salesData104b[bc];
-  const qtyHQ = sdHQ ? sdHQ[0] : null;
-  const qtyB1 = sdB1 ? sdB1[0] : null;
-  const totalBaseQty = (qtyHQ||0) + (qtyB1||0);
-  const totalAmt     = (sdHQ?sdHQ[1]:0) + (sdB1?sdB1[1]:0);
-  const hasAnyData   = qtyHQ!==null || qtyB1!==null;
+  const qtyHQ = Array.isArray(sdHQ) ? sdHQ[0] : null;
+  const qtyB1 = Array.isArray(sdB1) ? sdB1[0] : null;
+  const hasAnyData = qtyHQ !== null || qtyB1 !== null;
+  const totalBaseQty = hasAnyData ? ((qtyHQ||0) + (qtyB1||0)) : null;
+  const totalAmt = (Array.isArray(sdHQ)?sdHQ[1]:0) + (Array.isArray(sdB1)?sdB1[1]:0);
 
-  // แปลงเป็นหน่วยที่สแกน
-  const totalScannedQty = (totalBaseQty !== null && scannedMult > 1)
-    ? Math.floor(totalBaseQty / scannedMult) : totalBaseQty;
+  // แปลงยอดขายทุกหน่วย
+  const toUnit = (qty, mult) => qty!==null ? Math.floor(qty/mult) : null;
 
   // หาทุกหน่วยของสินค้านี้จาก products (เรียงจากย่อย→ใหญ่)
   const allUnits = Object.entries(products)
@@ -1454,34 +1453,39 @@ function renderShelfList() {
     } else {
       // แสดงทุกหน่วย (หน่วยย่อย→ใหญ่)
       const units = it.allUnits && it.allUnits.length > 1 ? it.allUnits : null;
+      const hasHQ = it.qtyHQ !== null;
+      const hasB1 = it.qtyB1 !== null;
+      const hasBoth = hasHQ && hasB1;
+
       if(units){
         // หลายหน่วย — แสดงแต่ละหน่วย
         const unitRows = units.map(u => {
-          const q = Math.floor(it.totalBaseQty / u.multiple);
-          return `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px">
+          const total = Math.floor(it.totalBaseQty / u.multiple);
+          const hq = hasHQ ? Math.floor(it.qtyHQ / u.multiple) : null;
+          const b1 = hasB1 ? Math.floor(it.qtyB1 / u.multiple) : null;
+          let branchStr = '';
+          if(hasBoth) branchStr = `<span style="font-size:10px;color:#8e8e93"> (🏢${hq} / 🏪${b1})</span>`;
+          else if(hasHQ) branchStr = `<span style="font-size:10px;color:#15803d"> (🏢สนญ.)</span>`;
+          else if(hasB1) branchStr = `<span style="font-size:10px;color:#1e40af"> (🏪สาขา1)</span>`;
+          return `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;align-items:center">
             <span style="color:#8e8e93">${u.unit}</span>
-            <span style="font-weight:600;color:#166534">${q} ${u.unit}</span>
+            <span><span style="font-weight:700;color:#166534">${total}</span> ${u.unit}${branchStr}</span>
           </div>`;
         }).join('');
-        qtyLine=`<div style="background:#f0fdf4;border-radius:8px;padding:6px 10px;min-width:120px">${unitRows}</div>`;
+        qtyLine=`<div style="background:#f0fdf4;border-radius:8px;padding:6px 10px;min-width:140px">${unitRows}</div>`;
       } else {
         // หน่วยเดียว
-        qtyLine=`<div style="font-size:16px;font-weight:700;color:#166534">${it.totalBaseQty} ${unitLabel}</div>`;
-      }
-      // แสดงแยก 2 สาขา (หน่วยย่อย)
-      const hasHQ = it.qtyHQ !== null;
-      const hasB1 = it.qtyB1 !== null;
-      if(hasHQ || hasB1){
-        qtyLine += `<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">`;
-        if(hasHQ){
-          const hqUnits = units ? units.map(u=>`${Math.floor(it.qtyHQ/u.multiple)}${u.unit}`).join(' / ') : `${it.qtyHQ} ${unitLabel}`;
-          qtyLine+=`<div style="background:#f0fdf4;border-radius:6px;padding:3px 8px;font-size:11px;color:#15803d">🏢 ${hqUnits}</div>`;
-        }
-        if(hasB1){
-          const b1Units = units ? units.map(u=>`${Math.floor(it.qtyB1/u.multiple)}${u.unit}`).join(' / ') : `${it.qtyB1} ${unitLabel}`;
-          qtyLine+=`<div style="background:#eff6ff;border-radius:6px;padding:3px 8px;font-size:11px;color:#1e40af">🏪 ${b1Units}</div>`;
-        }
-        qtyLine += `</div>`;
+        let branchStr = '';
+        if(hasBoth) branchStr = `<div style="display:flex;gap:5px;margin-top:3px">
+          <div style="background:#f0fdf4;border-radius:5px;padding:2px 7px;font-size:11px;color:#15803d">🏢 ${it.qtyHQ} ${unitLabel}</div>
+          <div style="background:#eff6ff;border-radius:5px;padding:2px 7px;font-size:11px;color:#1e40af">🏪 ${it.qtyB1} ${unitLabel}</div>
+        </div>`;
+        else if(hasHQ) branchStr = `<div style="font-size:11px;color:#15803d;margin-top:2px">🏢 สนญ.</div>`;
+        else if(hasB1) branchStr = `<div style="font-size:11px;color:#1e40af;margin-top:2px">🏪 สาขา 1</div>`;
+        qtyLine=`<div style="text-align:right">
+          <div style="font-size:16px;font-weight:700;color:#166534">${it.totalBaseQty} ${unitLabel}</div>
+          ${branchStr}
+        </div>`;
       }
     }
 
