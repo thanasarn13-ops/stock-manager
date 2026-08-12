@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v2.4</div>
+        <div>v2.5</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -863,11 +863,7 @@ let poData = {};
 let salesDateData = {};
 
 // แปลง barcode ใดๆ → barcode หน่วยย่อยสุด
-function resolveBC(bc) {
-  if(!bc) return bc;
-  const m = masterMap[bc];
-  return m ? m.baseBC : bc;
-}
+// resolveBC และ resolveName อยู่ใน buildMasterMap section ด้านล่าง
 
 // ดึงชื่อสินค้าจาก bc (รองรับทั้งหน่วยใหญ่และย่อย)
 function resolveName(bc) {
@@ -1022,7 +1018,7 @@ function buildProds(rows, c, branch) {
   const nameToBase={};
   Object.values(dest).forEach(p=>{if(p.m===1)nameToBase[p.n]=p.u;});
   Object.values(dest).forEach(p=>{if(nameToBase[p.n])p.bu=nameToBase[p.n];});
-  localStorage.setItem(isB1?'sm_prod_b1_v1':PROD_KEY, JSON.stringify(dest));
+  try{localStorage.setItem(isB1?'sm_prod_b1_v1':PROD_KEY, JSON.stringify(dest));}catch(e){showMsg('upload-msg','⚠️ พื้นที่เต็ม! ข้อมูลโหลดแล้วแต่บันทึกไม่ได้',false);}
 }
 
 // getter ที่แปลง compact → standard สำหรับโค้ดที่ใช้ .name .unit etc.
@@ -1037,14 +1033,30 @@ function buildMasterMap(src) {
   masterMap = {};
   const nameToBaseBC = {};
   // รองรับทั้ง compact {n,u,m} และ standard {name,unit,multiple}
-  Object.entries(src).forEach(([bc,p])=>{ const m=p.m||p.multiple||1; const n=p.n||p.name||''; if(m===1) nameToBaseBC[n]=bc; });
   Object.entries(src).forEach(([bc,p])=>{
-    const n=p.n||p.name||'', u=p.u||p.unit||'', m=p.m||p.multiple||1, b=p.b||p.baseBC||bc;
-    const baseBC = nameToBaseBC[n] || b || bc;
-    masterMap[bc]={baseBC,name:n,unit:u,multiple:m};
+    const m=p.m||p.multiple||1;
+    const n=p.n||p.name||'';
+    if(m===1) nameToBaseBC[n]=bc;
   });
-  localStorage.setItem(MASTER_KEY,JSON.stringify(masterMap));
+  // เก็บเฉพาะ barcode หน่วยใหญ่ที่ต้องแปลง (multiple>1)
+  // ประหยัด ~1.8MB เทียบกับเก็บทุก barcode
+  Object.entries(src).forEach(([bc,p])=>{
+    const n=p.n||p.name||'', u=p.u||p.unit||'', m=p.m||p.multiple||1;
+    const baseBC = nameToBaseBC[n] || (p.b||p.baseBC||bc);
+    if(m > 1 && baseBC !== bc) {
+      // เก็บเฉพาะ barcode ที่ต้องแปลง → slim มาก
+      masterMap[bc]={baseBC,name:n,unit:u,multiple:m};
+    }
+  });
+  try{localStorage.setItem(MASTER_KEY, JSON.stringify(masterMap));}catch(e){showMsg('upload-msg','⚠️ พื้นที่เต็ม! ข้อมูลโหลดแล้วแต่บันทึกไม่ได้',false);}
   return masterMap;
+}
+
+// resolveBC ใช้ masterMap slim — ถ้าไม่อยู่ใน masterMap แปลว่าเป็นหน่วยย่อยแล้ว
+function resolveBC(bc) {
+  if(!bc) return bc;
+  const m = masterMap[bc];
+  return m ? m.baseBC : bc;
 }
 
 function finishLoad(isPOS, branch) {
