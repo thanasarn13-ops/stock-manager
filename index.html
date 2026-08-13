@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v3.2</div>
+        <div>v3.5</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -525,7 +525,17 @@ input:focus{border-color:#007aff;background:#fff}
     <button class="header-back" onclick="goScreen('home')">&#8249;</button>
     <div><div class="header-title">เช็คราคาสินค้า</div></div>
   </div>
-  <div style="padding:12px 16px 8px">
+  <div style="padding:8px 16px 4px;display:flex;gap:8px">
+    <button id="price-branch-hq" onclick="setPriceBranch('hq')"
+      style="flex:1;padding:7px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #007aff;background:#007aff;color:#fff">
+      🏢 สนญ.
+    </button>
+    <button id="price-branch-b1" onclick="setPriceBranch('b1')"
+      style="flex:1;padding:7px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #e5e5ea;background:#fff;color:#8e8e93">
+      🏪 สาขา 1
+    </button>
+  </div>
+  <div style="padding:8px 16px 8px">
     <button class="btn btn-blue" id="price-scan-btn">&#128247; เปิดกล้องสแกน (ต่อเนื่อง)</button>
     <!-- กล้องสำหรับหน้าเช็คราคา -->
     <div id="price-video-wrap" style="display:none;position:relative;margin-bottom:10px">
@@ -1341,8 +1351,11 @@ function addShelfItem(bc) {
   }
 
   const scannedMult = scannedMultFromMaster > 1 ? scannedMultFromMaster : (p.multiple || 1);
-  const scannedUnit = masterEntry ? p.unit : p.unit; // unit มาจาก baseBC เสมอ
-  const baseUnit    = p.unit || '';
+  const baseUnit    = p.unit || ''; // หน่วยย่อย เช่น ขวด
+  // scannedUnit = หน่วยที่ยิงมา (ถ้าหน่วยใหญ่ให้ดูจาก products[bc] โดยตรง)
+  const pScannedRaw = products[bc] || products_b1[bc];
+  const pScanned    = normProd(pScannedRaw);
+  const scannedUnit = (pScanned && pScanned.unit) ? pScanned.unit : baseUnit;
   const displayName = p.n||p.name || '';
 
   // ค้นหายอดขาย — ทั้ง 2 สาขา (slim format [qty, amt])
@@ -1389,11 +1402,19 @@ function addShelfItem(bc) {
   if(totalBaseQty === null) {
     showMsg('shelf-msg','❓ '+displayName+' — ไม่พบในไฟล์ยอดขาย', false);
   } else if(totalBaseQty === 0) {
-    showMsg('shelf-msg','❌ '+displayName+' — ขายได้ 0 ชิ้น!', true);
+    showMsg('shelf-msg','❌ '+displayName+' — ขายได้ 0 '+baseUnit+'!', true);
   } else {
-    const msg = scannedMult > 1
-      ? '✅ '+displayName+' — '+totalScannedQty+' '+scannedUnit+' ('+totalBaseQty+' '+baseUnit+')'
-      : '✅ '+displayName+' — '+totalBaseQty+' '+baseUnit;
+    // แสดงหน่วยที่ยิง + หน่วยย่อย เช่น "✅ เนสท์เล่ — 187 แพค (1,125 ขวด)"
+    let msg;
+    if(scannedMult > 1) {
+      const scannedQty = Math.floor(totalBaseQty / scannedMult);
+      msg = '✅ '+displayName+' — '+scannedQty+' '+scannedUnit+' ('+totalBaseQty+' '+baseUnit+')';
+    } else {
+      // หน่วยย่อย — แสดงทุกหน่วยที่มี
+      const otherUnits = (allUnits||[]).filter(u=>u.multiple>1)
+        .map(u=>Math.floor(totalBaseQty/u.multiple)+' '+u.unit).join(', ');
+      msg = '✅ '+displayName+' — '+totalBaseQty+' '+baseUnit+(otherUnits?' ('+otherUnits+')':'');
+    }
     showMsg('shelf-msg', msg, false);
   }
 
@@ -1738,12 +1759,19 @@ document.getElementById('sales-bc-in').addEventListener('keyup',e=>{
 
 function addToCart(bc) {
   const bp = getBranchProducts();
-  const pRaw = bp[bc] || bp[resolveBC(bc)];
+  // ดูข้อมูลจาก bc ที่ยิงจริงก่อน (ราคาและหน่วยถูกต้อง)
+  // ถ้าไม่มีค่อย fallback ไป baseBC
+  const baseBC = resolveBC(bc);
+  const pRaw = bp[bc] || bp[baseBC];
   if(!pRaw) return;
-  const p=normProd(pRaw);
-  const existing=cart.find(it=>it.bc===bc);
+  const p = normProd(pRaw);
+  // ชื่อสินค้าจาก baseBC เสมอ (compact key n)
+  const basePRaw = bp[baseBC];
+  const baseP = basePRaw ? normProd(basePRaw) : p;
+  const displayName = baseP.name || p.name;
+  const existing = cart.find(it=>it.bc===bc);
   if(existing) existing.qty++;
-  else cart.push({bc,name:p.name,unit:p.unit||'',price:p.sellPrice||0,qty:1});
+  else cart.push({bc, name:displayName, unit:p.unit||'', price:p.sellPrice||0, qty:1});
   calcPromo();
   renderCart();
   setTimeout(()=>document.getElementById('sales-bc-in').focus(),50);
@@ -1771,7 +1799,8 @@ function calcPromo() {
   const activePromos = getBranchPromos();
   for(const [pid,promo] of Object.entries(activePromos)){
     const promoItemIds=promo.items.map(it=>it.id);
-    const cartItemsInPromo=cart.filter(it=>promoItemIds.includes(it.bc));
+    // รองรับทั้ง bc โดยตรงและ baseBC (กรณียิงหน่วยใหญ่)
+    const cartItemsInPromo=cart.filter(it=>promoItemIds.includes(it.bc)||promoItemIds.includes(resolveBC(it.bc)));
     const totalQtyInPromo=cartItemsInPromo.reduce((s,it)=>s+it.qty,0);
     const promoPrice=extractPriceFromName(pid);
     if(!promoPrice) continue;
@@ -2330,58 +2359,83 @@ function autoSave() {
 }
 
 // ===== PRICE CHECKER =====
+let priceBranch = 'hq';
+
+function setPriceBranch(branch) {
+  priceBranch = branch;
+  const hqBtn = document.getElementById('price-branch-hq');
+  const b1Btn = document.getElementById('price-branch-b1');
+  if(branch==='hq') {
+    hqBtn.style.background='#007aff'; hqBtn.style.color='#fff'; hqBtn.style.borderColor='#007aff';
+    b1Btn.style.background='#fff'; b1Btn.style.color='#8e8e93'; b1Btn.style.borderColor='#e5e5ea';
+  } else {
+    b1Btn.style.background='#0369a1'; b1Btn.style.color='#fff'; b1Btn.style.borderColor='#0369a1';
+    hqBtn.style.background='#fff'; hqBtn.style.color='#8e8e93'; hqBtn.style.borderColor='#e5e5ea';
+  }
+  // re-check ถ้ามี barcode อยู่แล้ว
+  const bc = document.getElementById('price-bc').value.trim();
+  if(bc) checkPrice(bc);
+  setTimeout(()=>document.getElementById('price-bc').focus(), 100);
+}
+
+function getPriceProducts() {
+  return priceBranch==='b1' && Object.keys(products_b1).length>0 ? products_b1 : products;
+}
+
 function checkPrice(bc) {
   bc=(bc||'').trim();
   document.getElementById('price-result').style.display='none';
   document.getElementById('price-not-found').style.display='none';
-  if(!bc)return;
-  const p=normProd(products[bc]);
-  if(p){
-    document.getElementById('price-result').style.display='block';
-    document.getElementById('pr-name').textContent=p.n||p.name||'—';
-    document.getElementById('pr-bc').textContent=bc;
+  if(!bc) return;
 
-    // หาสินค้าทุก barcode ที่ชื่อเดียวกัน เรียงจากหน่วยย่อย→ใหญ่
-    const allUnits = Object.entries(products)
+  const bp = getPriceProducts();
+  const baseBC = resolveBC(bc);
+  const pRaw = bp[baseBC] || bp[bc];
+  const p = normProd(pRaw);
+
+  if(p) {
+    document.getElementById('price-result').style.display='block';
+    document.getElementById('pr-name').textContent = p.n||p.name||'—';
+    document.getElementById('pr-bc').textContent = bc;
+
+    // หาสินค้าทุกหน่วยของสาขาที่เลือก
+    const allUnits = Object.entries(bp)
       .filter(([,v]) => (v.n||v.name) === (p.n||p.name))
-      .sort((a,b) => (a[1].multiple||1) - (b[1].multiple||1));
+      .sort((a,b) => (a[1].m||a[1].multiple||1) - (b[1].m||b[1].multiple||1));
 
     // แสดงราคาของ barcode ที่สแกน
-    showPriceCards(p);
+    showPriceCards(normProd(bp[bc]) || p);
 
     // แสดงราคาทุกหน่วย
+    const branchLabel = priceBranch==='b1' ? '🏪 สาขา 1' : '🏢 สนญ.';
     const list = document.getElementById('pr-units-list');
     list.innerHTML = allUnits.map(([ubc, uv]) => {
-      const sell   = uv.sellPrice>0 ? uv.sellPrice.toFixed(2)+' ฿' : '—';
+      const uNorm = normProd(uv);
       const active = ubc===bc ? 'border:1.5px solid #007aff;' : '';
       return `<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:8px;${active}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div>
-            <span style="font-size:14px;font-weight:600;color:#1c1c1e">${uv.u||uv.unit}</span>
-            ${(uv.m||uv.multiple||1)>1?`<span style="font-size:11px;color:#8e8e93;margin-left:6px">= ${uv.m||uv.multiple} ${allUnits[0][1].u||allUnits[0][1].unit}</span>`:''}
+            <span style="font-size:14px;font-weight:600;color:#1c1c1e">${uNorm.unit}</span>
+            ${uNorm.multiple>1?`<span style="font-size:11px;color:#8e8e93;margin-left:6px">= ${uNorm.multiple} ${allUnits[0][1].u||allUnits[0][1].unit}</span>`:''}
+            <span style="font-size:10px;color:#c7c7cc;margin-left:6px">${branchLabel}</span>
           </div>
           <span style="font-family:monospace;font-size:11px;color:#c7c7cc">${ubc}</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${uv.sellPrice>0  ? `<div style="flex:1;min-width:80px;background:#eff6ff;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#1d4ed8">ราคาขาย</div><div style="font-size:15px;font-weight:700;color:#1d4ed8">${uv.sellPrice.toFixed(2)} ฿</div></div>` : ''}
-          ${uv.fmlPrice>0   ? `<div style="flex:1;min-width:80px;background:#f0fdf4;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#15803d">ราคาสูตร</div><div style="font-size:15px;font-weight:700;color:#15803d">${uv.fmlPrice.toFixed(2)} ฿</div></div>` : ''}
-          ${uv.botPrice>0   ? `<div style="flex:1;min-width:80px;background:#fff7ed;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#9a3412">ต่ำสุด</div><div style="font-size:15px;font-weight:700;color:#9a3412">${uv.botPrice.toFixed(2)} ฿</div></div>` : ''}
-          ${uv.topPrice>0   ? `<div style="flex:1;min-width:80px;background:#faf5ff;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#6b21a8">สูงสุด</div><div style="font-size:15px;font-weight:700;color:#6b21a8">${uv.topPrice.toFixed(2)} ฿</div></div>` : ''}
+          ${uNorm.sellPrice>0?`<div style="flex:1;min-width:80px;background:#eff6ff;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#1d4ed8">ราคาขาย</div><div style="font-size:15px;font-weight:700;color:#1d4ed8">${uNorm.sellPrice.toFixed(2)} ฿</div></div>`:''}
+          ${uNorm.fmlPrice>0?`<div style="flex:1;min-width:80px;background:#f0fdf4;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#15803d">ราคาสูตร</div><div style="font-size:15px;font-weight:700;color:#15803d">${uNorm.fmlPrice.toFixed(2)} ฿</div></div>`:''}
+          ${uNorm.botPrice>0?`<div style="flex:1;min-width:80px;background:#fff7ed;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#9a3412">ต่ำสุด</div><div style="font-size:15px;font-weight:700;color:#9a3412">${uNorm.botPrice.toFixed(2)} ฿</div></div>`:''}
+          ${uNorm.topPrice>0?`<div style="flex:1;min-width:80px;background:#faf5ff;border-radius:8px;padding:6px 10px;text-align:center"><div style="font-size:10px;color:#6b21a8">สูงสุด</div><div style="font-size:15px;font-weight:700;color:#6b21a8">${uNorm.topPrice.toFixed(2)} ฿</div></div>`:''}
         </div>
       </div>`;
     }).join('');
 
-    // ซ่อน all-units ถ้ามีแค่หน่วยเดียว
-    document.getElementById('pr-all-units').style.display = allUnits.length > 1 ? 'block' : 'none';
-
+    document.getElementById('pr-all-units').style.display = allUnits.length>1 ? 'block' : 'none';
   } else {
     document.getElementById('price-not-found').style.display='block';
     document.getElementById('pr-nf-bc').textContent=bc;
   }
-  setTimeout(()=>{
-    const el=document.getElementById('price-bc');
-    el.value=''; el.focus();
-  },300);
+  setTimeout(()=>{ const el=document.getElementById('price-bc'); el.value=''; el.focus(); }, 300);
 }
 
 function showPriceCards(p) {
