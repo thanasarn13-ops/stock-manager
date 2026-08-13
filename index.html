@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v3.5</div>
+        <div>v3.6</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -993,13 +993,13 @@ function buildProds(rows, c, branch) {
     const bc=String(r[c.bcIdx]||'').trim();
     const name=String(r[c.nameIdx]||'').trim();
     const unit=String(r[c.unitIdx]||'').trim();
-    const multiple=c.multiIdx>=0?parseInt(r[c.multiIdx])||1:1;
-    const sellPrice=c.sellIdx>=0?parseFloat(r[c.sellIdx])||0:0;
-    const fmlPrice=c.fmlIdx>=0?parseFloat(r[c.fmlIdx])||0:0;
-    const botPrice=c.botIdx>=0?parseFloat(r[c.botIdx])||0:0;
-    const topPrice=c.topIdx>=0?parseFloat(r[c.topIdx])||0:0;
+    const multiple=c.multiIdx>=0?parseInt(String(r[c.multiIdx]||'1').replace(/,/g,''))||1:1;
+    const toF=(v)=>parseFloat(String(v||'0').replace(/,/g,''))||0;
+    const sellPrice=c.sellIdx>=0?toF(r[c.sellIdx]):0;
+    const fmlPrice=c.fmlIdx>=0?toF(r[c.fmlIdx]):0;
+    const botPrice=c.botIdx>=0?toF(r[c.botIdx]):0;
+    const topPrice=c.topIdx>=0?toF(r[c.topIdx]):0;
     const baseBC=c.itemIdIdx>=0?String(r[c.itemIdIdx]||'').trim():bc;
-    // compact keys ประหยัด ~45% ใน localStorage
     if(bc) dest[bc]={n:name,u:unit,m:multiple,bu:unit,p:sellPrice,fp:fmlPrice,bp:botPrice,tp:topPrice,b:baseBC};
   });
   if(!isB1 && Object.keys(products_b1).length===0) Object.assign(products_b1, dest);
@@ -1012,9 +1012,12 @@ function buildProds(rows, c, branch) {
 // getter ที่แปลง compact → standard สำหรับโค้ดที่ใช้ .name .unit etc.
 function normProd(p) {
   if(!p) return null;
-  if(p.name !== undefined) return p; // already standard
-  return {name:p.n,unit:p.u,multiple:p.m||1,baseUnit:p.bu||p.u,
+  // compact format {n,u,m,p,fp,bp,tp,b}
+  if('n' in p) return {name:p.n||'',unit:p.u||'',multiple:p.m||1,baseUnit:p.bu||p.u||'',
           sellPrice:p.p||0,fmlPrice:p.fp||0,botPrice:p.bp||0,topPrice:p.tp||0,baseBC:p.b||''};
+  // standard format {name,unit,...}
+  if('name' in p) return p;
+  return null;
 }
 
 function buildMasterMap(src) {
@@ -1372,11 +1375,11 @@ function addShelfItem(bc) {
   // แปลงยอดขายทุกหน่วย
   const toUnit = (qty, mult) => qty!==null ? Math.floor(qty/mult) : null;
 
-  // หาทุกหน่วยของสินค้านี้จาก products (เรียงจากย่อย→ใหญ่)
+  // หาทุกหน่วยของสินค้านี้จาก products (เรียงจากย่อย→ใหญ่) — ใช้ normProd เพื่อความปลอดภัย
   const allUnits = Object.entries(products)
-    .filter(([,v]) => (v.n||v.name) === displayName)
+    .filter(([,v]) => { const n=normProd(v); return n && n.name === displayName; })
     .sort((a,b) => (a[1].m||a[1].multiple||1) - (b[1].m||b[1].multiple||1))
-    .map(([ubc, uv]) => ({bc:ubc, unit:uv.u||uv.unit, multiple:uv.m||uv.multiple||1}));
+    .map(([ubc,uv]) => { const n=normProd(uv); return {bc:ubc,unit:n.unit,multiple:n.multiple||1}; });
 
   // ตรวจยิงซ้ำ
   const existing = shelfItems.find(it => it.scannedBC === bc);
