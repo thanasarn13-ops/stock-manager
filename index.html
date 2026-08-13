@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v3.6</div>
+        <div>v3.7</div>
         <div>10/08/2569</div>
       </div>
     </div>
@@ -1271,8 +1271,17 @@ function initShelfScreen() {
   if(!Object.keys(salesData104b).length) {
     try{ const s=localStorage.getItem(SALES_FILE104B_KEY); if(s) salesData104b=JSON.parse(s); }catch(e){}
   }
+  // ถ้ามีรายการเก่าอยู่ → ถามว่าจะล้างหรือดูต่อ
+  if(shelfItems.length > 0) {
+    const keep = confirm(`มีรายการสแกนเก่า ${shelfItems.length} รายการอยู่\nกด OK เพื่อดูต่อ | กด ยกเลิก เพื่อเริ่มใหม่`);
+    if(!keep) {
+      shelfItems = [];
+      document.getElementById('shelf-count-hd').textContent = '0 รายการ';
+    }
+  }
   renderShelfList();
-  document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
+  document.getElementById('shelf-count-hd').textContent = shelfItems.length + ' รายการ';
+  setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 300);
 }
 
 document.getElementById('shelf-scan-btn').addEventListener('click', toggleShelfScan);
