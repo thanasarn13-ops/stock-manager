@@ -194,8 +194,8 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v3.7</div>
-        <div>10/08/2569</div>
+        <div>v4.2</div>
+        <div>13/08/2569</div>
       </div>
     </div>
 
@@ -774,7 +774,9 @@ input:focus{border-color:#007aff;background:#fff}
       <button onclick="clearShelf()" style="padding:10px 14px;border-radius:10px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:13px;cursor:pointer">ล้าง</button>
     </div>
     <div style="padding:0 16px 8px">
-      <input type="text" id="shelf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="shelf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      onblur="setTimeout(()=>this.focus(),50)">
     </div>
 
     <!-- รายการ -->
@@ -863,6 +865,7 @@ const MASTER_KEY='sm_master_v1', MASTER_DATE_KEY='sm_master_date_v1';
 const PO_KEY='sm_po_v1', PO_DATE_KEY='sm_po_date_v1';
 const SALES_DATE_KEY='sm_salesdate_v1', SALES_DATE_FILE_KEY='sm_salesdate_file_v1';
 let products={}, products_b1={}, stock={}, codeReader=null, scanning=false, scanMode='stock';
+let nameToUnits = {}; // index: name → [{bc,unit,multiple}] เรียงจากย่อย→ใหญ่ (สร้างหลัง buildProds)
 let currentBranch = 'hq'; // สาขาที่เลือกสำหรับการขาย
 // masterMap: bc → {baseBC, name, unit, multiple}
 // ใช้แปลง barcode หน่วยใหญ่ → barcode หน่วยย่อยสุด
@@ -990,7 +993,9 @@ function buildProds(rows, c, branch) {
   else      { Object.keys(products).forEach(k=>delete products[k]); }
 
   rows.forEach(r=>{
+    // ข้าม barcode ที่ขึ้นต้นด้วย * (สินค้าเลิกขาย/barcode รอง ใน ProMaxx)
     const bc=String(r[c.bcIdx]||'').trim();
+    if(!bc || bc.startsWith('*')) return;
     const name=String(r[c.nameIdx]||'').trim();
     const unit=String(r[c.unitIdx]||'').trim();
     const multiple=c.multiIdx>=0?parseInt(String(r[c.multiIdx]||'1').replace(/,/g,''))||1:1;
@@ -1000,7 +1005,18 @@ function buildProds(rows, c, branch) {
     const botPrice=c.botIdx>=0?toF(r[c.botIdx]):0;
     const topPrice=c.topIdx>=0?toF(r[c.topIdx]):0;
     const baseBC=c.itemIdIdx>=0?String(r[c.itemIdIdx]||'').trim():bc;
-    if(bc) dest[bc]={n:name,u:unit,m:multiple,bu:unit,p:sellPrice,fp:fmlPrice,bp:botPrice,tp:topPrice,b:baseBC};
+    // compact slim format — เก็บเฉพาะ field ที่จำเป็น ประหยัด ~41%
+    if(bc) {
+      const entry = {n:name,u:unit,m:multiple,p:sellPrice};
+      // เก็บ b เฉพาะถ้า baseBC ต่างจาก bc เอง
+      if(baseBC && baseBC!==bc) entry.b=baseBC;
+      // เก็บ fp เฉพาะถ้ามีค่าและต่างจาก sellPrice
+      if(fmlPrice && fmlPrice!==sellPrice) entry.f=fmlPrice;
+      // เก็บ bp,tp เฉพาะถ้ามีค่า
+      if(botPrice) entry.bp=botPrice;
+      if(topPrice) entry.tp=topPrice;
+      dest[bc]=entry;
+    }
   });
   if(!isB1 && Object.keys(products_b1).length===0) Object.assign(products_b1, dest);
   const nameToBase={};
@@ -1012,9 +1028,14 @@ function buildProds(rows, c, branch) {
 // getter ที่แปลง compact → standard สำหรับโค้ดที่ใช้ .name .unit etc.
 function normProd(p) {
   if(!p) return null;
-  // compact format {n,u,m,p,fp,bp,tp,b}
-  if('n' in p) return {name:p.n||'',unit:p.u||'',multiple:p.m||1,baseUnit:p.bu||p.u||'',
-          sellPrice:p.p||0,fmlPrice:p.fp||0,botPrice:p.bp||0,topPrice:p.tp||0,baseBC:p.b||''};
+  // compact slim format {n,u,m,p,f?,b?,bp?,tp?}
+  if('n' in p) return {
+    name:p.n, unit:p.u, multiple:p.m||1, baseUnit:p.u,
+    sellPrice:p.p||0,
+    fmlPrice:p.f||p.fp||p.p||0,   // f=fmlPrice (ใหม่), fp=เก่า, fallback=sellPrice
+    botPrice:p.bp||0, topPrice:p.tp||0,
+    baseBC:p.b||''
+  };
   // standard format {name,unit,...}
   if('name' in p) return p;
   return null;
@@ -1063,6 +1084,14 @@ function finishLoad(isPOS, branch) {
     try{localStorage.setItem(PROD_DATE_KEY, now.toISOString());}catch(e){}
     buildMasterMap(products);
     if(Object.keys(products_b1).length===0) Object.assign(products_b1, products);
+    // สร้าง nameToUnits index สำหรับ addShelfItem (เร็วกว่า O(n) loop)
+    nameToUnits = {};
+    Object.entries(products).forEach(([bc,p])=>{
+      const n=normProd(p); if(!n||!n.name) return;
+      if(!nameToUnits[n.name]) nameToUnits[n.name]=[];
+      nameToUnits[n.name].push({bc,unit:n.unit,multiple:n.multiple||1});
+    });
+    Object.values(nameToUnits).forEach(arr=>arr.sort((a,b)=>a.multiple-b.multiple));
     const multiCount = Object.values(masterMap).filter(x=>x.multiple>1).length;
     setDbStatus(true, count+' สินค้า (สนญ.)');
     setDbDate(dateStr);
@@ -1211,6 +1240,7 @@ function parseSales104XLSX(buf, branch) {
         const base=resolveBC(bc);
         if(base!==bc){
           if(!newData[base]) newData[base]=[0,0];
+          // บวกเข้า base (ไม่ alias — เพื่อป้องกัน shared reference bug)
           newData[base][0]+=val[0]; newData[base][1]+=val[1];
         }
       });
@@ -1264,7 +1294,7 @@ function goScreen(s) {
 }
 
 function initShelfScreen() {
-  // โหลดจาก localStorage ถ้ายังว่าง
+  // โหลดจาก localStorage เฉพาะเมื่อยังว่าง (tryLoadSaved โหลดให้แล้วส่วนหนึ่ง)
   if(!Object.keys(salesData104).length) {
     try{ const s=localStorage.getItem(SALES_FILE104_KEY); if(s) salesData104=JSON.parse(s); }catch(e){}
   }
@@ -1358,7 +1388,7 @@ function addShelfItem(bc) {
   // ถ้าไม่พบใน products เลย
   if(!p) {
     showMsg('shelf-msg','❌ ไม่พบ barcode: '+bc+' (โปรดอัพโหลด R05 ก่อน)', true);
-    setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 100);
+    focusInput();
     return;
   }
 
@@ -1370,9 +1400,11 @@ function addShelfItem(bc) {
   const scannedUnit = (pScanned && pScanned.unit) ? pScanned.unit : baseUnit;
   const displayName = p.n||p.name || '';
 
-  // ค้นหายอดขาย — ทั้ง 2 สาขา (slim format [qty, amt])
-  const sdHQ = salesData104[baseBC]  || salesData104[bc];
-  const sdB1 = salesData104b[baseBC] || salesData104b[bc];
+  // ค้นหายอดขาย — แยกสาขาอย่างชัดเจน ไม่ข้ามสาขา
+  const sdHQ = salesData104[baseBC]  !== undefined ? salesData104[baseBC]
+             : salesData104[bc]      !== undefined ? salesData104[bc] : null;
+  const sdB1 = salesData104b[baseBC] !== undefined ? salesData104b[baseBC]
+             : salesData104b[bc]     !== undefined ? salesData104b[bc] : null;
   const qtyHQ = Array.isArray(sdHQ) ? sdHQ[0] : null;
   const qtyB1 = Array.isArray(sdB1) ? sdB1[0] : null;
   const amtHQ = Array.isArray(sdHQ) ? sdHQ[1] : 0;
@@ -1384,11 +1416,14 @@ function addShelfItem(bc) {
   // แปลงยอดขายทุกหน่วย
   const toUnit = (qty, mult) => qty!==null ? Math.floor(qty/mult) : null;
 
-  // หาทุกหน่วยของสินค้านี้จาก products (เรียงจากย่อย→ใหญ่) — ใช้ normProd เพื่อความปลอดภัย
-  const allUnits = Object.entries(products)
-    .filter(([,v]) => { const n=normProd(v); return n && n.name === displayName; })
-    .sort((a,b) => (a[1].m||a[1].multiple||1) - (b[1].m||b[1].multiple||1))
-    .map(([ubc,uv]) => { const n=normProd(uv); return {bc:ubc,unit:n.unit,multiple:n.multiple||1}; });
+  // ใช้ nameToUnits index แทน O(n) loop — เร็วกว่ามาก
+  const allUnits = nameToUnits[displayName] || [{bc:baseBC,unit:baseUnit,multiple:1}];
+
+  // cursor lock กลับช่องสแกนทันที
+  const focusInput = () => {
+    const el = document.getElementById('shelf-bc-in');
+    if(el){ el.focus(); el.setSelectionRange(0,0); }
+  };
 
   // ตรวจยิงซ้ำ
   const existing = shelfItems.find(it => it.scannedBC === bc);
@@ -1396,7 +1431,7 @@ function addShelfItem(bc) {
     existing.scanCount = (existing.scanCount||1) + 1;
     showMsg('shelf-msg','↻ '+displayName+' (ยิงซ้ำ '+existing.scanCount+' ครั้ง)', false);
     renderShelfList();
-    setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 50);
+    focusInput();
     return;
   }
 
@@ -1432,7 +1467,7 @@ function addShelfItem(bc) {
 
   document.getElementById('shelf-count-hd').textContent = shelfItems.length+' รายการ';
   renderShelfList();
-  setTimeout(()=>document.getElementById('shelf-bc-in').focus(), 50);
+  focusInput();
 }
 
 function renderShelfList() {
@@ -2795,6 +2830,11 @@ function tryLoadSaved() {
     // stock
     const ss=localStorage.getItem(STOCK_KEY);
     if(ss){stock=JSON.parse(ss);updateCount();renderStockInline();}
+    // salesData104 HQ และ สาขา 1
+    try{ const s1=localStorage.getItem(SALES_FILE104_KEY); if(s1) salesData104=JSON.parse(s1); }catch(e){}
+    try{ const s2=localStorage.getItem(SALES_FILE104B_KEY); if(s2) salesData104b=JSON.parse(s2); }catch(e){}
+    // products สาขา 1
+    try{ const sb1=localStorage.getItem('sm_prod_b1_v1'); if(sb1) products_b1=JSON.parse(sb1); }catch(e){}
     // ประวัติการขาย
     loadSalesLog();
     // เช็คขนาด storage
