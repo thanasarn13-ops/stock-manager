@@ -194,7 +194,7 @@ input:focus{border-color:#007aff;background:#fff}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="home-sub" style="margin:0">เลือกโหมดการทำงาน</div>
       <div style="font-size:11px;color:#c7c7cc;text-align:right">
-        <div>v4.3</div>
+        <div>v4.6</div>
         <div>13/08/2569</div>
       </div>
     </div>
@@ -1227,10 +1227,9 @@ function parseSales104XLSX(buf, branch) {
     // slim format: {bc:[qty,amt]} ประหยัด 70% vs full object
     const newData={};
     data.slice(1).forEach(row=>{
-      // ตัด * ออกจาก barcode (R06 บางรายการมี * นำหน้า เช่น *8850124003843)
-      const rawBc=String(row[bcIdx]||'').trim();
-      const bc=rawBc.replace(/^\*+/,'');
-      if(!bc) return;
+      // ข้าม barcode ที่ขึ้นต้นด้วย * (สินค้าเลิกขาย — เหมือนกับ R05)
+      const bc=String(row[bcIdx]||'').trim();
+      if(!bc || bc.startsWith('*')) return;
       const qty=parseFloat(row[qtyIdx]||0), amt=parseFloat(row[amtIdx]||0);
       if(!newData[bc]) newData[bc]=[0,0];
       newData[bc][0]+=qty; newData[bc][1]+=amt;
@@ -1717,6 +1716,12 @@ function exportSalesTxt() {
 
 // ===== BRANCH SELECTION =====
 function setBranch(branch) {
+  if(branch === currentBranch) return; // ไม่เปลี่ยนถ้าสาขาเดิม
+  // ถ้ามีของในตะกร้า → ถามก่อน
+  if(cart.length > 0) {
+    if(!confirm('เปลี่ยนสาขาจะล้างตะกร้าปัจจุบัน\nต้องการดำเนินการไหม?')) return; // กด ยกเลิก → ไม่เปลี่ยน
+    cart=[]; appliedPromos=[]; renderCart();
+  }
   currentBranch = branch;
   const hqBtn = document.getElementById('branch-hq-btn');
   const b1Btn = document.getElementById('branch-b1-btn');
@@ -1727,10 +1732,6 @@ function setBranch(branch) {
     b1Btn.style.background='#0369a1'; b1Btn.style.color='#fff'; b1Btn.style.borderColor='#0369a1';
     hqBtn.style.background='#fff'; hqBtn.style.color='#8e8e93'; hqBtn.style.borderColor='#e5e5ea';
   }
-  // เคลียร์ตะกร้าเมื่อเปลี่ยนสาขา
-  if(cart.length > 0 && confirm('เปลี่ยนสาขาจะล้างตะกร้าปัจจุบัน ต้องการดำเนินการไหม?')){
-    cart=[]; appliedPromos=[]; renderCart(); calcPromo();
-  } else if(cart.length === 0) { /* ไม่ต้องทำอะไร */ }
   setTimeout(()=>document.getElementById('sales-bc-in').focus(),100);
 }
 
@@ -2293,13 +2294,20 @@ document.getElementById('bc-in').addEventListener('input', function() {
 });
 
 function autofill(bc) {
-  const badge=document.getElementById('af-badge'), p=products[bc];
+  const badge=document.getElementById('af-badge');
+  const baseBC=resolveBC(bc);
+  const pRaw=products[bc]||products[baseBC]||products_b1[bc]||products_b1[baseBC];
+  const p=normProd(pRaw);
   if(p){
-    document.getElementById('name-in').value=p.n||p.name;
-    document.getElementById('unit-in').value=p.u||p.unit||'';
+    document.getElementById('name-in').value=p.name;
+    document.getElementById('unit-in').value=p.unit||'';
     document.getElementById('qty-in').value=1;
     badge.style.display='inline';
-    badge.textContent=(p.m||p.multiple||1)>1?'auto-filled · 1 '+(p.u||p.unit)+' = '+(p.m||p.multiple)+' '+(p.bu||p.baseUnit||p.u||p.unit):'auto-filled';
+    const units=nameToUnits[p.name]||[];
+    const base=units.find(u=>u.multiple===1);
+    badge.textContent=p.multiple>1?
+      'auto-filled · 1 '+p.unit+' = '+p.multiple+' '+(base?base.unit:p.unit):
+      'auto-filled';
   } else {
     badge.style.display='none';
     document.getElementById('name-in').value='';
@@ -2312,49 +2320,41 @@ function autofill(bc) {
 document.getElementById('bc-in').addEventListener('keydown',e=>{if(e.key==='Enter')addStock();});
 
 function addStock() {
-  const bc  = document.getElementById('bc-in').value.trim();
-  const qty = parseFloat(document.getElementById('qty-in').value)||0;
-  if (!bc) { showMsg('scan-msg','กรุณาใส่ barcode',true); return; }
+  const bcRaw = document.getElementById('bc-in').value.trim();
+  const qty   = parseFloat(document.getElementById('qty-in').value)||0;
+  if(!bcRaw){ showMsg('scan-msg','กรุณาใส่ barcode',true); return; }
 
-  // ตรวจสอบว่ามีในฐานข้อมูลไหม
-  if (!products[bc]) {
+  // resolveBC ก่อน — รองรับหน่วยใหญ่
+  const baseBC = resolveBC(bcRaw);
+  const pRaw = products[bcRaw] || products[baseBC] || products_b1[bcRaw] || products_b1[baseBC];
+  if(!pRaw){
     showMsg('scan-msg','❌ barcode นี้ไม่มีในฐานข้อมูล ไม่สามารถบันทึกได้', true);
     document.getElementById('bc-in').value='';
     document.getElementById('bc-in').focus();
     return;
   }
 
-  const p = products[bc];
-  const name = p.n||p.name;
-  const unit = document.getElementById('unit-in').value.trim()||(p.u||p.unit||'');
-  const multiple = p.m||p.multiple || 1;
+  const p = normProd(pRaw);
+  const name     = p.name;
+  const unit     = document.getElementById('unit-in').value.trim() || p.unit || '';
+  const multiple = p.multiple || 1;
 
-  // หา baseUnit = unit ของสินค้าชื่อเดียวกันที่มี multiple=1
-  let baseUnit = p?.baseUnit || unit;
-  if (multiple > 1) {
-    const baseProduct = Object.values(products).find(
-      x => x.name === name && x.multiple === 1
-    );
-    if (baseProduct) baseUnit = baseProduct.unit;
-  }
+  // หา baseUnit จาก nameToUnits index (compact-safe)
+  const units = nameToUnits[name] || [];
+  const baseUnitEntry = units.find(u=>u.multiple===1);
+  const baseUnit = baseUnitEntry ? baseUnitEntry.unit : (multiple===1 ? unit : p.baseUnit||unit);
 
   const baseQty = qty * multiple;
-  const key = name; // รวมด้วยชื่อสินค้าเสมอ
+  const key = name;
 
-  if (!stock[key]) stock[key] = {name, baseUnit, totalBase:0, scans:[], barcodes:[]};
+  if(!stock[key]) stock[key]={name,baseUnit,totalBase:0,scans:[],barcodes:[]};
+  if(multiple===1) stock[key].baseUnit=unit;
+  if(multiple===1 && !stock[key].barcodes.includes(baseBC)) stock[key].barcodes.push(baseBC);
+  stock[key].totalBase+=baseQty;
 
-  // อัปเดต baseUnit ถ้าเจอหน่วยย่อยใหม่
-  if (multiple === 1) stock[key].baseUnit = unit;
-
-  // เก็บเฉพาะ barcode ของหน่วยย่อยสุด (multiple=1)
-  if (multiple === 1 && !stock[key].barcodes.includes(bc)) stock[key].barcodes.push(bc);
-
-  stock[key].totalBase += baseQty;
-
-  // รวม scan เดิมที่ unit เดียวกัน
-  const ex = stock[key].scans.find(s => s.unit === unit);
-  if (ex) ex.qty += qty;
-  else stock[key].scans.push({unit, qty, multiple, baseQty});
+  const ex=stock[key].scans.find(s=>s.unit===unit);
+  if(ex) ex.qty+=qty;
+  else stock[key].scans.push({unit,qty,multiple,baseQty});
 
   autoSave();
   updateCount();
@@ -2839,6 +2839,17 @@ function tryLoadSaved() {
     try{ const s2=localStorage.getItem(SALES_FILE104B_KEY); if(s2) salesData104b=JSON.parse(s2); }catch(e){}
     // products สาขา 1
     try{ const sb1=localStorage.getItem('sm_prod_b1_v1'); if(sb1) products_b1=JSON.parse(sb1); }catch(e){}
+    // rebuild nameToUnits index จาก products ที่โหลดมา
+    if(Object.keys(products).length>0) {
+      nameToUnits={};
+      const src=Object.keys(products_b1).length>0?products_b1:products;
+      Object.entries(src).forEach(([bc,p])=>{
+        const n=normProd(p); if(!n||!n.name) return;
+        if(!nameToUnits[n.name]) nameToUnits[n.name]=[];
+        nameToUnits[n.name].push({bc,unit:n.unit,multiple:n.multiple||1});
+      });
+      Object.values(nameToUnits).forEach(arr=>arr.sort((a,b)=>a.multiple-b.multiple));
+    }
     // ประวัติการขาย
     loadSalesLog();
     // เช็คขนาด storage
