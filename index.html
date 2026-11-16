@@ -33,6 +33,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mode-desc{font-size:13px;opacity:0.75}
 .mode-stockcheck{background:#ecfeff;border-color:#a5f3fc;color:#155e75}
 .mode-stockcheck .mode-icon{background:#cffafe}
+.mode-shelfsale{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+.mode-shelfsale .mode-icon{background:#ffedd5}
 .mode-analyze{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .mode-analyze .mode-icon{background:#fee2e2}
 /* DB status dot (ใช้โดยเมนูตรวจนับสต๊อค) */
@@ -114,6 +116,8 @@ input:focus{border-color:#007aff;background:#fff}
   .mode-analyze .mode-icon{background:#7f1d1d}
   .mode-stockcheck{background:#083344;border-color:#0e7490;color:#67e8f9}
   .mode-stockcheck .mode-icon{background:#0e7490}
+  .mode-shelfsale{background:#431407;border-color:#9a3412;color:#fdba74}
+  .mode-shelfsale .mode-icon{background:#7c2d12}
   .stock-item{border-color:#2c2c2e}
   .item-name{color:#f2f2f7}
   .upload-area{background:#2c2c2e;border-color:#3a3a3c}
@@ -149,6 +153,14 @@ input:focus{border-color:#007aff;background:#fff}
       <div>
         <div class="mode-title">ตรวจนับสต๊อค</div>
         <div class="mode-desc">ฐานข้อมูลแยกต่างหาก · อัปโหลด R05.146 ของตัวเอง</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-shelfsale" onclick="goScreen('shelfsale')">
+      <div class="mode-icon">&#128202;</div>
+      <div>
+        <div class="mode-title">ยิงหน้าชั้น</div>
+        <div class="mode-desc">เช็คยอดขาย (R06.104) · ฐานข้อมูลแยกต่างหาก</div>
       </div>
     </div>
 
@@ -270,6 +282,62 @@ input:focus{border-color:#007aff;background:#fff}
   </div>
 </div>
 
+<!-- SHELF SALE CHECK (ยิงหน้าชั้น — ฐานข้อมูลแยกต่างหาก) -->
+<div id="screen-shelfsale" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1"><div class="header-title">ยิงหน้าชั้น (เช็คยอดขาย)</div></div>
+  </div>
+  <div style="padding-top:8px">
+
+    <!-- ฐานข้อมูลยอดขายของเมนูนี้เอง (แยกจากเมนูอื่นทั้งหมด) -->
+    <div class="card" style="margin-top:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="db-dot" id="shf-upload-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">📊 ฐานข้อมูลยอดขาย (เฉพาะเมนูนี้)</div>
+          <div id="shf-upload-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="shf-upload-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('shf-file-in').click()" style="border-color:#9a3412">
+        <input type="file" id="shf-file-in" accept=".xlsx,.xls,.csv" onchange="shfHandleFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:3px">📊</div>
+        <div style="font-size:13px;color:#9a3412;font-weight:600">R06.104 (ยอดขาย)</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">แยกจากไฟล์ที่ใช้ในเมนูอื่น ไม่ปนกัน · ไม่แปลงหน่วย</div>
+      </div>
+      <div id="shf-upload-preview" style="display:none;background:#fff7ed;border-radius:10px;padding:9px 12px;font-size:13px;color:#9a3412;margin-top:4px;border:0.5px solid #fed7aa"></div>
+    </div>
+
+    <div style="padding:0 16px 8px">
+      <button class="btn" id="shf-scan-btn" style="background:#9a3412;color:#fff">&#128247; เปิดกล้องสแกน</button>
+    </div>
+
+    <div class="card">
+      <label>Barcode</label>
+      <input type="text" id="shf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <div class="msg" id="shf-scan-msg"></div>
+    </div>
+
+    <!-- รายการที่เช็คแล้ว -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:15px;font-weight:600">รายการที่เช็คแล้ว</span>
+        <span id="shf-list-total" style="font-size:13px;color:#8e8e93"></span>
+      </div>
+      <div id="shf-list" style="max-height:340px;overflow-y:auto">
+        <div class="empty">ยังไม่มีรายการ</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-green" style="flex:2;margin:0" onclick="shfSaveTxt()">&#128190; .txt</button>
+        <button class="btn btn-blue" style="flex:2;margin:0" onclick="shfSaveExcel()">&#128202; Excel</button>
+        <button class="btn btn-red" style="flex:1;margin:0" onclick="shfClearList()">&#128465;</button>
+      </div>
+      <div class="msg" id="shf-list-msg"></div>
+    </div>
+  </div>
+</div>
+
 <!-- SALESLOG -->
 </div>
 
@@ -364,6 +432,7 @@ function goScreen(s) {
   document.getElementById('screen-' + s).classList.add('active');
 
   if (typeof scStopScan    === 'function') scStopScan();
+  if (typeof shfStopScan   === 'function') shfStopScan();
 }
 
 // ======================================================================
@@ -853,6 +922,278 @@ function scInitScreen() {
   // ไม่ auto-focus ช่อง barcode ตอนเข้าเมนู เพื่อไม่ให้คีย์บอร์ดเด้งขึ้นมาเอง
 }
 
+// ======================================================================
+// ยิงหน้าชั้น (เช็คยอดขาย) — ฐานข้อมูลแยกต่างหาก
+// ======================================================================
+// เมนูนี้ไม่ใช้ตัวแปร scProducts/scMasterMap/products ของเมนูอื่นเลย
+// อัปโหลดไฟล์ R06.104 ของตัวเองที่นี่ → รวมยอดขาย (BASEQUANTITY, AMOUNT)
+// ต่อ barcode ตรงๆ ไม่แปลงหน่วย (ไม่ใช้ MULTIPLE) ตามที่เลือกไว้
+const SHF_SALES_KEY = 'shf_sales_v1';
+const SHF_DATE_KEY = 'shf_date_v1';
+const SHF_LIST_KEY = 'shf_list_v1';
+
+let shfSales = {};   // { barcode: {n,u,q,a} }
+let shfList = [];    // [{bc,name,unit,qty,amt}, ...] ล่าสุดอยู่บนสุด
+let shfCamReader = null, shfScanning = false;
+let shfBcTimer = null;
+
+// หาตำแหน่งคอลัมน์ของไฟล์ R06.104 (ต่างจากไฟล์ R05.146 ของเมนูอื่น)
+function shfDetectCols(headers) {
+  const h = headers.map(x => String(x || '').toUpperCase());
+  return {
+    bcIdx:   h.indexOf('ITEMID'),
+    nameIdx: h.indexOf('ITEMNAME'),
+    unitIdx: h.indexOf('CF_UNITNAME'),
+    qtyIdx:  h.indexOf('BASEQUANTITY'),
+    amtIdx:  h.indexOf('AMOUNT'),
+  };
+}
+
+function shfHandleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    readFileAsText(file, text => {
+      const lines = text.trim().split('\n').map(l => l.split(',').map(x => x.replace(/^"|"$/g, '').trim()));
+      const c = shfDetectCols(lines[0]);
+      if (c.bcIdx === -1) { showMsg('shf-list-msg', '❌ ไม่พบคอลัมน์ ITEMID ในไฟล์', true); return; }
+      shfBuildSales(lines.slice(1), c);
+      shfFinishLoad();
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    readFileAsArrayBuffer(file, buf => {
+      try {
+        const wb = XLSX.read(buf, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const c = shfDetectCols(rows[0] || []);
+        if (c.bcIdx === -1) { showMsg('shf-list-msg', '❌ ไม่พบคอลัมน์ ITEMID ในไฟล์', true); return; }
+        shfBuildSales(rows.slice(1), c);
+        shfFinishLoad();
+      } catch (e) {
+        showMsg('shf-list-msg', 'อ่านไฟล์ไม่ได้', true);
+      }
+    });
+  } else {
+    showMsg('shf-list-msg', 'รองรับเฉพาะ .csv, .xlsx, .xls', true);
+  }
+}
+
+// รวมยอดขาย (จำนวน + เงิน) ต่อ barcode — ไม่แปลงหน่วย
+function shfBuildSales(rows, c) {
+  const dest = {};
+  rows.forEach(r => {
+    const bc = String(r[c.bcIdx] || '').trim();
+    if (!bc || bc.startsWith('*')) return;
+    const name = String(r[c.nameIdx] || '').trim();
+    const unit = String(r[c.unitIdx] || '').trim();
+    const qty = c.qtyIdx >= 0 ? toNumber(r[c.qtyIdx]) : 0;
+    const amt = c.amtIdx >= 0 ? toNumber(r[c.amtIdx]) : 0;
+    if (!dest[bc]) dest[bc] = { n: name, u: unit, q: 0, a: 0 };
+    dest[bc].q += qty;
+    dest[bc].a += amt;
+  });
+  shfSales = dest;
+  try { localStorage.setItem(SHF_SALES_KEY, JSON.stringify(shfSales)); } catch (e) {
+    showMsg('shf-list-msg', '⚠️ พื้นที่เต็ม! ข้อมูลโหลดแล้วแต่บันทึกไม่ได้', false);
+  }
+}
+
+function shfFinishLoad() {
+  const count = Object.keys(shfSales).length;
+  const now = new Date();
+  const dateStr = fmtUploadDate(now);
+  try { localStorage.setItem(SHF_DATE_KEY, now.toISOString()); } catch (e) {}
+  shfUpdateUploadStatus(true, count + ' สินค้า', dateStr);
+  const el = document.getElementById('shf-upload-preview');
+  if (el) { el.style.display = 'block'; el.innerHTML = '✓ โหลดแล้ว <b>' + count + '</b> สินค้า'; }
+  showMsg('shf-list-msg', '✓ โหลดฐานข้อมูลยอดขายเรียบร้อย! ' + count + ' สินค้า', false);
+}
+
+function shfUpdateUploadStatus(ok, txt, dateStr) {
+  const dot = document.getElementById('shf-upload-dot');
+  const st  = document.getElementById('shf-upload-status');
+  const dt  = document.getElementById('shf-upload-date');
+  if (dot) dot.className = 'db-dot' + (ok ? ' ok' : '');
+  if (st)  st.textContent = txt;
+  if (dt)  dt.textContent = dateStr ? 'อัพโหลดเมื่อ: ' + dateStr : '';
+}
+
+// ----- สแกน / ค้นหา -----
+document.getElementById('shf-bc-in').addEventListener('input', function () {
+  const bc = this.value.trim();
+  if (!bc) return;
+  if (shfSales[bc]) {
+    clearTimeout(shfBcTimer);
+    shfAddToList(bc);
+    this.value = '';
+    return;
+  }
+  if (bc.length >= 8) {
+    clearTimeout(shfBcTimer);
+    shfBcTimer = setTimeout(() => {
+      const cur = document.getElementById('shf-bc-in').value.trim();
+      if (cur && !shfSales[cur]) {
+        showMsg('shf-scan-msg', '❌ ไม่พบ barcode นี้ในข้อมูลยอดขาย', true);
+        setTimeout(() => { document.getElementById('shf-bc-in').value = ''; document.getElementById('shf-bc-in').focus(); }, 800);
+      }
+    }, 600);
+  }
+});
+
+document.getElementById('shf-bc-in').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const bc = document.getElementById('shf-bc-in').value.trim();
+  if (!bc) return;
+  if (shfSales[bc]) { shfAddToList(bc); document.getElementById('shf-bc-in').value = ''; }
+  else showMsg('shf-scan-msg', '❌ ไม่พบ barcode นี้ในข้อมูลยอดขาย', true);
+});
+
+function shfAddToList(bc) {
+  const d = shfSales[bc];
+  if (!d) { showMsg('shf-scan-msg', '❌ ไม่พบ barcode นี้ในข้อมูลยอดขาย', true); return; }
+  shfList = shfList.filter(it => it.bc !== bc);
+  shfList.unshift({ bc, name: d.n, unit: d.u, qty: d.q, amt: d.a });
+  if (shfList.length > 300) shfList = shfList.slice(0, 300);
+  shfAutoSave();
+  shfRenderList();
+  document.getElementById('shf-bc-in').focus();
+  showMsg('shf-scan-msg', '✓ ' + (d.n || bc) + ' — ขายไป ' + d.q + ' ' + d.u, false);
+}
+
+// ----- กล้องสแกน (ใช้ #video-wrap/#video ร่วมกับเมนูอื่น) -----
+document.getElementById('shf-scan-btn').addEventListener('click', shfToggleScan);
+
+function shfToggleScan() {
+  if (shfScanning) { shfStopScan(); return; }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      stream.getTracks().forEach(t => t.stop());
+      document.getElementById('video-wrap').style.display = 'block';
+      document.getElementById('shf-scan-btn').textContent = '⏹ ปิดกล้อง';
+      shfCamReader = new ZXing.BrowserMultiFormatReader();
+      shfScanning = true;
+      shfCamReader.listVideoInputDevices().then(devices => {
+        const back = devices.find(d => /back|environment/i.test(d.label));
+        const id = back ? back.deviceId : (devices[0]?.deviceId || null);
+        let lastBC = '', lastTime = 0;
+        shfCamReader.decodeFromVideoDevice(id, 'video', result => {
+          if (!result) return;
+          const bc = result.getText();
+          const now = Date.now();
+          if (bc === lastBC && now - lastTime < 1500) return;
+          lastBC = bc; lastTime = now;
+          shfAddToList(bc);
+        });
+      });
+    })
+    .catch(() => alert('ไม่สามารถเปิดกล้องได้'));
+}
+
+function shfStopScan() {
+  shfScanning = false;
+  if (shfCamReader) { shfCamReader.reset(); shfCamReader = null; }
+  document.getElementById('video-wrap').style.display = 'none';
+  document.getElementById('shf-scan-btn').textContent = '📷 เปิดกล้องสแกน';
+}
+
+// ----- รายการ / แสดงผล / export -----
+function shfRenderList() {
+  const list = document.getElementById('shf-list');
+  document.getElementById('shf-list-total').textContent = shfList.length ? shfList.length + ' รายการ' : '';
+  if (!shfList.length) { list.innerHTML = '<div class="empty">ยังไม่มีรายการ</div>'; return; }
+  list.innerHTML = shfList.map(it => `<div class="stock-item">
+      <div style="flex:1;min-width:0">
+        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name || '—'}</div>
+        <div class="item-bc">${it.bc}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="text-align:right">
+          <div class="qty-pill" style="background:#ffedd5;color:#9a3412">${it.qty} ${it.unit || ''}</div>
+          <div class="qty-sub">฿${(it.amt || 0).toFixed(2)}</div>
+        </div>
+        <button class="del-btn" onclick="shfRemoveItem('${String(it.bc).replace(/'/g, "\\'")}')">&#x2715;</button>
+      </div>
+    </div>`).join('');
+}
+
+function shfRemoveItem(bc) {
+  shfList = shfList.filter(it => it.bc !== bc);
+  shfAutoSave();
+  shfRenderList();
+}
+
+function shfAutoSave() {
+  try { localStorage.setItem(SHF_LIST_KEY, JSON.stringify(shfList)); } catch (e) {}
+}
+
+function shfClearList() {
+  if (!shfList.length) return;
+  if (confirm('ล้างรายการที่เช็คไว้ทั้งหมด? (ฐานข้อมูลยอดขายที่อัปโหลดไว้จะไม่ถูกลบ)')) {
+    shfList = [];
+    shfAutoSave();
+    shfRenderList();
+  }
+}
+
+function shfSaveTxt() {
+  if (!shfList.length) { showMsg('shf-list-msg', 'ไม่มีรายการ', true); return; }
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+  let maxName = 20, maxBC = 13, maxQty = 10;
+  shfList.forEach(it => {
+    maxName = Math.max(maxName, strWidth(it.name || '—'));
+    maxBC   = Math.max(maxBC, String(it.bc || '').length);
+    maxQty  = Math.max(maxQty, strWidth(it.qty + ' ' + (it.unit || '')));
+  });
+  maxName += 2; maxBC += 2; maxQty += 2;
+  const sep = '─'.repeat(6) + '┼' + '─'.repeat(maxName + 2) + '┼' + '─'.repeat(maxBC + 2) + '┼' + '─'.repeat(maxQty + 2) + '┼' + '─'.repeat(14);
+
+  let txt = `รายงานยิงหน้าชั้น (เช็คยอดขาย)\n${ds}\n${'='.repeat(40)}\n\n`;
+  txt += padEndTh('ลำดับ', 6) + '│ ' + padEndTh('ชื่อสินค้า', maxName) + '│ ' + 'Barcode'.padEnd(maxBC) + '│ ' + padEndTh('ขายได้', maxQty) + '│ ยอดเงิน\n';
+  txt += sep + '\n';
+  shfList.forEach((it, i) => {
+    const qs = it.qty + ' ' + (it.unit || '');
+    txt += padEndTh(String(i + 1), 6) + '│ ' + padEndTh(it.name || '—', maxName) + '│ ' + String(it.bc || '').padEnd(maxBC) + '│ ' + padEndTh(qs, maxQty) + '│ ฿' + (it.amt || 0).toFixed(2) + '\n';
+  });
+  txt += sep + '\n';
+  txt += 'รวมทั้งหมด: ' + shfList.length + ' รายการ\n';
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.download = 'ยิงหน้าชั้น_' + fmtFileName(now) + '.txt';
+  a.click();
+  showMsg('shf-list-msg', '✓ บันทึกไฟล์แล้ว ดูใน Downloads', false);
+}
+
+function shfSaveExcel() {
+  if (!shfList.length) { showMsg('shf-list-msg', 'ไม่มีรายการ', true); return; }
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+  const rows = [
+    ['รายงานยิงหน้าชั้น (เช็คยอดขาย) — ' + ds],
+    [],
+    ['ลำดับ', 'Barcode', 'ชื่อสินค้า', 'ขายได้', 'หน่วย', 'ยอดเงิน (฿)'],
+  ];
+  shfList.forEach((it, i) => {
+    rows.push([i + 1, it.bc, it.name || '—', it.qty, it.unit || '', Math.round((it.amt || 0) * 100) / 100]);
+  });
+  rows.push([]);
+  rows.push(['รวมทั้งหมด', '', shfList.length + ' รายการ']);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 40 }, { wch: 12 }, { wch: 10 }, { wch: 14 }];
+  const headerRow = 2;
+  ['A', 'B', 'C', 'D', 'E', 'F'].forEach(col => {
+    const cell = ws[col + (headerRow + 1)];
+    if (cell) cell.s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '9A3412' } }, alignment: { horizontal: 'center' } };
+  });
+  XLSX.utils.book_append_sheet(wb, ws, 'ยิงหน้าชั้น');
+  XLSX.writeFile(wb, 'ยิงหน้าชั้น_' + fmtFileName(now) + '.xlsx');
+  showMsg('shf-list-msg', '✓ บันทึก Excel แล้ว ดูใน Downloads', false);
+}
+
 // ===== TEXT WIDTH HELPERS (ใช้โดย scSaveTxt ของเมนูตรวจนับสต๊อค) =====
 // นับความกว้างจริงของข้อความ (ภาษาไทย 1 ตัว = 2 ช่อง)
 function strWidth(s) {
@@ -911,6 +1252,22 @@ function tryLoadSaved() {
       if (Object.keys(scProducts).length > 0) scNameToUnits = buildUnitIndex(scProducts);
       const scs = localStorage.getItem(SC_STOCK_KEY);
       if (scs) { scStock = JSON.parse(scs); scUpdateCount(); }
+    } catch (e) {}
+
+    // ===== ยิงหน้าชั้น (ฐานข้อมูลแยกต่างหาก) =====
+    try {
+      const shfs = localStorage.getItem(SHF_SALES_KEY);
+      const shfDate = localStorage.getItem(SHF_DATE_KEY);
+      if (shfs) {
+        shfSales = JSON.parse(shfs);
+        const n3 = Object.keys(shfSales).length;
+        const ds3 = shfDate ? fmtUploadDate(new Date(shfDate)) : '';
+        shfUpdateUploadStatus(true, n3 + ' สินค้า (cache)', ds3);
+        const el2 = document.getElementById('shf-upload-preview');
+        if (el2) { el2.style.display = 'block'; el2.innerHTML = '✓ โหลดแล้ว <b>' + n3 + '</b> สินค้า (cache)'; }
+      }
+      const shfl = localStorage.getItem(SHF_LIST_KEY);
+      if (shfl) { shfList = JSON.parse(shfl); shfRenderList(); }
     } catch (e) {}
   }catch(e){}
 }
