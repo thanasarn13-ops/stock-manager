@@ -35,6 +35,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mode-stockcheck .mode-icon{background:#cffafe}
 .mode-shelfsale{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
 .mode-shelfsale .mode-icon{background:#ffedd5}
+.mode-sell{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.mode-sell .mode-icon{background:#dcfce7}
 .mode-analyze{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .mode-analyze .mode-icon{background:#fee2e2}
 /* DB status dot (ใช้โดยเมนูตรวจนับสต๊อค) */
@@ -118,6 +120,8 @@ input:focus{border-color:#007aff;background:#fff}
   .mode-stockcheck .mode-icon{background:#0e7490}
   .mode-shelfsale{background:#431407;border-color:#9a3412;color:#fdba74}
   .mode-shelfsale .mode-icon{background:#7c2d12}
+  .mode-sell{background:#052e16;border-color:#166534;color:#86efac}
+  .mode-sell .mode-icon{background:#14532d}
   .stock-item{border-color:#2c2c2e}
   .item-name{color:#f2f2f7}
   .upload-area{background:#2c2c2e;border-color:#3a3a3c}
@@ -161,6 +165,14 @@ input:focus{border-color:#007aff;background:#fff}
       <div>
         <div class="mode-title">ยิงหน้าชั้น</div>
         <div class="mode-desc">เช็คยอดขาย (R06.104) · ฐานข้อมูลแยกต่างหาก</div>
+      </div>
+    </div>
+
+    <div class="mode-btn mode-sell" onclick="goScreen('sell')">
+      <div class="mode-icon">&#128722;</div>
+      <div>
+        <div class="mode-title">ขายสินค้า</div>
+        <div class="mode-desc">ราคา+โปรโมชั่น (R05.146, R17.103) · ฐานข้อมูลแยกต่างหาก</div>
       </div>
     </div>
 
@@ -338,6 +350,84 @@ input:focus{border-color:#007aff;background:#fff}
   </div>
 </div>
 
+<div id="screen-sell" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goScreen('home')">&#8249;</button>
+    <div style="flex:1"><div class="header-title">ขายสินค้า</div></div>
+  </div>
+  <div style="padding-top:8px">
+
+    <!-- ฐานข้อมูลสินค้า+ราคา ของเมนูนี้เอง (แยกจากเมนูอื่นทั้งหมด) -->
+    <div class="card" style="margin-top:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="db-dot" id="sl-prod-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">🛒 ฐานข้อมูลสินค้า+ราคา (เฉพาะเมนูนี้)</div>
+          <div id="sl-prod-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="sl-prod-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('sl-prod-file-in').click()" style="border-color:#166534">
+        <input type="file" id="sl-prod-file-in" accept=".xlsx,.xls,.csv" onchange="slHandleProdFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:3px">🛒</div>
+        <div style="font-size:13px;color:#166534;font-weight:600">R05.146 (สินค้า+ราคา)</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">แยกจากไฟล์ที่ใช้ในเมนูอื่น ไม่ปนกัน</div>
+      </div>
+      <div id="sl-prod-preview" style="display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#166534;margin-top:4px;border:0.5px solid #bbf7d0"></div>
+    </div>
+
+    <!-- ฐานข้อมูลโปรโมชั่น -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="db-dot" id="sl-promo-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">🏷 ฐานข้อมูลโปรโมชั่น (ไม่บังคับ)</div>
+          <div id="sl-promo-status" style="font-size:12px;color:#8e8e93;margin-top:2px">ยังไม่ได้โหลด</div>
+          <div id="sl-promo-date" style="font-size:11px;color:#c7c7cc;margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('sl-promo-file-in').click()" style="border-color:#166534">
+        <input type="file" id="sl-promo-file-in" accept=".xlsx,.xls,.csv" onchange="slHandlePromoFile(this.files[0])">
+        <div style="font-size:20px;margin-bottom:3px">🏷</div>
+        <div style="font-size:13px;color:#166534;font-weight:600">R17.103 (โปรโมชั่น)</div>
+        <div style="font-size:11px;color:#8e8e93;margin-top:2px">ใช้โชว์ชื่อโปรเตือนพนักงานเท่านั้น ไม่คำนวณราคาโปรให้</div>
+      </div>
+      <div id="sl-promo-preview" style="display:none;background:#f0fdf4;border-radius:10px;padding:9px 12px;font-size:13px;color:#166534;margin-top:4px;border:0.5px solid #bbf7d0"></div>
+    </div>
+
+    <div style="padding:0 16px 8px">
+      <button class="btn" id="sl-scan-btn" style="background:#166534;color:#fff">&#128247; เปิดกล้องสแกน</button>
+    </div>
+
+    <div class="card">
+      <label>Barcode</label>
+      <input type="text" id="sl-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <div class="msg" id="sl-scan-msg"></div>
+    </div>
+
+    <!-- ตะกร้าสินค้า -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:15px;font-weight:600">ตะกร้าสินค้า</span>
+        <span id="sl-cart-total" style="font-size:13px;color:#8e8e93"></span>
+      </div>
+      <div id="sl-cart" style="max-height:340px;overflow-y:auto">
+        <div class="empty">ยังไม่มีสินค้าในตะกร้า</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;background:#f0fdf4;border-radius:10px;border:0.5px solid #bbf7d0">
+        <span style="font-size:14px;font-weight:600;color:#166534">ยอดรวม</span>
+        <span id="sl-cart-sum" style="font-size:18px;font-weight:700;color:#166534">฿0.00</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-green" style="flex:2;margin:0" onclick="slSaveTxt()">&#128190; .txt</button>
+        <button class="btn btn-blue" style="flex:2;margin:0" onclick="slSaveExcel()">&#128202; Excel</button>
+        <button class="btn btn-red" style="flex:1;margin:0" onclick="slClearCart()">&#128465;</button>
+      </div>
+      <div class="msg" id="sl-cart-msg"></div>
+    </div>
+  </div>
+</div>
+
 <!-- SALESLOG -->
 </div>
 
@@ -438,6 +528,7 @@ function goScreen(s) {
 
   if (typeof scStopScan    === 'function') scStopScan();
   if (typeof shfStopScan   === 'function') shfStopScan();
+  if (typeof slStopScan    === 'function') slStopScan();
 }
 
 // ======================================================================
@@ -1199,6 +1290,384 @@ function shfSaveExcel() {
   showMsg('shf-list-msg', '✓ บันทึก Excel แล้ว ดูใน Downloads', false);
 }
 
+// ======================================================================
+// ขายสินค้า — ฐานข้อมูลแยกต่างหาก (ไม่ใช้ scProducts/shfSales ของเมนูอื่นเลย)
+// ======================================================================
+// โปรโมชั่น (R17.103) ใช้แค่ "โชว์ชื่อโปรเตือนพนักงาน" เท่านั้น — ไม่คำนวณราคาโปรให้
+// เพราะไฟล์ไม่มีฟิลด์ "ราคาโปรที่แท้จริง" ให้คำนวณตรงๆ (ตรวจสอบแล้วค่าใกล้เคียงแต่ไม่ตรง
+// กับป้ายโปรจริง เช่น "ซิต้า 2 ขวด 175บ." ไฟล์ให้ 99/ขวด) คำนวณเองอาจคิดราคาผิดจริง
+const SL_PROD_KEY = 'sl_prod_v1';
+const SL_PROD_DATE_KEY = 'sl_prod_date_v1';
+const SL_PROMO_KEY = 'sl_promo_v1';
+const SL_PROMO_DATE_KEY = 'sl_promo_date_v1';
+const SL_CART_KEY = 'sl_cart_v1';
+
+let slProducts = {};  // { barcode: {n,u,m,p} } — เหมือน scProducts แต่แยกชุด
+let slPromoMap = {};  // { barcode: [ชื่อโปร, ...] } เฉพาะโปรที่ยังไม่หมดอายุ ณ วันนี้
+let slCart = [];      // [{bc,name,unit,price,qty,promo}, ...] ล่าสุดอยู่บนสุด
+let slCamReader = null, slScanning = false;
+let slBcTimer = null;
+
+// ----- อัปโหลด R05.146 (สินค้า+ราคา) -----
+function slHandleProdFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    readFileAsText(file, text => {
+      const lines = text.trim().split('\n').map(l => l.split(',').map(x => x.replace(/^"|"$/g, '').trim()));
+      const c = detectCols(lines[0]);
+      slBuildProds(lines.slice(1), c);
+      slFinishProdLoad();
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    readFileAsArrayBuffer(file, buf => {
+      try {
+        const wb = XLSX.read(buf, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const c = detectCols(rows[0] || []);
+        slBuildProds(rows.slice(1), c);
+        slFinishProdLoad();
+      } catch (e) {
+        showMsg('sl-cart-msg', 'อ่านไฟล์ไม่ได้', true);
+      }
+    });
+  } else {
+    showMsg('sl-cart-msg', 'รองรับเฉพาะ .csv, .xlsx, .xls', true);
+  }
+}
+
+function slBuildProds(rows, c) {
+  slProducts = {};
+  rows.forEach(r => {
+    const bc = String(r[c.bcIdx] || '').trim();
+    if (!bc || bc.startsWith('*')) return;
+    const name = String(r[c.nameIdx] || '').trim();
+    const unit = String(r[c.unitIdx] || '').trim();
+    const multiple = c.multiIdx >= 0 ? (parseInt(String(r[c.multiIdx] || '1').replace(/,/g, '')) || 1) : 1;
+    const price = c.sellIdx >= 0 ? toNumber(r[c.sellIdx]) : 0;
+    slProducts[bc] = { n: name, u: unit, m: multiple, p: price };
+  });
+  try { localStorage.setItem(SL_PROD_KEY, JSON.stringify(slProducts)); } catch (e) {
+    showMsg('sl-cart-msg', '⚠️ พื้นที่เต็ม! ข้อมูลโหลดแล้วแต่บันทึกไม่ได้', false);
+  }
+}
+
+function slFinishProdLoad() {
+  const count = Object.keys(slProducts).length;
+  const now = new Date();
+  const dateStr = fmtUploadDate(now);
+  try { localStorage.setItem(SL_PROD_DATE_KEY, now.toISOString()); } catch (e) {}
+  slUpdateProdStatus(true, count + ' สินค้า', dateStr);
+  const el = document.getElementById('sl-prod-preview');
+  if (el) { el.style.display = 'block'; el.innerHTML = '✓ โหลดแล้ว <b>' + count + '</b> สินค้า'; }
+  showMsg('sl-cart-msg', '✓ โหลดฐานข้อมูลสินค้า+ราคาเรียบร้อย! ' + count + ' สินค้า', false);
+}
+
+function slUpdateProdStatus(ok, txt, dateStr) {
+  const dot = document.getElementById('sl-prod-dot');
+  const st  = document.getElementById('sl-prod-status');
+  const dt  = document.getElementById('sl-prod-date');
+  if (dot) dot.className = 'db-dot' + (ok ? ' ok' : '');
+  if (st)  st.textContent = txt;
+  if (dt)  dt.textContent = dateStr ? 'อัพโหลดเมื่อ: ' + dateStr : '';
+}
+
+// ----- อัปโหลด R17.103 (โปรโมชั่น) — ใช้แค่โชว์ชื่อโปรเตือน ไม่คำนวณราคา -----
+function slDetectPromoCols(headers) {
+  const h = headers.map(x => String(x || '').toUpperCase());
+  return {
+    bcIdx:    h.indexOf('ITEMID'),
+    nameIdx:  h.indexOf('CF_PROMOTIONNAME'),
+    begIdx:   h.indexOf('CF_BEGDATE'),
+    endIdx:   h.indexOf('CF_ENDDATE'),
+    activeIdx: h.indexOf('FACTIVE'),
+  };
+}
+
+function slHandlePromoFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    readFileAsText(file, text => {
+      const lines = text.trim().split('\n').map(l => l.split(',').map(x => x.replace(/^"|"$/g, '').trim()));
+      const c = slDetectPromoCols(lines[0]);
+      if (c.bcIdx === -1) { showMsg('sl-cart-msg', '❌ ไม่พบคอลัมน์ ITEMID ในไฟล์โปรโมชั่น', true); return; }
+      slBuildPromo(lines.slice(1), c);
+      slFinishPromoLoad();
+    });
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    readFileAsArrayBuffer(file, buf => {
+      try {
+        const wb = XLSX.read(buf, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const c = slDetectPromoCols(rows[0] || []);
+        if (c.bcIdx === -1) { showMsg('sl-cart-msg', '❌ ไม่พบคอลัมน์ ITEMID ในไฟล์โปรโมชั่น', true); return; }
+        slBuildPromo(rows.slice(1), c);
+        slFinishPromoLoad();
+      } catch (e) {
+        showMsg('sl-cart-msg', 'อ่านไฟล์ไม่ได้', true);
+      }
+    });
+  } else {
+    showMsg('sl-cart-msg', 'รองรับเฉพาะ .csv, .xlsx, .xls', true);
+  }
+}
+
+function slParseDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function slBuildPromo(rows, c) {
+  const dest = {};
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  rows.forEach(r => {
+    const bc = String(r[c.bcIdx] || '').trim();
+    if (!bc) return;
+    if (c.activeIdx >= 0 && toNumber(r[c.activeIdx]) === 0) return;
+    const beg = c.begIdx >= 0 ? slParseDate(r[c.begIdx]) : null;
+    const end = c.endIdx >= 0 ? slParseDate(r[c.endIdx]) : null;
+    if (beg && today < beg) return;
+    if (end && today > end) return;
+    const name = String(r[c.nameIdx] || '').trim();
+    if (!name) return;
+    if (!dest[bc]) dest[bc] = [];
+    if (dest[bc].indexOf(name) === -1) dest[bc].push(name);
+  });
+  slPromoMap = dest;
+  try { localStorage.setItem(SL_PROMO_KEY, JSON.stringify(slPromoMap)); } catch (e) {}
+}
+
+function slFinishPromoLoad() {
+  const count = Object.keys(slPromoMap).length;
+  const now = new Date();
+  const dateStr = fmtUploadDate(now);
+  try { localStorage.setItem(SL_PROMO_DATE_KEY, now.toISOString()); } catch (e) {}
+  slUpdatePromoStatus(true, count + ' สินค้ามีโปร (ที่ยังไม่หมดอายุ)', dateStr);
+  const el = document.getElementById('sl-promo-preview');
+  if (el) { el.style.display = 'block'; el.innerHTML = '✓ โหลดแล้ว <b>' + count + '</b> สินค้ามีโปรที่ยังไม่หมดอายุ'; }
+  showMsg('sl-cart-msg', '✓ โหลดฐานข้อมูลโปรโมชั่นเรียบร้อย! ' + count + ' สินค้ามีโปร', false);
+}
+
+function slUpdatePromoStatus(ok, txt, dateStr) {
+  const dot = document.getElementById('sl-promo-dot');
+  const st  = document.getElementById('sl-promo-status');
+  const dt  = document.getElementById('sl-promo-date');
+  if (dot) dot.className = 'db-dot' + (ok ? ' ok' : '');
+  if (st)  st.textContent = txt;
+  if (dt)  dt.textContent = dateStr ? 'อัพโหลดเมื่อ: ' + dateStr : '';
+}
+
+// ----- สแกน / ค้นหา / ใส่ตะกร้า -----
+document.getElementById('sl-bc-in').addEventListener('input', function () {
+  const bc = this.value.trim();
+  if (!bc) return;
+  if (slProducts[bc]) {
+    clearTimeout(slBcTimer);
+    slAddToCart(bc);
+    this.value = '';
+    return;
+  }
+  if (bc.length >= 8) {
+    clearTimeout(slBcTimer);
+    slBcTimer = setTimeout(() => {
+      const cur = document.getElementById('sl-bc-in').value.trim();
+      if (cur && !slProducts[cur]) {
+        showMsg('sl-scan-msg', '❌ ไม่พบ barcode นี้ในฐานข้อมูลสินค้า', true);
+        setTimeout(() => { document.getElementById('sl-bc-in').value = ''; document.getElementById('sl-bc-in').focus(); }, 800);
+      }
+    }, 600);
+  }
+});
+
+document.getElementById('sl-bc-in').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const bc = document.getElementById('sl-bc-in').value.trim();
+  if (!bc) return;
+  if (slProducts[bc]) { slAddToCart(bc); document.getElementById('sl-bc-in').value = ''; }
+  else showMsg('sl-scan-msg', '❌ ไม่พบ barcode นี้ในฐานข้อมูลสินค้า', true);
+});
+
+function slAddToCart(bc) {
+  const p = normProd(slProducts[bc]);
+  if (!p) { showMsg('sl-scan-msg', '❌ ไม่พบ barcode นี้ในฐานข้อมูลสินค้า', true); return; }
+  const promo = slPromoMap[bc] || null;
+  const existing = slCart.find(it => it.bc === bc);
+  if (existing) {
+    existing.qty += 1;
+    slCart = slCart.filter(it => it.bc !== bc);
+    slCart.unshift(existing);
+  } else {
+    slCart.unshift({ bc, name: p.name, unit: p.unit, price: p.sellPrice, qty: 1, promo });
+  }
+  slAutoSave();
+  slRenderCart();
+  document.getElementById('sl-bc-in').focus();
+  const promoHint = promo && promo.length ? (' · 🏷 มีโปร: ' + promo.join(', ')) : '';
+  showMsg('sl-scan-msg', '✓ ' + (p.name || bc) + ' — ฿' + p.sellPrice.toFixed(2) + ' / ' + p.unit + promoHint, false);
+}
+
+// ----- กล้องสแกน (ใช้ #video-wrap/#video ร่วมกับเมนูอื่น) -----
+document.getElementById('sl-scan-btn').addEventListener('click', slToggleScan);
+
+function slToggleScan() {
+  if (slScanning) { slStopScan(); return; }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      stream.getTracks().forEach(t => t.stop());
+      document.getElementById('video-wrap').style.display = 'block';
+      document.getElementById('sl-scan-btn').textContent = '⏹ ปิดกล้อง';
+      slCamReader = new ZXing.BrowserMultiFormatReader();
+      slScanning = true;
+      slCamReader.listVideoInputDevices().then(devices => {
+        const back = devices.find(d => /back|environment/i.test(d.label));
+        const id = back ? back.deviceId : (devices[0]?.deviceId || null);
+        let lastBC = '', lastTime = 0;
+        slCamReader.decodeFromVideoDevice(id, 'video', result => {
+          if (!result) return;
+          const bc = result.getText();
+          const now = Date.now();
+          if (bc === lastBC && now - lastTime < 1500) return;
+          lastBC = bc; lastTime = now;
+          slAddToCart(bc);
+        });
+      });
+    })
+    .catch(() => alert('ไม่สามารถเปิดกล้องได้'));
+}
+
+function slStopScan() {
+  slScanning = false;
+  if (slCamReader) { slCamReader.reset(); slCamReader = null; }
+  document.getElementById('video-wrap').style.display = 'none';
+  document.getElementById('sl-scan-btn').textContent = '📷 เปิดกล้องสแกน';
+}
+
+// ----- ตะกร้า / แสดงผล / export -----
+function slCartTotal() {
+  return slCart.reduce((sum, it) => sum + it.price * it.qty, 0);
+}
+
+function slRenderCart() {
+  const list = document.getElementById('sl-cart');
+  document.getElementById('sl-cart-total').textContent = slCart.length ? slCart.length + ' รายการ' : '';
+  document.getElementById('sl-cart-sum').textContent = '฿' + slCartTotal().toFixed(2);
+  if (!slCart.length) { list.innerHTML = '<div class="empty">ยังไม่มีสินค้าในตะกร้า</div>'; return; }
+  list.innerHTML = slCart.map(it => {
+    const promoTag = (it.promo && it.promo.length) ? `<div style="font-size:11px;color:#c2410c;margin-top:2px">&#127991; มีโปร: ${it.promo.join(', ')}</div>` : '';
+    const bcSafe = String(it.bc).replace(/'/g, "\\'");
+    return `<div class="stock-item" style="align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div class="item-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name || '—'}</div>
+        <div class="item-bc">${it.bc} · ฿${it.price.toFixed(2)} / ${it.unit || ''}</div>
+        ${promoTag}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button class="del-btn" style="background:#f2f2f7;color:#166534" onclick="slAdjustQty('${bcSafe}',-1)">&#8722;</button>
+        <div style="min-width:28px;text-align:center;font-weight:600">${it.qty}</div>
+        <button class="del-btn" style="background:#f2f2f7;color:#166534" onclick="slAdjustQty('${bcSafe}',1)">&#43;</button>
+        <div style="text-align:right;min-width:62px">
+          <div class="qty-pill" style="background:#dcfce7;color:#166534">฿${(it.price * it.qty).toFixed(2)}</div>
+        </div>
+        <button class="del-btn" onclick="slRemoveItem('${bcSafe}')">&#x2715;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function slAdjustQty(bc, delta) {
+  const it = slCart.find(x => x.bc === bc);
+  if (!it) return;
+  it.qty += delta;
+  if (it.qty <= 0) slCart = slCart.filter(x => x.bc !== bc);
+  slAutoSave();
+  slRenderCart();
+}
+
+function slRemoveItem(bc) {
+  slCart = slCart.filter(it => it.bc !== bc);
+  slAutoSave();
+  slRenderCart();
+}
+
+function slAutoSave() {
+  try { localStorage.setItem(SL_CART_KEY, JSON.stringify(slCart)); } catch (e) {}
+}
+
+function slClearCart() {
+  if (!slCart.length) return;
+  if (confirm('ล้างตะกร้าสินค้าทั้งหมด? (ฐานข้อมูลสินค้า/โปรโมชั่นที่อัปโหลดไว้จะไม่ถูกลบ)')) {
+    slCart = [];
+    slAutoSave();
+    slRenderCart();
+  }
+}
+
+function slSaveTxt() {
+  if (!slCart.length) { showMsg('sl-cart-msg', 'ไม่มีสินค้าในตะกร้า', true); return; }
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+  let maxName = 20, maxBC = 13, maxQty = 6;
+  slCart.forEach(it => {
+    maxName = Math.max(maxName, strWidth(it.name || '—'));
+    maxBC   = Math.max(maxBC, String(it.bc || '').length);
+  });
+  maxName += 2; maxBC += 2;
+  const sep = '─'.repeat(6) + '┼' + '─'.repeat(maxName + 2) + '┼' + '─'.repeat(maxBC + 2) + '┼' + '─'.repeat(maxQty + 2) + '┼' + '─'.repeat(12) + '┼' + '─'.repeat(14);
+
+  let txt = `บิลขายสินค้า\n${ds}\n${'='.repeat(40)}\n\n`;
+  txt += padEndTh('ลำดับ', 6) + '│ ' + padEndTh('ชื่อสินค้า', maxName) + '│ ' + 'Barcode'.padEnd(maxBC) + '│ ' + padEndTh('จำนวน', maxQty) + '│ ' + padEndTh('ราคา/หน่วย', 12) + '│ รวม\n';
+  txt += sep + '\n';
+  slCart.forEach((it, i) => {
+    const promoNote = (it.promo && it.promo.length) ? ('  [มีโปร: ' + it.promo.join(', ') + ']') : '';
+    txt += padEndTh(String(i + 1), 6) + '│ ' + padEndTh(it.name || '—', maxName) + '│ ' + String(it.bc || '').padEnd(maxBC) + '│ ' + padEndTh(String(it.qty), maxQty) + '│ ' + padEndTh('฿' + it.price.toFixed(2), 12) + '│ ฿' + (it.price * it.qty).toFixed(2) + promoNote + '\n';
+  });
+  txt += sep + '\n';
+  txt += 'จำนวนรายการ: ' + slCart.length + '\n';
+  txt += 'ยอดรวมทั้งหมด: ฿' + slCartTotal().toFixed(2) + '\n';
+  txt += '\n* ราคาเป็นราคาปกติจากฐานข้อมูลสินค้า หากมีโปรโมชั่น กรุณาคิดเงินส่วนลดด้วยตนเองที่หน้าแคชเชียร์\n';
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.download = 'ขายสินค้า_' + fmtFileName(now) + '.txt';
+  a.click();
+  showMsg('sl-cart-msg', '✓ บันทึกไฟล์แล้ว ดูใน Downloads', false);
+}
+
+function slSaveExcel() {
+  if (!slCart.length) { showMsg('sl-cart-msg', 'ไม่มีสินค้าในตะกร้า', true); return; }
+  const now = new Date();
+  const ds = fmtUploadDate(now);
+  const rows = [
+    ['บิลขายสินค้า — ' + ds],
+    [],
+    ['ลำดับ', 'Barcode', 'ชื่อสินค้า', 'จำนวน', 'หน่วย', 'ราคา/หน่วย (฿)', 'รวม (฿)', 'โปรโมชั่น (เตือน-ไม่รวมในราคา)'],
+  ];
+  slCart.forEach((it, i) => {
+    rows.push([i + 1, it.bc, it.name || '—', it.qty, it.unit || '', Math.round(it.price * 100) / 100, Math.round(it.price * it.qty * 100) / 100, (it.promo && it.promo.length) ? it.promo.join(', ') : '']);
+  });
+  rows.push([]);
+  rows.push(['รวมทั้งหมด', '', '', '', '', '', Math.round(slCartTotal() * 100) / 100]);
+  rows.push(['* ราคาเป็นราคาปกติ หากมีโปรโมชั่นกรุณาคิดเงินส่วนลดด้วยตนเอง']);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 30 }];
+  const headerRow = 2;
+  ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach(col => {
+    const cell = ws[col + (headerRow + 1)];
+    if (cell) cell.s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '166534' } }, alignment: { horizontal: 'center' } };
+  });
+  XLSX.utils.book_append_sheet(wb, ws, 'ขายสินค้า');
+  XLSX.writeFile(wb, 'ขายสินค้า_' + fmtFileName(now) + '.xlsx');
+  showMsg('sl-cart-msg', '✓ บันทึก Excel แล้ว ดูใน Downloads', false);
+}
+
 // ===== TEXT WIDTH HELPERS (ใช้โดย scSaveTxt ของเมนูตรวจนับสต๊อค) =====
 // นับความกว้างจริงของข้อความ (ภาษาไทย 1 ตัว = 2 ช่อง)
 function strWidth(s) {
@@ -1273,6 +1742,32 @@ function tryLoadSaved() {
       }
       const shfl = localStorage.getItem(SHF_LIST_KEY);
       if (shfl) { shfList = JSON.parse(shfl); shfRenderList(); }
+    } catch (e) {}
+
+    // ===== ขายสินค้า (ฐานข้อมูลแยกต่างหาก) =====
+    try {
+      const slp = localStorage.getItem(SL_PROD_KEY);
+      const slProdDate = localStorage.getItem(SL_PROD_DATE_KEY);
+      if (slp) {
+        slProducts = JSON.parse(slp);
+        const n4 = Object.keys(slProducts).length;
+        const ds4 = slProdDate ? fmtUploadDate(new Date(slProdDate)) : '';
+        slUpdateProdStatus(true, n4 + ' สินค้า (cache)', ds4);
+        const el3 = document.getElementById('sl-prod-preview');
+        if (el3) { el3.style.display = 'block'; el3.innerHTML = '✓ โหลดแล้ว <b>' + n4 + '</b> สินค้า (cache)'; }
+      }
+      const slpr = localStorage.getItem(SL_PROMO_KEY);
+      const slPromoDate = localStorage.getItem(SL_PROMO_DATE_KEY);
+      if (slpr) {
+        slPromoMap = JSON.parse(slpr);
+        const n5 = Object.keys(slPromoMap).length;
+        const ds5 = slPromoDate ? fmtUploadDate(new Date(slPromoDate)) : '';
+        slUpdatePromoStatus(true, n5 + ' สินค้ามีโปร (cache)', ds5);
+        const el4 = document.getElementById('sl-promo-preview');
+        if (el4) { el4.style.display = 'block'; el4.innerHTML = '✓ โหลดแล้ว <b>' + n5 + '</b> สินค้ามีโปร (cache)'; }
+      }
+      const slc = localStorage.getItem(SL_CART_KEY);
+      if (slc) { slCart = JSON.parse(slc); slRenderCart(); }
     } catch (e) {}
   }catch(e){}
 }
