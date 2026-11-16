@@ -529,6 +529,13 @@ function goScreen(s) {
   if (typeof scStopScan    === 'function') scStopScan();
   if (typeof shfStopScan   === 'function') shfStopScan();
   if (typeof slStopScan    === 'function') slStopScan();
+
+  // กัน iOS/มือถือบางรุ่น auto-focus ช่อง input ที่เพิ่งโผล่มา ถ้าตำแหน่งที่แตะ
+  // ตรงกับตำแหน่ง input พอดี (ทำให้คีย์บอร์ดเด้งเองทั้งที่ยังไม่ได้แตะช่องกรอกจริงๆ)
+  setTimeout(() => {
+    const ae = document.activeElement;
+    if (ae && ae.tagName === 'INPUT' && ae.type === 'text') ae.blur();
+  }, 0);
 }
 
 // ======================================================================
