@@ -364,11 +364,6 @@ function goScreen(s) {
   document.getElementById('screen-' + s).classList.add('active');
 
   if (typeof scStopScan    === 'function') scStopScan();
-
-  const focusMap = {
-    stockcheck: 'sc-bc-in',
-  };
-  if (focusMap[s]) setTimeout(() => document.getElementById(focusMap[s]).focus(), 200);
 }
 
 // ======================================================================
@@ -855,7 +850,7 @@ function scClearAll() {
 }
 
 function scInitScreen() {
-  setTimeout(() => document.getElementById('sc-bc-in').focus(), 300);
+  // ไม่ auto-focus ช่อง barcode ตอนเข้าเมนู เพื่อไม่ให้คีย์บอร์ดเด้งขึ้นมาเอง
 }
 
 // ===== TEXT WIDTH HELPERS (ใช้โดย scSaveTxt ของเมนูตรวจนับสต๊อค) =====
