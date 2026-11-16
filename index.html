@@ -426,6 +426,11 @@ function buildUnitIndex(src) {
 }
 
 function goScreen(s) {
+  // ปิดคีย์บอร์ดที่อาจเปิดค้างอยู่จากหน้าเดิม ก่อนสลับหน้าเสมอ
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+
   if (s === 'stockcheck') scInitScreen();
 
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
