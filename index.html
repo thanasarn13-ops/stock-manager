@@ -256,7 +256,7 @@ input:focus{border-color:#007aff;background:#fff}
     <!-- โหมด 1: ยิงก่อน ใส่จำนวนทีหลัง -->
     <div id="sc-panel-normal" class="card">
       <label>Barcode</label>
-      <input type="text" id="sc-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="sc-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="none">
       <div class="label-row">
         <label style="margin:0">ชื่อสินค้า</label>
         <span class="badge-af" id="sc-af-badge">auto-filled</span>
@@ -264,7 +264,7 @@ input:focus{border-color:#007aff;background:#fff}
       <input type="text" id="sc-name-in" placeholder="ดึงจากไฟล์อัตโนมัติ" style="margin-top:4px">
       <div id="sc-price-info" style="font-size:13px;color:#0e7490;font-weight:600;margin:-4px 0 10px;min-height:16px"></div>
       <div class="row">
-        <div><label>จำนวน</label><input type="number" id="sc-qty-in" value="1" min="0"></div>
+        <div><label>จำนวน</label><input type="number" id="sc-qty-in" value="1" min="0" inputmode="none"></div>
         <div><label>หน่วย</label><input type="text" id="sc-unit-in" placeholder="pcs/กล่อง/ถุง"></div>
       </div>
       <button class="btn btn-green" onclick="scAddStock()">+ เพิ่ม / อัปเดตสต๊อค</button>
@@ -294,7 +294,7 @@ input:focus{border-color:#007aff;background:#fff}
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid #f0f0f0">
         <div style="font-size:12px;color:#8e8e93;margin-bottom:6px">หรือสแกน barcode ใหม่เลย</div>
-        <input type="text" id="sc-accum-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric" style="margin-bottom:0">
+        <input type="text" id="sc-accum-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." style="margin-bottom:0" inputmode="none">
       </div>
       <div class="msg" id="sc-accum-msg"></div>
     </div>
@@ -351,7 +351,7 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div class="card">
       <label>Barcode</label>
-      <input type="text" id="shf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="shf-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="none">
       <div class="msg" id="shf-scan-msg"></div>
     </div>
 
@@ -407,7 +407,7 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div class="card">
       <label>Barcode</label>
-      <input type="text" id="shf6-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="shf6-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="none">
       <div class="msg" id="shf6-scan-msg"></div>
     </div>
 
@@ -481,7 +481,7 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div class="card">
       <label>Barcode</label>
-      <input type="text" id="sl-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="sl-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="none">
       <div class="msg" id="sl-scan-msg"></div>
     </div>
 
@@ -551,7 +551,7 @@ input:focus{border-color:#007aff;background:#fff}
 
     <div class="card">
       <label>Barcode</label>
-      <input type="text" id="rc-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="numeric">
+      <input type="text" id="rc-bc-in" placeholder="สแกนหรือพิมพ์ barcode..." inputmode="none">
       <div id="rc-info-box" style="display:none;background:#eef2ff;border-radius:10px;padding:10px 12px;margin-top:8px;border:0.5px solid #c7d2fe">
         <div id="rc-info-name" style="font-size:14px;font-weight:600;color:#3730a3"></div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
@@ -560,7 +560,7 @@ input:focus{border-color:#007aff;background:#fff}
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
           <label style="margin:0;flex-shrink:0;font-size:13px">จำนวน</label>
-          <input type="number" id="rc-qty-in" value="1" min="1" style="flex:1" inputmode="numeric">
+          <input type="number" id="rc-qty-in" value="1" min="1" style="flex:1" inputmode="none">
         </div>
         <button class="btn" style="background:#3730a3;color:#fff;margin-top:8px" onclick="rcAddItem()">&#10010; เพิ่มรายการ</button>
       </div>
