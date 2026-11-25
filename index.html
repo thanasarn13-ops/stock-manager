@@ -1095,47 +1095,34 @@ function scAutoSave() {
 }
 
 function scSaveTxt() {
+  // รูปแบบไฟล์: บรรทัดละ 1 สินค้า = "บาร์โค้ดหน่วยย่อยที่สุด <TAB> จำนวน(หน่วยย่อยที่สุด)" ขึ้นบรรทัดด้วย CRLF
   const keys = Object.keys(scStock);
   if (!keys.length) { showMsg('sc-list-msg', 'ไม่มีรายการ', true); return; }
   const now = new Date();
-  const ds = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-  let maxName = 20, maxBC = 13, maxQty = 8;
+  let txt = '';
+  let skipped = 0;
   keys.forEach(k => {
     const it = scStock[k];
-    const qs = scFormatQty(it);
-    const main = qs.split('(')[0].trim();
-    const bcStr = (it.barcodes || []).join(', ');
-    maxName = Math.max(maxName, strWidth(it.name || '—'));
-    maxBC   = Math.max(maxBC, bcStr.length);
-    maxQty  = Math.max(maxQty, strWidth(main));
+    const units = scNameToUnits[it.name] || [];
+    let bc = (it.barcodes && it.barcodes[0]) || '';
+    let qty = it.totalBase;
+    if (!bc) {
+      const base = units.find(u => u.multiple === 1) || units[0];
+      if (base) { bc = base.bc; if (base.multiple > 1) qty = it.totalBase / base.multiple; }
+    }
+    if (!bc) { skipped++; return; }
+    qty = Math.round(qty * 1000) / 1000;
+    txt += bc + '\t' + qty + '\r\n';
   });
-  maxName += 2; maxBC += 2; maxQty += 2;
-
-  const sep = '─'.repeat(6) + '┼' + '─'.repeat(maxName + 2) + '┼' + '─'.repeat(maxBC + 2) + '┼' + '─'.repeat(maxQty + 2) + '┼' + '─'.repeat(20);
-
-  let txt = '╔══════════════════════════════╗\n';
-  txt += '║      รายงาน ตรวจนับสต๊อค      ║\n';
-  txt += '║  ' + ds.padEnd(28) + '║\n';
-  txt += '╚══════════════════════════════╝\n\n';
-  txt += padEndTh('ลำดับ', 6) + '│ ' + padEndTh('ชื่อสินค้า', maxName) + '│ ' + 'Barcode'.padEnd(maxBC) + '│ ' + padEndTh('จำนวน', maxQty) + '│ รายละเอียด\n';
-  txt += sep + '\n';
-  keys.forEach((k, i) => {
-    const it = scStock[k];
-    const qs = scFormatQty(it);
-    const main   = qs.split('(')[0].trim();
-    const detail = qs.includes('(') ? '(' + qs.split('(')[1] : '';
-    const bcStr  = (it.barcodes || []).join(', ');
-    txt += padEndTh(String(i + 1), 6) + '│ ' + padEndTh(it.name || '—', maxName) + '│ ' + bcStr.padEnd(maxBC) + '│ ' + padEndTh(main, maxQty) + '│ ' + detail + '\n';
-  });
-  txt += sep + '\n';
-  txt += 'รวมทั้งหมด: ' + keys.length + ' รายการ\n';
+  if (!txt) { showMsg('sc-list-msg', 'ไม่พบบาร์โค้ดหน่วยย่อยของรายการ', true); return; }
+  txt += '\r\n';
 
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
   a.download = 'ตรวจนับสต๊อค_' + fmtFileName(now) + '.txt';
   a.click();
-  showMsg('sc-list-msg', '✓ บันทึกไฟล์แล้ว ดูใน Downloads', false);
+  showMsg('sc-list-msg', '✓ บันทึกไฟล์แล้ว ดูใน Downloads' + (skipped ? ' (ข้าม ' + skipped + ' รายการที่ไม่มีบาร์โค้ด)' : ''), skipped > 0);
 }
 
 function scSaveExcel() {
